@@ -3,13 +3,14 @@ import heroImage from "@/assets/restaurant-hero.jpg";
 interface RestaurantHeaderProps {
   name: string;
   tagline?: string;
+  heroImageUrl?: string | null;
 }
 
-const RestaurantHeader = ({ name, tagline }: RestaurantHeaderProps) => {
+const RestaurantHeader = ({ name, tagline, heroImageUrl }: RestaurantHeaderProps) => {
   return (
     <div className="relative h-64 overflow-hidden">
       <img 
-        src={heroImage} 
+        src={heroImageUrl || heroImage} 
         alt="Restaurant interior" 
         className="w-full h-full object-cover"
       />

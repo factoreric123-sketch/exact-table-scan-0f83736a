@@ -54,6 +54,7 @@ const Index = () => {
       <RestaurantHeader 
         name="balzem"
         tagline="Mediterranean Cuisine"
+        heroImageUrl={null}
       />
 
       {/* Category & Subcategory Navigation */}
