@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useRestaurantById, useUpdateRestaurant } from "@/hooks/useRestaurants";
 import { useCategories } from "@/hooks/useCategories";
@@ -11,6 +11,9 @@ import { EditableDishes } from "@/components/editor/EditableDishes";
 import RestaurantHeader from "@/components/RestaurantHeader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { useThemeHistory } from "@/hooks/useThemeHistory";
+import { getDefaultTheme } from "@/lib/presetThemes";
+import { Theme } from "@/lib/types/theme";
 
 const Editor = () => {
   const { restaurantId } = useParams<{ restaurantId: string }>();
@@ -24,6 +27,53 @@ const Editor = () => {
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [activeSubcategory, setActiveSubcategory] = useState<string>("");
   const [previewMode, setPreviewMode] = useState(false);
+
+  // Theme history for undo/redo
+  const { canUndo, canRedo, undo, redo, push, reset } = useThemeHistory(
+    (restaurant?.theme as Theme) || getDefaultTheme()
+  );
+
+  // Reset history when restaurant changes
+  useEffect(() => {
+    if (restaurant?.theme) {
+      reset(restaurant.theme as Theme);
+    }
+  }, [restaurant?.id]);
+
+  const handleUndo = () => {
+    const prevTheme = undo();
+    if (prevTheme && restaurant) {
+      updateRestaurant.mutate({ id: restaurant.id, updates: { theme: prevTheme as any } });
+    }
+  };
+
+  const handleRedo = () => {
+    const nextTheme = redo();
+    if (nextTheme && restaurant) {
+      updateRestaurant.mutate({ id: restaurant.id, updates: { theme: nextTheme as any } });
+    }
+  };
+
+  const handleThemeChange = (theme: Theme) => {
+    push(theme);
+  };
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !previewMode) {
+        if (e.shiftKey) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleUndo, handleRedo, previewMode]);
 
   // Set initial active category and subcategory
   useState(() => {
@@ -94,6 +144,11 @@ const Editor = () => {
         previewMode={previewMode}
         onPreviewToggle={() => setPreviewMode(!previewMode)}
         onPublishToggle={handlePublishToggle}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onThemeChange={handleThemeChange}
       />
 
       <RestaurantHeader

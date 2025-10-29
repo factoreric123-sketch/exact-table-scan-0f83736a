@@ -1,16 +1,22 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Eye, EyeOff, QrCode, Palette, Upload } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, QrCode, Palette, Upload, Undo2, Redo2 } from "lucide-react";
 import { QRCodeModal } from "@/components/editor/QRCodeModal";
-import { ThemeSettingsDialog } from "@/components/editor/ThemeSettingsDialog";
+import { ThemeGalleryModal } from "@/components/editor/ThemeGalleryModal";
 import type { Restaurant } from "@/hooks/useRestaurants";
+import { Theme } from "@/lib/types/theme";
 
 interface EditorTopBarProps {
   restaurant: Restaurant;
   previewMode: boolean;
   onPreviewToggle: () => void;
   onPublishToggle: () => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onThemeChange?: (theme: Theme) => void;
 }
 
 export const EditorTopBar = ({
@@ -18,6 +24,11 @@ export const EditorTopBar = ({
   previewMode,
   onPreviewToggle,
   onPublishToggle,
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
+  onThemeChange,
 }: EditorTopBarProps) => {
   const navigate = useNavigate();
   const [showQRModal, setShowQRModal] = useState(false);
@@ -69,6 +80,28 @@ export const EditorTopBar = ({
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={onUndo}
+                  disabled={!canUndo}
+                  className="gap-2"
+                >
+                  <Undo2 className="h-4 w-4" />
+                  Undo
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onRedo}
+                  disabled={!canRedo}
+                  className="gap-2"
+                >
+                  <Redo2 className="h-4 w-4" />
+                  Redo
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setShowThemeDialog(true)}
                   className="gap-2"
                 >
@@ -108,10 +141,11 @@ export const EditorTopBar = ({
         restaurantName={restaurant.name}
       />
 
-      <ThemeSettingsDialog
+      <ThemeGalleryModal
         open={showThemeDialog}
         onOpenChange={setShowThemeDialog}
         restaurant={restaurant}
+        onThemeChange={onThemeChange}
       />
     </>
   );

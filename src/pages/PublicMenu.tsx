@@ -10,6 +10,7 @@ import { useRestaurant } from "@/hooks/useRestaurants";
 import { useCategories } from "@/hooks/useCategories";
 import { useSubcategories } from "@/hooks/useSubcategories";
 import { useDishes } from "@/hooks/useDishes";
+import { useThemePreview } from "@/hooks/useThemePreview";
 
 const PublicMenu = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -17,6 +18,9 @@ const PublicMenu = () => {
   const { data: categories } = useCategories(restaurant?.id || "");
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [activeSubcategory, setActiveSubcategory] = useState<string>("");
+
+  // Apply restaurant theme to public menu
+  useThemePreview(restaurant?.theme as any, !!restaurant);
 
   const activeCategoryObj = categories?.find((c) => c.id === activeCategory);
   const { data: subcategories } = useSubcategories(activeCategoryObj?.id || "");
