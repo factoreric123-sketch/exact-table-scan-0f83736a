@@ -63,11 +63,10 @@ export const SortableCategory = ({
         style={style}
         className="group relative shrink-0"
       >
-        <Button
+        <div
           onClick={() => onCategoryChange(category.id)}
-          variant={isActive ? "default" : "ghost"}
           className={`
-            px-5 py-2 rounded-full whitespace-nowrap font-semibold text-sm transition-all
+            px-5 py-2 rounded-full whitespace-nowrap font-semibold text-sm transition-all cursor-pointer
             ${isActive 
               ? 'bg-primary text-primary-foreground shadow-md' 
               : 'text-foreground hover:bg-muted'
@@ -98,7 +97,7 @@ export const SortableCategory = ({
               <Trash2 className="h-4 w-4" />
             </div>
           </div>
-        </Button>
+        </div>
       </div>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

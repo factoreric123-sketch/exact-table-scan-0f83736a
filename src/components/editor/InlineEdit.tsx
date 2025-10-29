@@ -25,13 +25,6 @@ export const InlineEdit = ({ value, onSave, className, multiline = false }: Inli
     }
   }, [isEditing]);
 
-  // Phase 3: Debounced save to prevent excessive API calls during typing
-  const debouncedSave = useDebouncedCallback((newValue: string) => {
-    if (newValue.trim() !== value) {
-      onSave(newValue.trim());
-    }
-  }, 500);
-
   const handleSave = () => {
     setIsEditing(false);
     if (editValue.trim() !== value) {
