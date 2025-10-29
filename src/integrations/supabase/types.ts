@@ -184,6 +184,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      batch_update_order_indexes: {
+        Args: { table_name: string; updates: Json }
+        Returns: undefined
+      }
+      batch_update_order_indexes_optimized: {
+        Args: { table_name: string; updates: Json }
+        Returns: undefined
+      }
+      get_restaurant_full_menu: {
+        Args: { p_restaurant_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -118,18 +118,51 @@ export const useUpdateSubcategoriesOrder = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ subcategories }: { subcategories: { id: string; order_index: number }[] }) => {
-      const updates = subcategories.map((sub) =>
-        supabase
-          .from("subcategories")
-          .update({ order_index: sub.order_index })
-          .eq("id", sub.id)
-      );
+    mutationFn: async ({ 
+      subcategories,
+      categoryId
+    }: { 
+      subcategories: { id: string; order_index: number }[];
+      categoryId: string;
+    }) => {
+      // Use optimized batch update function
+      const { error } = await supabase.rpc('batch_update_order_indexes_optimized', {
+        table_name: 'subcategories',
+        updates: subcategories
+      });
 
-      await Promise.all(updates);
+      if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["subcategories"] });
+    onMutate: async ({ subcategories, categoryId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["subcategories", categoryId] });
+
+      // Snapshot previous value
+      const previousSubcategories = queryClient.getQueryData(["subcategories", categoryId]);
+
+      // Optimistically update cache
+      if (previousSubcategories) {
+        const optimisticData = (previousSubcategories as any[]).map(sub => {
+          const update = subcategories.find(u => u.id === sub.id);
+          return update ? { ...sub, order_index: update.order_index } : sub;
+        }).sort((a, b) => a.order_index - b.order_index);
+        
+        queryClient.setQueryData(["subcategories", categoryId], optimisticData);
+      }
+
+      return { previousSubcategories, categoryId };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousSubcategories) {
+        queryClient.setQueryData(["subcategories", context.categoryId], context.previousSubcategories);
+      }
+      toast.error("Failed to reorder subcategories");
+    },
+    onSettled: (_, __, variables) => {
+      // Invalidate after completion
+      queryClient.invalidateQueries({ queryKey: ["subcategories", variables.categoryId] });
+      queryClient.invalidateQueries({ queryKey: ["subcategories", "restaurant"] });
     },
   });
 };

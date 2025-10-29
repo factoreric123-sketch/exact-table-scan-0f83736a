@@ -94,20 +94,50 @@ export const useUpdateCategoriesOrder = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ categories }: { categories: { id: string; order_index: number }[] }) => {
-      const updates = categories.map((cat) =>
-        supabase
-          .from("categories")
-          .update({ order_index: cat.order_index })
-          .eq("id", cat.id)
-      );
+    mutationFn: async ({ 
+      categories, 
+      restaurantId 
+    }: { 
+      categories: { id: string; order_index: number }[];
+      restaurantId: string;
+    }) => {
+      // Use optimized batch update function
+      const { error } = await supabase.rpc('batch_update_order_indexes_optimized', {
+        table_name: 'categories',
+        updates: categories
+      });
 
-      await Promise.all(updates);
+      if (error) throw error;
     },
-    onSuccess: (_, variables) => {
-      if (variables.categories.length > 0) {
-        queryClient.invalidateQueries({ queryKey: ["categories"] });
+    onMutate: async ({ categories, restaurantId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["categories", restaurantId] });
+
+      // Snapshot previous value
+      const previousCategories = queryClient.getQueryData(["categories", restaurantId]);
+
+      // Optimistically update cache
+      if (previousCategories) {
+        const optimisticData = (previousCategories as any[]).map(cat => {
+          const update = categories.find(u => u.id === cat.id);
+          return update ? { ...cat, order_index: update.order_index } : cat;
+        }).sort((a, b) => a.order_index - b.order_index);
+        
+        queryClient.setQueryData(["categories", restaurantId], optimisticData);
       }
+
+      return { previousCategories, restaurantId };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousCategories) {
+        queryClient.setQueryData(["categories", context.restaurantId], context.previousCategories);
+      }
+      toast.error("Failed to reorder categories");
+    },
+    onSettled: (_, __, variables) => {
+      // Invalidate after completion
+      queryClient.invalidateQueries({ queryKey: ["categories", variables.restaurantId] });
     },
   });
 };

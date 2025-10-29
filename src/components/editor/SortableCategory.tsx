@@ -38,7 +38,7 @@ export const SortableCategory = ({
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: isDragging ? transition : "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
     opacity: isDragging ? 0.5 : 1,
   };
 

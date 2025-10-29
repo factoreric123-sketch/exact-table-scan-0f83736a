@@ -37,8 +37,8 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+    transition: isDragging ? transition : "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+    opacity: isDragging ? 0.3 : 1,
   };
 
   const handleUpdate = (field: keyof Dish, value: string | boolean) => {

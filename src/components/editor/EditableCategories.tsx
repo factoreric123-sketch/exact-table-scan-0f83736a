@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DndContext, closestCorners, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { DndContext, closestCorners, DragEndEvent, DragStartEvent, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { SortableCategory } from "./SortableCategory";
@@ -23,18 +23,25 @@ export const EditableCategories = ({
   restaurantId,
   previewMode,
 }: EditableCategoriesProps) => {
+  const [activeId, setActiveId] = useState<string | null>(null);
   const createCategory = useCreateCategory();
   const updateCategoriesOrder = useUpdateCategoriesOrder();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5, // Reduced for more responsive drag
       },
     })
   );
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
+    setActiveId(null);
+    
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -50,7 +57,10 @@ export const EditableCategories = ({
       order_index: index,
     }));
 
-    updateCategoriesOrder.mutate({ categories: updates });
+    updateCategoriesOrder.mutate({ 
+      categories: updates,
+      restaurantId 
+    });
   };
 
   const handleAddCategory = async () => {
@@ -94,9 +104,15 @@ export const EditableCategories = ({
 
   return (
     <div className="pt-4 px-4">
-      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd} modifiers={[restrictToHorizontalAxis]}>
+      <DndContext 
+        sensors={sensors} 
+        collisionDetection={closestCorners} 
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd} 
+        modifiers={[restrictToHorizontalAxis]}
+      >
         <SortableContext items={categories.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
-          <div className="flex gap-6 overflow-x-auto pb-3 scrollbar-hide">
+          <div className="flex gap-8 overflow-x-auto pb-3 scrollbar-hide">
             {categories.map((category) => (
               <SortableCategory
                 key={category.id}
@@ -117,6 +133,14 @@ export const EditableCategories = ({
             </Button>
           </div>
         </SortableContext>
+        
+        <DragOverlay dropAnimation={null}>
+          {activeId ? (
+            <div className="px-6 py-2 rounded-full bg-primary text-primary-foreground font-medium shadow-lg cursor-grabbing">
+              {categories.find(c => c.id === activeId)?.name}
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
     </div>
   );

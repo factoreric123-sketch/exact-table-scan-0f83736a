@@ -1,4 +1,5 @@
-import { DndContext, closestCorners, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { useState } from "react";
+import { DndContext, closestCorners, DragEndEvent, DragStartEvent, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { SortableDish } from "./SortableDish";
 import { Button } from "@/components/ui/button";
@@ -19,18 +20,25 @@ export const EditableDishes = ({
   subcategoryId,
   previewMode,
 }: EditableDishesProps) => {
+  const [activeId, setActiveId] = useState<string | null>(null);
   const createDish = useCreateDish();
   const updateDishesOrder = useUpdateDishesOrder();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5, // Reduced for more responsive drag
       },
     })
   );
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
+    setActiveId(null);
+    
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -46,7 +54,10 @@ export const EditableDishes = ({
       order_index: index,
     }));
 
-    updateDishesOrder.mutate({ dishes: updates });
+    updateDishesOrder.mutate({ 
+      dishes: updates,
+      subcategoryId 
+    });
   };
 
   const handleAddDish = async () => {
@@ -84,7 +95,12 @@ export const EditableDishes = ({
 
   return (
     <div className="px-4 py-6">
-      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+      <DndContext 
+        sensors={sensors} 
+        collisionDetection={closestCorners} 
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
         <SortableContext items={dishes.map((d) => d.id)} strategy={rectSortingStrategy}>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-6">
             {dishes.map((dish) => (
@@ -92,6 +108,16 @@ export const EditableDishes = ({
             ))}
           </div>
         </SortableContext>
+        
+        <DragOverlay dropAnimation={null}>
+          {activeId ? (
+            <div className="bg-dish-card rounded-2xl p-4 shadow-2xl cursor-grabbing opacity-90">
+              <div className="font-bold text-foreground">
+                {dishes.find(d => d.id === activeId)?.name}
+              </div>
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
 
       <Button

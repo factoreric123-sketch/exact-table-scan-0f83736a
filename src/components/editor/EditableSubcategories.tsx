@@ -1,4 +1,5 @@
-import { DndContext, closestCorners, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { useState } from "react";
+import { DndContext, closestCorners, DragEndEvent, DragStartEvent, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { SortableSubcategory } from "./SortableSubcategory";
@@ -22,18 +23,25 @@ export const EditableSubcategories = ({
   categoryId,
   previewMode,
 }: EditableSubcategoriesProps) => {
+  const [activeId, setActiveId] = useState<string | null>(null);
   const createSubcategory = useCreateSubcategory();
   const updateSubcategoriesOrder = useUpdateSubcategoriesOrder();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5, // Reduced for more responsive drag
       },
     })
   );
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
+    setActiveId(null);
+    
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -49,7 +57,10 @@ export const EditableSubcategories = ({
       order_index: index,
     }));
 
-    updateSubcategoriesOrder.mutate({ subcategories: updates });
+    updateSubcategoriesOrder.mutate({ 
+      subcategories: updates,
+      categoryId 
+    });
   };
 
   const handleAddSubcategory = async () => {
@@ -93,7 +104,13 @@ export const EditableSubcategories = ({
 
   return (
     <div className="px-4 pb-3">
-      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd} modifiers={[restrictToHorizontalAxis]}>
+      <DndContext 
+        sensors={sensors} 
+        collisionDetection={closestCorners} 
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd} 
+        modifiers={[restrictToHorizontalAxis]}
+      >
         <SortableContext items={subcategories.map((s) => s.id)} strategy={horizontalListSortingStrategy}>
           <div className="flex gap-12 overflow-x-auto scrollbar-hide">
             {subcategories.map((subcategory) => (
@@ -116,6 +133,14 @@ export const EditableSubcategories = ({
             </Button>
           </div>
         </SortableContext>
+        
+        <DragOverlay dropAnimation={null}>
+          {activeId ? (
+            <div className="px-4 py-2 rounded-lg bg-background border-2 border-primary text-foreground font-medium shadow-lg cursor-grabbing whitespace-nowrap">
+              {subcategories.find(s => s.id === activeId)?.name}
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
     </div>
   );

@@ -124,18 +124,51 @@ export const useUpdateDishesOrder = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ dishes }: { dishes: { id: string; order_index: number }[] }) => {
-      const updates = dishes.map((dish) =>
-        supabase
-          .from("dishes")
-          .update({ order_index: dish.order_index })
-          .eq("id", dish.id)
-      );
+    mutationFn: async ({ 
+      dishes,
+      subcategoryId
+    }: { 
+      dishes: { id: string; order_index: number }[];
+      subcategoryId: string;
+    }) => {
+      // Use optimized batch update function
+      const { error } = await supabase.rpc('batch_update_order_indexes_optimized', {
+        table_name: 'dishes',
+        updates: dishes
+      });
 
-      await Promise.all(updates);
+      if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["dishes"] });
+    onMutate: async ({ dishes, subcategoryId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["dishes", subcategoryId] });
+
+      // Snapshot previous value
+      const previousDishes = queryClient.getQueryData(["dishes", subcategoryId]);
+
+      // Optimistically update cache
+      if (previousDishes) {
+        const optimisticData = (previousDishes as any[]).map(dish => {
+          const update = dishes.find(u => u.id === dish.id);
+          return update ? { ...dish, order_index: update.order_index } : dish;
+        }).sort((a, b) => a.order_index - b.order_index);
+        
+        queryClient.setQueryData(["dishes", subcategoryId], optimisticData);
+      }
+
+      return { previousDishes, subcategoryId };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousDishes) {
+        queryClient.setQueryData(["dishes", context.subcategoryId], context.previousDishes);
+      }
+      toast.error("Failed to reorder dishes");
+    },
+    onSettled: (_, __, variables) => {
+      // Invalidate after completion
+      queryClient.invalidateQueries({ queryKey: ["dishes", variables.subcategoryId] });
+      queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
     },
   });
 };
