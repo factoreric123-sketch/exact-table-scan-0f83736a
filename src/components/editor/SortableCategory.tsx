@@ -75,28 +75,28 @@ export const SortableCategory = ({
           `}
         >
           <div className="flex items-center gap-2">
-            <button
+            <div
               {...attributes}
               {...listeners}
               className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => e.stopPropagation()}
             >
               <GripVertical className="h-4 w-4" />
-            </button>
+            </div>
             <InlineEdit
               value={category.name}
               onSave={handleNameUpdate}
               className="bg-transparent border-none focus:outline-none focus:ring-0"
             />
-            <button
+            <div
               onClick={(e) => {
                 e.stopPropagation();
                 setShowDeleteDialog(true);
               }}
-              className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive"
+              className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive cursor-pointer"
             >
               <Trash2 className="h-4 w-4" />
-            </button>
+            </div>
           </div>
         </Button>
       </div>
