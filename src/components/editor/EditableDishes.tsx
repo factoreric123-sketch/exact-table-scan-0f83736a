@@ -1,4 +1,4 @@
-import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
+import { DndContext, closestCorners, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { SortableDish } from "./SortableDish";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,14 @@ export const EditableDishes = ({
 }: EditableDishesProps) => {
   const createDish = useCreateDish();
   const updateDishesOrder = useUpdateDishesOrder();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -76,9 +84,9 @@ export const EditableDishes = ({
 
   return (
     <div className="px-4 py-6">
-      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
         <SortableContext items={dishes.map((d) => d.id)} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-6">
             {dishes.map((dish) => (
               <SortableDish key={dish.id} dish={dish} subcategoryId={subcategoryId} />
             ))}

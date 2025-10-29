@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
+import { DndContext, closestCorners, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { SortableCategory } from "./SortableCategory";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,14 @@ export const EditableCategories = ({
 }: EditableCategoriesProps) => {
   const createCategory = useCreateCategory();
   const updateCategoriesOrder = useUpdateCategoriesOrder();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -85,9 +93,9 @@ export const EditableCategories = ({
 
   return (
     <div className="pt-4 px-4">
-      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
         <SortableContext items={categories.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
-          <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide">
+          <div className="flex gap-6 overflow-x-auto pb-3 scrollbar-hide">
             {categories.map((category) => (
               <SortableCategory
                 key={category.id}

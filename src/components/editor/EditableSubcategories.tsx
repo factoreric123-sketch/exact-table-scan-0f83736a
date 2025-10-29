@@ -1,4 +1,4 @@
-import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
+import { DndContext, closestCorners, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { SortableSubcategory } from "./SortableSubcategory";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,14 @@ export const EditableSubcategories = ({
 }: EditableSubcategoriesProps) => {
   const createSubcategory = useCreateSubcategory();
   const updateSubcategoriesOrder = useUpdateSubcategoriesOrder();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -84,9 +92,9 @@ export const EditableSubcategories = ({
 
   return (
     <div className="px-4 pb-3">
-      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
         <SortableContext items={subcategories.map((s) => s.id)} strategy={horizontalListSortingStrategy}>
-          <div className="flex gap-8 overflow-x-auto scrollbar-hide">
+          <div className="flex gap-12 overflow-x-auto scrollbar-hide">
             {subcategories.map((subcategory) => (
               <SortableSubcategory
                 key={subcategory.id}
