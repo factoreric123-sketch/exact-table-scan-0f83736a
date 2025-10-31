@@ -1,12 +1,18 @@
 import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, Image as ImageIcon } from "lucide-react";
+import { GripVertical, Trash2, Image as ImageIcon, ChevronDown, Flame } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { InlineEdit } from "./InlineEdit";
 import { useUpdateDish, useDeleteDish, type Dish } from "@/hooks/useDishes";
 import { ImageCropModal } from "@/components/ImageCropModal";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import { ALLERGEN_OPTIONS } from "@/components/AllergenFilter";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +40,7 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showCropModal, setShowCropModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -41,11 +48,19 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
     opacity: isDragging ? 0.3 : 1,
   };
 
-  const handleUpdate = (field: keyof Dish, value: string | boolean) => {
+  const handleUpdate = (field: keyof Dish, value: string | boolean | string[] | number | null) => {
     updateDish.mutate({
       id: dish.id,
       updates: { [field]: value },
     });
+  };
+
+  const handleAllergenToggle = (allergen: string) => {
+    const current = dish.allergens || [];
+    const updated = current.includes(allergen)
+      ? current.filter((a) => a !== allergen)
+      : [...current, allergen];
+    handleUpdate("allergens", updated);
   };
 
   const handleDelete = () => {
@@ -151,6 +166,85 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
             onSave={(value) => handleUpdate("price", value)}
             className="text-sm font-semibold text-foreground w-full"
           />
+
+          {/* Expandable dietary info */}
+          <Collapsible open={isExpanded} onOpenChange={setIsExpanded} className="mt-3">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="w-full justify-between p-2 h-auto">
+                <span className="text-xs font-medium">Dietary Info</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2 space-y-3 p-2 bg-muted/30 rounded-lg">
+              {/* Allergens */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-2 block">Allergens</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {ALLERGEN_OPTIONS.map((option) => (
+                    <Badge
+                      key={option.value}
+                      variant={(dish.allergens || []).includes(option.value) ? "default" : "outline"}
+                      className="cursor-pointer text-xs"
+                      onClick={() => handleAllergenToggle(option.value)}
+                    >
+                      <span className="mr-1">{option.icon}</span>
+                      {option.label}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Calories */}
+              <div className="flex items-center gap-2">
+                <Label htmlFor={`calories-${dish.id}`} className="text-xs text-muted-foreground">
+                  Calories
+                </Label>
+                <Input
+                  id={`calories-${dish.id}`}
+                  type="number"
+                  value={dish.calories || ""}
+                  onChange={(e) => handleUpdate("calories", e.target.value ? parseInt(e.target.value) : null)}
+                  className="h-8 text-xs w-24"
+                  placeholder="0"
+                />
+              </div>
+
+              {/* Dietary preferences */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor={`vegetarian-${dish.id}`} className="text-xs">
+                    🥬 Vegetarian
+                  </Label>
+                  <Switch
+                    id={`vegetarian-${dish.id}`}
+                    checked={dish.is_vegetarian}
+                    onCheckedChange={(checked) => handleUpdate("is_vegetarian", checked)}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor={`vegan-${dish.id}`} className="text-xs">
+                    🌱 Vegan
+                  </Label>
+                  <Switch
+                    id={`vegan-${dish.id}`}
+                    checked={dish.is_vegan}
+                    onCheckedChange={(checked) => handleUpdate("is_vegan", checked)}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor={`spicy-${dish.id}`} className="text-xs">
+                    <Flame className="h-3 w-3 inline mr-1" />
+                    Spicy
+                  </Label>
+                  <Switch
+                    id={`spicy-${dish.id}`}
+                    checked={dish.is_spicy}
+                    onCheckedChange={(checked) => handleUpdate("is_spicy", checked)}
+                  />
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </div>
 

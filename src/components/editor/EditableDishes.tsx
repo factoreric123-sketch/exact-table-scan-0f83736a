@@ -86,6 +86,11 @@ export const EditableDishes = ({
       isNew: dish.is_new,
       category: "",
       subcategory: "",
+      allergens: dish.allergens || undefined,
+      calories: dish.calories || undefined,
+      isVegetarian: dish.is_vegetarian,
+      isVegan: dish.is_vegan,
+      isSpicy: dish.is_spicy,
     }));
 
     return (

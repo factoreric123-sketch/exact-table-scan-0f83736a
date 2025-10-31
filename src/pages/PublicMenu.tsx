@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { Bookmark, Share2, Menu as MenuIcon, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import CategoryNav from "@/components/CategoryNav";
 import SubcategoryNav from "@/components/SubcategoryNav";
 import MenuGrid from "@/components/MenuGrid";
 import RestaurantHeader from "@/components/RestaurantHeader";
+import { AllergenFilter } from "@/components/AllergenFilter";
 import { useRestaurant } from "@/hooks/useRestaurants";
 import { useCategories } from "@/hooks/useCategories";
 import { useSubcategories } from "@/hooks/useSubcategories";
@@ -20,6 +21,8 @@ const PublicMenu = () => {
   const { data: categories } = useCategories(restaurant?.id || "");
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [activeSubcategory, setActiveSubcategory] = useState<string>("");
+  const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
+  const [selectedDietary, setSelectedDietary] = useState<string[]>([]);
 
   // Apply restaurant theme to public menu
   useThemePreview(restaurant?.theme as any, !!restaurant);
@@ -107,6 +110,69 @@ const PublicMenu = () => {
   const categoryNames = categories?.map((c) => c.name) || [];
   const activeCategoryName = categories?.find((c) => c.id === activeCategory)?.name || "";
 
+  // Filter dishes based on selected allergens and dietary preferences
+  const filteredDishes = useMemo(() => {
+    if (!dishes) return [];
+
+    let filtered = dishes;
+
+    // Filter out dishes with selected allergens
+    if (selectedAllergens.length > 0) {
+      filtered = filtered.filter((dish) => {
+        if (!dish.allergens || dish.allergens.length === 0) return true;
+        return !dish.allergens.some((allergen) =>
+          selectedAllergens.includes(allergen.toLowerCase())
+        );
+      });
+    }
+
+    // Filter by dietary preferences
+    if (selectedDietary.length > 0) {
+      filtered = filtered.filter((dish) => {
+        if (selectedDietary.includes("vegan")) return dish.is_vegan;
+        if (selectedDietary.includes("vegetarian")) return dish.is_vegetarian || dish.is_vegan;
+        return true;
+      });
+    }
+
+    return filtered.map((d) => ({
+      id: d.id,
+      name: d.name,
+      description: d.description || "",
+      price: d.price,
+      image: d.image_url || "",
+      isNew: d.is_new,
+      category: activeCategoryName,
+      subcategory: activeSubcategoryObj?.name || "",
+      allergens: d.allergens,
+      calories: d.calories,
+      isVegetarian: d.is_vegetarian,
+      isVegan: d.is_vegan,
+      isSpicy: d.is_spicy,
+    }));
+  }, [dishes, selectedAllergens, selectedDietary, activeCategoryName, activeSubcategoryObj]);
+
+  const handleAllergenToggle = (allergen: string) => {
+    setSelectedAllergens((prev) =>
+      prev.includes(allergen)
+        ? prev.filter((a) => a !== allergen)
+        : [...prev, allergen]
+    );
+  };
+
+  const handleDietaryToggle = (dietary: string) => {
+    setSelectedDietary((prev) =>
+      prev.includes(dietary)
+        ? prev.filter((d) => d !== dietary)
+        : [...prev, dietary]
+    );
+  };
+
+  const handleClearFilters = () => {
+    setSelectedAllergens([]);
+    setSelectedDietary([]);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Top Action Bar */}
@@ -156,19 +222,19 @@ const PublicMenu = () => {
         )}
       </div>
 
+      {/* Allergen Filter */}
+      <AllergenFilter
+        selectedAllergens={selectedAllergens}
+        selectedDietary={selectedDietary}
+        onAllergenToggle={handleAllergenToggle}
+        onDietaryToggle={handleDietaryToggle}
+        onClear={handleClearFilters}
+      />
+
       {/* Main Content */}
       <main>
         <MenuGrid 
-          dishes={dishes?.map((d) => ({
-            id: d.id,
-            name: d.name,
-            description: d.description || "",
-            price: d.price,
-            image: d.image_url || "",
-            isNew: d.is_new,
-            category: activeCategoryName,
-            subcategory: activeSubcategoryObj?.name || "",
-          })) || []}
+          dishes={filteredDishes}
           sectionTitle={activeSubcategoryObj?.name || ""}
         />
       </main>

@@ -48,33 +48,48 @@ export type Database = {
       }
       dishes: {
         Row: {
+          allergens: string[] | null
+          calories: number | null
           created_at: string | null
           description: string | null
           id: string
           image_url: string | null
           is_new: boolean | null
+          is_spicy: boolean | null
+          is_vegan: boolean | null
+          is_vegetarian: boolean | null
           name: string
           order_index: number
           price: string
           subcategory_id: string
         }
         Insert: {
+          allergens?: string[] | null
+          calories?: number | null
           created_at?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
           is_new?: boolean | null
+          is_spicy?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
           name: string
           order_index: number
           price: string
           subcategory_id: string
         }
         Update: {
+          allergens?: string[] | null
+          calories?: number | null
           created_at?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
           is_new?: boolean | null
+          is_spicy?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
           name?: string
           order_index?: number
           price?: string

@@ -12,6 +12,11 @@ export interface Dish {
   is_new: boolean;
   order_index: number;
   created_at: string;
+  allergens: string[] | null;
+  calories: number | null;
+  is_vegetarian: boolean;
+  is_vegan: boolean;
+  is_spicy: boolean;
 }
 
 export const useDishes = (subcategoryId: string) => {
