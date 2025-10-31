@@ -5,6 +5,7 @@ import { SortableDish } from "./SortableDish";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useCreateDish, useUpdateDishesOrder, type Dish } from "@/hooks/useDishes";
+import { useImageUpload } from "@/hooks/useImageUpload";
 import MenuGrid from "@/components/MenuGrid";
 import DishCard from "@/components/DishCard";
 import { toast } from "sonner";

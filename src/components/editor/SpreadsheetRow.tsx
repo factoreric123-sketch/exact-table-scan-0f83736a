@@ -1,9 +1,9 @@
 import { useState, CSSProperties } from "react";
-import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Copy } from "lucide-react";
+import { Trash2, Upload } from "lucide-react";
 import { EditableCell } from "./EditableCell";
 import { useUpdateDish, useDeleteDish, type Dish } from "@/hooks/useDishes";
+import { useImageUpload } from "@/hooks/useImageUpload";
 import { toast } from "sonner";
 
 interface SpreadsheetRowProps {
@@ -16,7 +16,9 @@ interface SpreadsheetRowProps {
 export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: SpreadsheetRowProps) => {
   const updateDish = useUpdateDish();
   const deleteDish = useDeleteDish();
+  const uploadImage = useImageUpload();
   const [localDish, setLocalDish] = useState(dish);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const handleUpdate = async (field: keyof Dish, value: any) => {
     setLocalDish({ ...localDish, [field]: value });
@@ -43,58 +45,99 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
     }
   };
 
+  const handleImageClick = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        setIsUploadingImage(true);
+        try {
+          const url = await uploadImage.mutateAsync({
+            file,
+            bucket: "dish-images",
+            path: `${dish.id}/${file.name}`
+          });
+          await handleUpdate("image_url", url);
+          toast.success("Image updated");
+        } catch (error) {
+          toast.error("Failed to upload image");
+        } finally {
+          setIsUploadingImage(false);
+        }
+      }
+    };
+    input.click();
+  };
+
   return (
-    <TableRow style={style} className="hover:bg-muted/50">
-      <TableCell>
+    <tr style={style} className="border-b transition-colors hover:bg-muted/30">
+      <td className="sticky left-0 z-20 bg-background p-4 align-middle w-[40px]">
         <input
           type="checkbox"
           checked={isSelected}
           onChange={(e) => onSelect(e.target.checked)}
+          className="cursor-pointer"
         />
-      </TableCell>
-      <TableCell>
-        {localDish.image_url ? (
-          <img
-            src={localDish.image_url}
-            alt={localDish.name}
-            className="w-12 h-12 object-cover rounded"
-          />
-        ) : (
-          <div className="w-12 h-12 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">
-            No image
-          </div>
-        )}
-      </TableCell>
-      <TableCell>
+      </td>
+      <td className="sticky left-[40px] z-20 bg-background p-4 align-middle w-[100px]">
+        <div 
+          onClick={handleImageClick}
+          className="w-16 h-16 rounded-lg overflow-hidden cursor-pointer group relative border border-border hover:border-primary transition-colors"
+        >
+          {isUploadingImage ? (
+            <div className="w-full h-full bg-muted animate-pulse flex items-center justify-center">
+              <Upload className="h-5 w-5 text-muted-foreground animate-bounce" />
+            </div>
+          ) : localDish.image_url ? (
+            <>
+              <img
+                src={localDish.image_url}
+                alt={localDish.name}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                <Upload className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </>
+          ) : (
+            <div className="w-full h-full bg-muted flex items-center justify-center">
+              <Upload className="h-5 w-5 text-muted-foreground" />
+            </div>
+          )}
+        </div>
+      </td>
+      <td className="sticky left-[140px] z-20 bg-background p-4 align-middle w-[220px]">
         <EditableCell
           type="text"
           value={localDish.name}
           onSave={(value) => handleUpdate("name", value)}
         />
-      </TableCell>
-      <TableCell>
+      </td>
+      <td className="p-4 align-middle w-[300px]">
         <EditableCell
           type="textarea"
           value={localDish.description || ""}
           onSave={(value) => handleUpdate("description", value)}
         />
-      </TableCell>
-      <TableCell>
+      </td>
+      <td className="p-4 align-middle w-[100px]">
         <EditableCell
           type="text"
           value={localDish.price}
           onSave={(value) => handleUpdate("price", value)}
         />
-      </TableCell>
-      <TableCell>
+      </td>
+      <td className="p-4 align-middle w-[280px]">
         <EditableCell
           type="multi-select"
           value={localDish.allergens || []}
           onSave={(value) => handleUpdate("allergens", value)}
           options={["gluten", "dairy", "eggs", "fish", "shellfish", "nuts", "soy", "pork", "beef", "poultry"]}
         />
-      </TableCell>
-      <TableCell>
+      </td>
+      <td className="p-4 align-middle w-[200px]">
         <EditableCell
           type="boolean-group"
           value={{
@@ -108,8 +151,8 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
             handleUpdate("is_spicy", value.spicy);
           }}
         />
-      </TableCell>
-      <TableCell>
+      </td>
+      <td className="p-4 align-middle w-[240px]">
         <EditableCell
           type="boolean-group"
           value={{
@@ -125,21 +168,21 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
             handleUpdate("is_chef_recommendation", value.chef);
           }}
         />
-      </TableCell>
-      <TableCell>
+      </td>
+      <td className="p-4 align-middle w-[80px]">
         <EditableCell
           type="number"
           value={localDish.calories || ""}
           onSave={(value) => handleUpdate("calories", value ? parseInt(value as string) : null)}
         />
-      </TableCell>
-      <TableCell>
+      </td>
+      <td className="p-4 align-middle w-[80px]">
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" onClick={handleDelete}>
+          <Button variant="ghost" size="sm" onClick={handleDelete} className="h-8 w-8 p-0">
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
-      </TableCell>
-    </TableRow>
+      </td>
+    </tr>
   );
 };

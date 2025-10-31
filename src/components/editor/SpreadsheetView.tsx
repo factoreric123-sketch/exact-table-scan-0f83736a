@@ -115,12 +115,12 @@ export const SpreadsheetView = ({
   };
 
   return (
-    <div className="px-4 py-6">
-      <div className="mb-4 flex items-center justify-between">
+    <div className="h-full flex flex-col bg-background">
+      <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
         <div className="flex items-center gap-2">
           {selectedRows.size > 0 && (
             <>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm font-medium">
                 {selectedRows.size} selected
               </span>
               <Button
@@ -130,7 +130,7 @@ export const SpreadsheetView = ({
                 className="gap-2"
               >
                 <Trash2 className="h-4 w-4" />
-                Delete Selected
+                Delete
               </Button>
             </>
           )}
@@ -138,24 +138,23 @@ export const SpreadsheetView = ({
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleImportClick} className="gap-2">
             <Upload className="h-4 w-4" />
-            Import Excel
+            Import
           </Button>
           <Button variant="outline" size="sm" onClick={handleExport} className="gap-2">
             <Download className="h-4 w-4" />
-            Export Excel
+            Export
           </Button>
         </div>
       </div>
 
       <div
         ref={parentRef}
-        className="rounded-lg border border-border bg-card overflow-auto"
-        style={{ height: "calc(100vh - 400px)" }}
+        className="flex-1 overflow-x-auto overflow-y-auto bg-background"
       >
-        <Table>
-          <TableHeader className="sticky top-0 bg-card z-10">
-            <TableRow>
-              <TableHead className="w-12">
+        <table className="min-w-[1580px] w-full caption-bottom text-sm border-collapse">
+          <thead className="sticky top-0 z-30 bg-muted/30 backdrop-blur-sm border-b">
+            <tr className="border-b">
+              <th className="sticky left-0 z-40 bg-muted/30 backdrop-blur-sm h-12 px-4 text-left align-middle font-semibold text-sm w-[40px]">
                 <input
                   type="checkbox"
                   checked={selectedRows.size === dishes.length && dishes.length > 0}
@@ -166,20 +165,21 @@ export const SpreadsheetView = ({
                       setSelectedRows(new Set());
                     }
                   }}
+                  className="cursor-pointer"
                 />
-              </TableHead>
-              <TableHead className="w-20">Image</TableHead>
-              <TableHead className="w-48">Name</TableHead>
-              <TableHead className="w-64">Description</TableHead>
-              <TableHead className="w-32">Price</TableHead>
-              <TableHead className="w-48">Allergens</TableHead>
-              <TableHead className="w-32">Dietary</TableHead>
-              <TableHead className="w-48">Badges</TableHead>
-              <TableHead className="w-24">Calories</TableHead>
-              <TableHead className="w-24">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+              </th>
+              <th className="sticky left-[40px] z-40 bg-muted/30 backdrop-blur-sm h-12 px-4 text-left align-middle font-semibold text-sm w-[100px]">Image</th>
+              <th className="sticky left-[140px] z-40 bg-muted/30 backdrop-blur-sm h-12 px-4 text-left align-middle font-semibold text-sm w-[220px]">Name</th>
+              <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[300px]">Description</th>
+              <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[100px]">Price</th>
+              <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[280px]">Allergens</th>
+              <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[200px]">Dietary</th>
+              <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[240px]">Badges</th>
+              <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[80px]">Cal</th>
+              <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[80px]">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
               const dish = dishes[virtualRow.index];
               return (
@@ -190,13 +190,12 @@ export const SpreadsheetView = ({
                   onSelect={(isSelected) => handleRowSelect(dish.id, isSelected)}
                   style={{
                     height: `${virtualRow.size}px`,
-                    transform: `translateY(${virtualRow.start}px)`,
                   }}
                 />
               );
             })}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
 
       <ExcelImportDialog
