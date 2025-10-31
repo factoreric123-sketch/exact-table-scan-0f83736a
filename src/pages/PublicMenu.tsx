@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Bookmark, Share2, Menu } from "lucide-react";
+import { Bookmark, Share2, Menu as MenuIcon, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CategoryNav from "@/components/CategoryNav";
 import SubcategoryNav from "@/components/SubcategoryNav";
@@ -11,6 +11,8 @@ import { useCategories } from "@/hooks/useCategories";
 import { useSubcategories } from "@/hooks/useSubcategories";
 import { useDishes } from "@/hooks/useDishes";
 import { useThemePreview } from "@/hooks/useThemePreview";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const PublicMenu = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -49,12 +51,54 @@ const PublicMenu = () => {
     );
   }
 
+  // Check if restaurant owner has premium subscription
+  const { data: ownerHasPremium, isLoading: premiumLoading } = useQuery({
+    queryKey: ['owner-premium', restaurant?.owner_id],
+    queryFn: async () => {
+      if (!restaurant?.owner_id) return false;
+      
+      const { data, error } = await supabase
+        .rpc('has_premium_subscription', { user_id_param: restaurant.owner_id });
+
+      if (error) {
+        console.error('Error checking premium status:', error);
+        return false;
+      }
+
+      return data;
+    },
+    enabled: !!restaurant?.owner_id,
+  });
+
   if (!restaurant || !restaurant.published) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">Restaurant Not Found</h1>
           <p className="text-muted-foreground">This menu is not available.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show upgrade prompt if owner doesn't have premium
+  if (!premiumLoading && !ownerHasPremium) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30 p-4">
+        <div className="max-w-md text-center space-y-6">
+          <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+            <Crown className="h-8 w-8 text-primary" />
+          </div>
+          <h1 className="text-3xl font-bold">Premium Required</h1>
+          <p className="text-lg text-muted-foreground">
+            This menu requires a premium subscription to be publicly accessible.
+          </p>
+          <div className="bg-muted/50 rounded-lg p-6 space-y-2">
+            <p className="text-sm font-medium">Restaurant owner needs to:</p>
+            <p className="text-sm text-muted-foreground">
+              Upgrade to TAPTAB Premium ($10/month) to publish this menu and generate QR codes.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -69,7 +113,7 @@ const PublicMenu = () => {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
           <Button variant="ghost" size="icon" className="h-9 w-9">
-            <Menu className="h-5 w-5" />
+            <MenuIcon className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="h-9 w-9">

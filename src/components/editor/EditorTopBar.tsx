@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Eye, EyeOff, QrCode, Palette, Upload, Undo2, Redo2 } from "lucide-react";
 import { QRCodeModal } from "@/components/editor/QRCodeModal";
 import { ThemeGalleryModal } from "@/components/editor/ThemeGalleryModal";
+import { PaywallModal } from "@/components/PaywallModal";
+import { useSubscription } from "@/hooks/useSubscription";
 import type { Restaurant } from "@/hooks/useRestaurants";
 import { Theme } from "@/lib/types/theme";
 
@@ -33,6 +35,27 @@ export const EditorTopBar = ({
   const navigate = useNavigate();
   const [showQRModal, setShowQRModal] = useState(false);
   const [showThemeDialog, setShowThemeDialog] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallFeature, setPaywallFeature] = useState("");
+  const { hasPremium } = useSubscription();
+
+  const handleQRCodeClick = () => {
+    if (hasPremium) {
+      setShowQRModal(true);
+    } else {
+      setPaywallFeature("QR Code Generation");
+      setShowPaywall(true);
+    }
+  };
+
+  const handlePublishClick = () => {
+    if (hasPremium || restaurant.published) {
+      onPublishToggle();
+    } else {
+      setPaywallFeature("Menu Publishing");
+      setShowPaywall(true);
+    }
+  };
 
   return (
     <>
@@ -112,7 +135,7 @@ export const EditorTopBar = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setShowQRModal(true)}
+                  onClick={handleQRCodeClick}
                   className="gap-2"
                 >
                   <QrCode className="h-4 w-4" />
@@ -124,7 +147,7 @@ export const EditorTopBar = ({
             <Button
               variant={restaurant.published ? "secondary" : "default"}
               size="sm"
-              onClick={onPublishToggle}
+              onClick={handlePublishClick}
               className="gap-2"
             >
               <Upload className="h-4 w-4" />
@@ -146,6 +169,12 @@ export const EditorTopBar = ({
         onOpenChange={setShowThemeDialog}
         restaurant={restaurant}
         onThemeChange={onThemeChange}
+      />
+
+      <PaywallModal
+        open={showPaywall}
+        onOpenChange={setShowPaywall}
+        feature={paywallFeature}
       />
     </>
   );

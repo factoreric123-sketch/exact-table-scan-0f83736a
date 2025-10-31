@@ -5,90 +5,75 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 const Pricing = () => {
   const pricingPlans = [
     {
-      title: "Free Forever",
+      title: "Free",
       price: "$0",
-      description: "Perfect for single-location restaurants getting started",
+      description: "Perfect for trying out TAPTAB",
       features: [
-        "1 restaurant",
+        "Unlimited restaurants",
         "Unlimited dishes & categories",
-        "QR code generation",
+        "Full visual editor access",
         "10+ beautiful themes",
         "Mobile-optimized menus",
         "Real-time menu updates",
-        "Basic analytics"
+        "Preview mode",
+        "❌ No QR code generation",
+        "❌ No public menu publishing"
       ],
       ctaText: "Get Started Free",
       ctaLink: "/auth?signup=true"
     },
     {
-      title: "Professional",
-      price: "$19",
-      description: "For growing restaurants and small chains",
+      title: "Premium",
+      price: "$10",
+      description: "For restaurants ready to go live",
       features: [
-        "Up to 5 restaurants",
         "Everything in Free, plus:",
-        "Advanced themes & customization",
-        "Custom domain support",
-        "Advanced analytics & insights",
-        "Priority email support",
-        "Remove TAPTAB branding",
-        "Export menu data"
+        "✅ Unlimited QR code generation",
+        "✅ Publish menus publicly",
+        "✅ Shareable menu links",
+        "✅ Download QR codes (PNG/SVG)",
+        "✅ Priority email support",
+        "✅ Advanced themes (coming soon)",
+        "✅ Custom branding (coming soon)"
       ],
-      ctaText: "Start Free Trial",
+      ctaText: "Start 7-Day Free Trial",
       ctaLink: "/auth?signup=true",
       popular: true
-    },
-    {
-      title: "Enterprise",
-      price: "Custom",
-      description: "For restaurant groups and franchises",
-      features: [
-        "Unlimited restaurants",
-        "Everything in Professional, plus:",
-        "White-label solution",
-        "API access",
-        "Dedicated account manager",
-        "Custom integrations",
-        "SLA guarantee",
-        "Advanced security features"
-      ],
-      ctaText: "Contact Sales",
-      ctaLink: "/contact"
     }
   ];
 
   const faqs = [
     {
       question: "Is the free plan really free forever?",
-      answer: "Yes! The free plan includes everything you need for one restaurant with unlimited dishes, categories, and menu updates. No credit card required, no hidden fees, no time limits."
+      answer: "Yes! The free plan lets you create unlimited menus and use the full visual editor forever. No credit card required, no time limits. Upgrade to Premium only when you're ready to publish."
     },
     {
-      question: "Can I upgrade or downgrade anytime?",
-      answer: "Absolutely. You can upgrade to Professional anytime to unlock more features and locations. Downgrade with no penalties – we'll just adjust your access to match your plan."
+      question: "What's included in the 7-day free trial?",
+      answer: "The 7-day trial gives you full access to Premium features: QR code generation, public menu publishing, and shareable links. No credit card required to start the trial. Cancel anytime during the trial without being charged."
     },
     {
-      question: "What happens if I exceed my plan limits?",
-      answer: "We'll notify you when you're approaching your limits. You can either upgrade to the next plan or remove some restaurants to stay within your current tier."
+      question: "Can I cancel my Premium subscription anytime?",
+      answer: "Absolutely. Cancel anytime with one click from your dashboard. Your menus will remain published until the end of your billing period, then automatically revert to the free plan."
     },
     {
-      question: "Do you offer annual discounts?",
-      answer: "Yes! Pay annually and save 20% on Professional and Enterprise plans. That's like getting 2 months free."
+      question: "What happens to my published menus if I cancel Premium?",
+      answer: "When you cancel, your menus will be unpublished at the end of your billing period. Your menu data remains safe and accessible in the editor. Upgrade again anytime to republish."
+    },
+    {
+      question: "Can I create multiple restaurants on the free plan?",
+      answer: "Yes! The free plan includes unlimited restaurants. You can create and edit as many menus as you want. Premium is only required to publish menus and generate QR codes."
     },
     {
       question: "What payment methods do you accept?",
-      answer: "We accept all major credit cards (Visa, Mastercard, American Express) and PayPal. Enterprise customers can also pay via bank transfer with annual invoicing."
+      answer: "We accept all major credit cards (Visa, Mastercard, American Express, Discover) securely processed through Stripe."
     },
     {
-      question: "Is there a setup fee?",
-      answer: "No setup fees, ever. What you see is what you pay – simple, transparent pricing."
+      question: "Do you offer refunds?",
+      answer: "If you cancel within the first 30 days, we'll provide a full refund, no questions asked. After that, you can cancel anytime and your access continues until the end of your billing period."
     },
     {
-      question: "Can I try Professional features before upgrading?",
-      answer: "Yes! Start with the free plan and we offer a 14-day free trial when you upgrade to Professional. No credit card required for the trial."
-    },
-    {
-      question: "What if I need help migrating my existing menu?",
-      answer: "Professional and Enterprise plans include migration assistance. Our team will help you import your existing menu data quickly and accurately."
+      question: "Can I get a discount for annual billing?",
+      answer: "Annual billing with discounts is coming soon! For now, we offer simple monthly billing at $10/month. Join our waitlist for annual plans and we'll notify you when it's available."
     }
   ];
 
@@ -111,8 +96,8 @@ const Pricing = () => {
 
       {/* Pricing Cards */}
       <section className="py-24">
-        <div className="container mx-auto px-4 max-w-7xl">
-          <div className="grid md:grid-cols-3 gap-8 md:gap-6 items-start">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {pricingPlans.map((plan, index) => (
               <PricingCard key={index} {...plan} />
             ))}

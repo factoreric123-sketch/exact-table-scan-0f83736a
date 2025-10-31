@@ -1,22 +1,52 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRestaurants } from "@/hooks/useRestaurants";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
-import { Plus, LogOut } from "lucide-react";
+import { Plus, LogOut, Crown } from "lucide-react";
 import { CreateRestaurantModal } from "@/components/CreateRestaurantModal";
 import { RestaurantCard } from "@/components/RestaurantCard";
+import { PremiumBadge } from "@/components/PremiumBadge";
+import { PaywallModal } from "@/components/PaywallModal";
+import { toast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: restaurants, isLoading } = useRestaurants();
+  const { hasPremium, subscription, refetch } = useSubscription();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/auth");
   };
+
+  // Handle successful payment redirect
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
+
+    if (success) {
+      toast({
+        title: "Welcome to Premium! 🎉",
+        description: "Your subscription is now active. Enjoy all premium features!",
+      });
+      // Remove query params
+      setSearchParams({});
+      // Refetch subscription status
+      refetch();
+    } else if (canceled) {
+      toast({
+        title: "Checkout Canceled",
+        description: "You can upgrade to premium anytime from your dashboard.",
+      });
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams, refetch]);
 
   if (isLoading) {
     return (
@@ -30,7 +60,22 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">My Restaurants</h1>
+          <div>
+            <h1 className="text-2xl font-bold">My Restaurants</h1>
+            <div className="flex items-center gap-2 mt-1">
+              <PremiumBadge isPremium={hasPremium} />
+              {!hasPremium && (
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="h-auto p-0 text-primary"
+                  onClick={() => setShowPaywall(true)}
+                >
+                  Upgrade to Premium
+                </Button>
+              )}
+            </div>
+          </div>
           <Button variant="ghost" size="sm" onClick={handleSignOut}>
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
@@ -74,6 +119,12 @@ const Dashboard = () => {
       <CreateRestaurantModal
         open={showCreateModal}
         onOpenChange={setShowCreateModal}
+      />
+
+      <PaywallModal
+        open={showPaywall}
+        onOpenChange={setShowPaywall}
+        feature="Premium Features"
       />
     </div>
   );
