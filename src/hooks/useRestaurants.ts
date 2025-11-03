@@ -74,38 +74,14 @@ export const useCreateRestaurant = () => {
 
   return useMutation({
     mutationFn: async (restaurant: Partial<Restaurant>) => {
-      const maxRetries = 4;
-      let lastError: any = null;
+      const { data, error } = await supabase
+        .from("restaurants")
+        .insert([restaurant as any])
+        .select()
+        .single();
 
-      for (let attempt = 0; attempt < maxRetries; attempt++) {
-        const { data, error } = await supabase
-          .from("restaurants")
-          .insert([restaurant as any])
-          .select("id, slug")
-          .single();
-
-        if (!error) {
-          return data as Pick<Restaurant, "id" | "slug"> as any;
-        }
-
-        lastError = error;
-        const msg = String(error?.message || "").toLowerCase();
-        const isTransient = msg.includes("schema cache") || msg.includes("failed to fetch") || msg.includes("timeout");
-
-        if (isTransient) {
-          // Exponential backoff: 300ms, 600ms, 900ms, 1200ms
-          await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
-          continue;
-        }
-        break;
-      }
-
-      // Surface clearer messages for common cases
-      const normalized = String(lastError?.message || "Failed to create restaurant");
-      if (normalized.toLowerCase().includes("row-level security") || normalized.toLowerCase().includes("permission")) {
-        throw new Error("Permission denied. Please sign in again and retry.");
-      }
-      throw new Error(normalized);
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["restaurants"] });

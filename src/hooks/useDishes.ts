@@ -161,18 +161,7 @@ export const useUpdateDishesOrder = () => {
         updates: dishes
       });
 
-      if (error) {
-        const results = await Promise.all(
-          dishes.map((u) =>
-            supabase
-              .from('dishes')
-              .update({ order_index: u.order_index })
-              .eq('id', u.id)
-          )
-        );
-        const firstError = results.find((r: any) => r.error)?.error;
-        if (firstError) throw firstError;
-      }
+      if (error) throw error;
     },
     onMutate: async ({ dishes, subcategoryId }) => {
       // Cancel outgoing refetches
