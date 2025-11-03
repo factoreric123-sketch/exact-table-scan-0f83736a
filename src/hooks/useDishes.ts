@@ -70,33 +70,18 @@ export const useCreateDish = () => {
 
   return useMutation({
     mutationFn: async (dish: Partial<Dish>) => {
-      // Ensure subcategory_id is set
-      if (!dish.subcategory_id) {
-        throw new Error("Subcategory ID is required");
-      }
-
       const { data, error } = await supabase
         .from("dishes")
         .insert([dish as any])
         .select()
         .single();
 
-      if (error) {
-        console.error("Error creating dish:", error);
-        if (error.code === "42501") {
-          throw new Error("Permission denied. Please make sure you're logged in and have access to this restaurant.");
-        }
-        throw error;
-      }
+      if (error) throw error;
       return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["dishes", data.subcategory_id] });
       queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
-      toast.success("Dish created");
-    },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to create dish");
     },
   });
 };
@@ -161,18 +146,7 @@ export const useUpdateDishesOrder = () => {
         updates: dishes
       });
 
-      if (error) {
-        const results = await Promise.all(
-          dishes.map((u) =>
-            supabase
-              .from('dishes')
-              .update({ order_index: u.order_index })
-              .eq('id', u.id)
-          )
-        );
-        const firstError = results.find((r: any) => r.error)?.error;
-        if (firstError) throw firstError;
-      }
+      if (error) throw error;
     },
     onMutate: async ({ dishes, subcategoryId }) => {
       // Cancel outgoing refetches

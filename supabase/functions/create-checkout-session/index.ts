@@ -79,7 +79,7 @@ serve(async (req) => {
       success_url: `${origin}/dashboard?success=true`,
       cancel_url: `${origin}/dashboard?canceled=true`,
       subscription_data: {
-        trial_period_days: 14,
+        trial_period_days: 7,
         metadata: { userId },
       },
     });

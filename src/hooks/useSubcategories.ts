@@ -131,18 +131,7 @@ export const useUpdateSubcategoriesOrder = () => {
         updates: subcategories
       });
 
-      if (error) {
-        const results = await Promise.all(
-          subcategories.map((u) =>
-            supabase
-              .from('subcategories')
-              .update({ order_index: u.order_index })
-              .eq('id', u.id)
-          )
-        );
-        const firstError = results.find((r: any) => r.error)?.error;
-        if (firstError) throw firstError;
-      }
+      if (error) throw error;
     },
     onMutate: async ({ subcategories, categoryId }) => {
       // Cancel outgoing refetches

@@ -1,5 +1,4 @@
-import { useState, useCallback } from "react";
-import { useDebouncedCallback } from "use-debounce";
+import { useState } from "react";
 import { DndContext, closestCorners, DragEndEvent, DragStartEvent, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
@@ -42,17 +41,7 @@ export const EditableSubcategories = ({
     setActiveId(event.active.id as string);
   };
 
-  const debouncedUpdate = useDebouncedCallback(
-    (updates: { id: string; order_index: number }[]) => {
-      updateSubcategoriesOrder.mutate({ 
-        subcategories: updates,
-        categoryId 
-      });
-    },
-    300
-  );
-
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     setActiveId(null);
     
     const { active, over } = event;
@@ -70,8 +59,11 @@ export const EditableSubcategories = ({
       order_index: index,
     }));
 
-    debouncedUpdate(updates);
-  }, [subcategories, categoryId, debouncedUpdate]);
+    updateSubcategoriesOrder.mutate({ 
+      subcategories: updates,
+      categoryId 
+    });
+  };
 
   const handleAddSubcategory = async () => {
     try {

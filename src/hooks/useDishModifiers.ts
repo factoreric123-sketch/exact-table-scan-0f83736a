@@ -33,11 +33,6 @@ export const useCreateDishModifier = () => {
 
   return useMutation({
     mutationFn: async (modifier: Omit<DishModifier, "id" | "created_at">) => {
-      // Validate price format
-      if (!modifier.price || !/^[+]?\$?\d+(\.\d{2})?$/.test(modifier.price)) {
-        throw new Error("Invalid price format. Use format like +$1.00 or 1.00");
-      }
-      
       const { data, error } = await supabase
         .from("dish_modifiers")
         .insert(modifier)
@@ -49,6 +44,7 @@ export const useCreateDishModifier = () => {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["dish-modifiers", variables.dish_id] });
+      queryClient.invalidateQueries({ queryKey: ["dishes"] });
     },
   });
 };
@@ -106,7 +102,7 @@ export const useUpdateDishModifiersOrder = () => {
         order_index: modifier.order_index,
       }));
 
-      const { error } = await supabase.rpc("batch_update_order_indexes_optimized", {
+      const { error } = await supabase.rpc("batch_update_order_indexes", {
         table_name: "dish_modifiers",
         updates: updates,
       });
