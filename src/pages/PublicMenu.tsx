@@ -24,6 +24,8 @@ const PublicMenu = () => {
   const [activeSubcategory, setActiveSubcategory] = useState<string>("");
   const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
   const [selectedDietary, setSelectedDietary] = useState<string[]>([]);
+  const [selectedSpicy, setSelectedSpicy] = useState<boolean | null>(null);
+  const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
 
   // Apply restaurant theme to public menu
   useThemePreview(restaurant?.theme as any, !!restaurant);
@@ -155,7 +157,7 @@ const PublicMenu = () => {
     if (!dishes || dishes.length === 0) return [];
 
     // Fast path: No filters applied
-    if (selectedAllergens.length === 0 && selectedDietary.length === 0) {
+    if (selectedAllergens.length === 0 && selectedDietary.length === 0 && selectedSpicy === null && selectedBadges.length === 0) {
       return dishes.map((d) => transformDish(d, activeCategoryName, activeSubcategoryObj?.name || ""));
     }
 
@@ -177,11 +179,24 @@ const PublicMenu = () => {
         if (isVegetarianSelected && !isVeganSelected && !dish.is_vegetarian && !dish.is_vegan) return false;
       }
       
+      // Filter spicy
+      if (selectedSpicy !== null && dish.is_spicy !== selectedSpicy) {
+        return false;
+      }
+      
+      // Filter badges (ALL selected badges must match - AND logic)
+      if (selectedBadges.length > 0) {
+        if (selectedBadges.includes("new") && !dish.is_new) return false;
+        if (selectedBadges.includes("special") && !dish.is_special) return false;
+        if (selectedBadges.includes("popular") && !dish.is_popular) return false;
+        if (selectedBadges.includes("chef") && !dish.is_chef_recommendation) return false;
+      }
+      
       return true;
     });
 
     return filtered.map((d) => transformDish(d, activeCategoryName, activeSubcategoryObj?.name || ""));
-  }, [dishes, selectedAllergens, selectedDietary, activeCategoryName, activeSubcategoryObj, transformDish]);
+  }, [dishes, selectedAllergens, selectedDietary, selectedSpicy, selectedBadges, activeCategoryName, activeSubcategoryObj, transformDish]);
 
   // Memoize handlers to prevent re-renders
   const handleAllergenToggle = useCallback((allergen: string) => {
@@ -200,9 +215,21 @@ const PublicMenu = () => {
     );
   }, []);
 
+  const handleSpicyToggle = useCallback((value: boolean | null) => {
+    setSelectedSpicy(value);
+  }, []);
+
+  const handleBadgeToggle = useCallback((badge: string) => {
+    setSelectedBadges((prev) =>
+      prev.includes(badge) ? prev.filter((b) => b !== badge) : [...prev, badge]
+    );
+  }, []);
+
   const handleClearFilters = useCallback(() => {
     setSelectedAllergens([]);
     setSelectedDietary([]);
+    setSelectedSpicy(null);
+    setSelectedBadges([]);
   }, []);
 
   return (
@@ -259,11 +286,16 @@ const PublicMenu = () => {
         <AllergenFilter
           selectedAllergens={selectedAllergens}
           selectedDietary={selectedDietary}
+          selectedSpicy={selectedSpicy}
+          selectedBadges={selectedBadges}
           onAllergenToggle={handleAllergenToggle}
           onDietaryToggle={handleDietaryToggle}
+          onSpicyToggle={handleSpicyToggle}
+          onBadgeToggle={handleBadgeToggle}
           onClear={handleClearFilters}
           allergenOrder={restaurant.allergen_filter_order as string[] | undefined}
           dietaryOrder={restaurant.dietary_filter_order as string[] | undefined}
+          badgeOrder={restaurant.badge_display_order as string[] | undefined}
         />
       )}
 

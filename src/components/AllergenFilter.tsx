@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { X, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Leaf, Flame, Salad } from "lucide-react";
+import { X, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Flame, Salad, Sparkles, Star, TrendingUp, ChefHat } from "lucide-react";
 import { useMemo, memo, useCallback } from "react";
 
 export const ALLERGEN_OPTIONS = [
@@ -20,31 +20,48 @@ export const DIETARY_OPTIONS = [
   { value: "vegan", label: "Vegan", Icon: Sprout },
 ] as const;
 
+export const BADGE_OPTIONS = [
+  { value: "new", label: "New Addition", Icon: Sparkles },
+  { value: "special", label: "Special", Icon: Star },
+  { value: "popular", label: "Popular", Icon: TrendingUp },
+  { value: "chef", label: "Chef's Recommendation", Icon: ChefHat },
+] as const;
+
 // Capitalize helper
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
 interface AllergenFilterProps {
   selectedAllergens: string[];
   selectedDietary: string[];
+  selectedSpicy: boolean | null;
+  selectedBadges: string[];
   onAllergenToggle: (allergen: string) => void;
   onDietaryToggle: (dietary: string) => void;
+  onSpicyToggle: (value: boolean | null) => void;
+  onBadgeToggle: (badge: string) => void;
   onClear: () => void;
   allergenOrder?: string[];
   dietaryOrder?: string[];
+  badgeOrder?: string[];
 }
 
 export const AllergenFilter = memo(({
   selectedAllergens,
   selectedDietary,
+  selectedSpicy,
+  selectedBadges,
   onAllergenToggle,
   onDietaryToggle,
+  onSpicyToggle,
+  onBadgeToggle,
   onClear,
   allergenOrder,
   dietaryOrder,
+  badgeOrder,
 }: AllergenFilterProps) => {
   const hasActiveFilters = useMemo(
-    () => selectedAllergens.length > 0 || selectedDietary.length > 0,
-    [selectedAllergens.length, selectedDietary.length]
+    () => selectedAllergens.length > 0 || selectedDietary.length > 0 || selectedSpicy !== null || selectedBadges.length > 0,
+    [selectedAllergens.length, selectedDietary.length, selectedSpicy, selectedBadges.length]
   );
 
   // Sort options based on custom order
@@ -61,6 +78,13 @@ export const AllergenFilter = memo(({
       .map(id => DIETARY_OPTIONS.find(o => o.value === id))
       .filter((o): o is typeof DIETARY_OPTIONS[number] => o !== undefined);
   }, [dietaryOrder]);
+
+  const sortedBadges = useMemo(() => {
+    if (!badgeOrder || badgeOrder.length === 0) return BADGE_OPTIONS;
+    return badgeOrder
+      .map(id => BADGE_OPTIONS.find(o => o.value === id))
+      .filter((o): o is typeof BADGE_OPTIONS[number] => o !== undefined);
+  }, [badgeOrder]);
 
   return (
     <div className="px-6 py-4 border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-10">
@@ -97,6 +121,24 @@ export const AllergenFilter = memo(({
             </Badge>
           );
         })}
+        
+        {/* Spicy filter - tri-state */}
+        <Badge
+          variant={selectedSpicy === null ? "outline" : "default"}
+          className={cn(
+            "cursor-pointer ease-out active:scale-95 hover:shadow-md px-3 py-1.5 gap-1.5",
+            selectedSpicy === true && "bg-orange-500 hover:bg-orange-500/90",
+            selectedSpicy === false && "bg-blue-500 hover:bg-blue-500/90"
+          )}
+          onClick={() => {
+            if (selectedSpicy === null) onSpicyToggle(true);
+            else if (selectedSpicy === true) onSpicyToggle(false);
+            else onSpicyToggle(null);
+          }}
+        >
+          {selectedSpicy !== null && <Flame className="h-3.5 w-3.5" />}
+          {selectedSpicy === null ? "Spicy" : selectedSpicy ? "Spicy Only" : "Not Spicy"}
+        </Badge>
       </div>
 
       {/* Allergen filters */}
@@ -118,9 +160,31 @@ export const AllergenFilter = memo(({
         })}
       </div>
 
+      {/* Badges & Labels */}
+      {sortedBadges.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border">
+          <div className="w-full text-xs font-medium text-muted-foreground mb-1">Badges & Labels</div>
+          {sortedBadges.map((option) => {
+            const Icon = option.Icon;
+            const isSelected = selectedBadges.includes(option.value);
+            return (
+              <Badge
+                key={option.value}
+                variant={isSelected ? "default" : "outline"}
+                className="cursor-pointer ease-out active:scale-95 hover:shadow-md px-3 py-1.5 gap-1.5"
+                onClick={() => onBadgeToggle(option.value)}
+              >
+                {isSelected && <Icon className="h-3.5 w-3.5" />}
+                {option.label}
+              </Badge>
+            );
+          })}
+        </div>
+      )}
+
       {hasActiveFilters && (
         <p className="text-xs text-muted-foreground mt-3">
-          Hiding dishes with selected allergens and showing only selected dietary options
+          Filtering by selected preferences, allergens, and badges
         </p>
       )}
     </div>
