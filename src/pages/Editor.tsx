@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useRestaurantById, useUpdateRestaurant } from "@/hooks/useRestaurants";
 import { useCategories } from "@/hooks/useCategories";
@@ -10,6 +10,7 @@ import { EditableSubcategories } from "@/components/editor/EditableSubcategories
 import { EditableDishes } from "@/components/editor/EditableDishes";
 import { SpreadsheetView } from "@/components/editor/SpreadsheetView";
 import RestaurantHeader from "@/components/RestaurantHeader";
+import { AllergenFilter } from "@/components/AllergenFilter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useThemeHistory } from "@/hooks/useThemeHistory";
@@ -24,6 +25,10 @@ const Editor = () => {
   const [activeSubcategory, setActiveSubcategory] = useState<string>("");
   const [previewMode, setPreviewMode] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
+  const [selectedDietary, setSelectedDietary] = useState<string[]>([]);
+  const [selectedSpicy, setSelectedSpicy] = useState<boolean | null>(null);
+  const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
 
   const { data: restaurant, isLoading: restaurantLoading } = useRestaurantById(restaurantId || "");
   const { data: categories = [], isLoading: categoriesLoading } = useCategories(restaurantId || "");
@@ -134,6 +139,87 @@ const Editor = () => {
     }
   };
 
+  const handleFilterToggle = () => {
+    if (!restaurant) return;
+    
+    const newState = !restaurant.show_allergen_filter;
+    
+    updateRestaurant.mutate({
+      id: restaurant.id,
+      updates: { show_allergen_filter: newState }
+    });
+    
+    toast.success(newState ? "Filter enabled" : "Filter disabled");
+  };
+
+  // Filter handlers
+  const handleAllergenToggle = useCallback((allergen: string) => {
+    setSelectedAllergens((prev) =>
+      prev.includes(allergen) ? prev.filter((a) => a !== allergen) : [...prev, allergen]
+    );
+  }, []);
+
+  const handleDietaryToggle = useCallback((dietary: string) => {
+    setSelectedDietary((prev) =>
+      prev.includes(dietary) ? prev.filter((d) => d !== dietary) : [...prev, dietary]
+    );
+  }, []);
+
+  const handleSpicyToggle = useCallback((value: boolean | null) => {
+    setSelectedSpicy(value);
+  }, []);
+
+  const handleBadgeToggle = useCallback((badge: string) => {
+    setSelectedBadges((prev) =>
+      prev.includes(badge) ? prev.filter((b) => b !== badge) : [...prev, badge]
+    );
+  }, []);
+
+  const handleClearFilters = useCallback(() => {
+    setSelectedAllergens([]);
+    setSelectedDietary([]);
+    setSelectedSpicy(null);
+    setSelectedBadges([]);
+  }, []);
+
+  // Filter dishes in preview mode
+  const filteredDishes = useMemo(() => {
+    if (!previewMode || !dishes || dishes.length === 0) return dishes;
+
+    if (selectedAllergens.length === 0 && selectedDietary.length === 0 && selectedSpicy === null && selectedBadges.length === 0) {
+      return dishes;
+    }
+
+    const isVeganSelected = selectedDietary.includes("vegan");
+    const isVegetarianSelected = selectedDietary.includes("vegetarian");
+    
+    return dishes.filter((dish) => {
+      if (selectedAllergens.length > 0 && dish.allergens && dish.allergens.length > 0) {
+        if (dish.allergens.some((allergen) => selectedAllergens.includes(allergen.toLowerCase()))) {
+          return false;
+        }
+      }
+      
+      if (selectedDietary.length > 0) {
+        if (isVeganSelected && !dish.is_vegan) return false;
+        if (isVegetarianSelected && !isVeganSelected && !dish.is_vegetarian && !dish.is_vegan) return false;
+      }
+      
+      if (selectedSpicy !== null && dish.is_spicy !== selectedSpicy) {
+        return false;
+      }
+      
+      if (selectedBadges.length > 0) {
+        if (selectedBadges.includes("new") && !dish.is_new) return false;
+        if (selectedBadges.includes("special") && !dish.is_special) return false;
+        if (selectedBadges.includes("popular") && !dish.is_popular) return false;
+        if (selectedBadges.includes("chef") && !dish.is_chef_recommendation) return false;
+      }
+      
+      return true;
+    });
+  }, [dishes, previewMode, selectedAllergens, selectedDietary, selectedSpicy, selectedBadges]);
+
   // Sync view mode with restaurant preference
   useEffect(() => {
     if (restaurant?.editor_view_mode) {
@@ -189,6 +275,7 @@ const Editor = () => {
         onViewModeChange={handleViewModeChange}
         onPreviewToggle={() => setPreviewMode(!previewMode)}
         onPublishToggle={handlePublishToggle}
+        onFilterToggle={handleFilterToggle}
         onUndo={handleUndo}
         onRedo={handleRedo}
         canUndo={canUndo}
@@ -223,9 +310,27 @@ const Editor = () => {
           />
         )}
 
+        {/* Show filter in preview mode */}
+        {previewMode && restaurant.show_allergen_filter !== false && (
+          <AllergenFilter
+            selectedAllergens={selectedAllergens}
+            selectedDietary={selectedDietary}
+            selectedSpicy={selectedSpicy}
+            selectedBadges={selectedBadges}
+            onAllergenToggle={handleAllergenToggle}
+            onDietaryToggle={handleDietaryToggle}
+            onSpicyToggle={handleSpicyToggle}
+            onBadgeToggle={handleBadgeToggle}
+            onClear={handleClearFilters}
+            allergenOrder={restaurant.allergen_filter_order as string[] | undefined}
+            dietaryOrder={restaurant.dietary_filter_order as string[] | undefined}
+            badgeOrder={restaurant.badge_display_order as string[] | undefined}
+          />
+        )}
+
         {activeSubcategory && viewMode === 'grid' && (
           <EditableDishes
-            dishes={dishes}
+            dishes={filteredDishes || dishes}
             subcategoryId={activeSubcategory}
             previewMode={previewMode}
           />

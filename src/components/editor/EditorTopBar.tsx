@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Eye, EyeOff, QrCode, Palette, Upload, Undo2, Redo2, LayoutGrid, Table2 } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, QrCode, Palette, Upload, Undo2, Redo2, LayoutGrid, Table2, Filter } from "lucide-react";
 import { QRCodeModal } from "@/components/editor/QRCodeModal";
 import { ThemeGalleryModal } from "@/components/editor/ThemeGalleryModal";
 import { PaywallModal } from "@/components/PaywallModal";
@@ -16,6 +16,7 @@ interface EditorTopBarProps {
   onViewModeChange: (mode: 'grid' | 'table') => void;
   onPreviewToggle: () => void;
   onPublishToggle: () => void;
+  onFilterToggle: () => void;
   onUndo?: () => void;
   onRedo?: () => void;
   canUndo?: boolean;
@@ -30,6 +31,7 @@ export const EditorTopBar = ({
   onViewModeChange,
   onPreviewToggle,
   onPublishToggle,
+  onFilterToggle,
   onUndo,
   onRedo,
   canUndo = false,
@@ -167,6 +169,16 @@ export const EditorTopBar = ({
                 >
                   <QrCode className="h-4 w-4" />
                   QR Code
+                </Button>
+
+                <Button
+                  variant={restaurant.show_allergen_filter !== false ? "default" : "outline"}
+                  size="sm"
+                  onClick={onFilterToggle}
+                  className="gap-2"
+                >
+                  <Filter className="h-4 w-4" />
+                  Filter
                 </Button>
               </>
             )}
