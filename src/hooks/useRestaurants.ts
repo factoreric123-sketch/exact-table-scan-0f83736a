@@ -24,31 +24,14 @@ export const useRestaurants = () => {
   return useQuery({
     queryKey: ["restaurants"],
     queryFn: async () => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const { data, error } = await supabase
+        .from("restaurants")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-      try {
-        const { data, error } = await supabase
-          .from("restaurants")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .abortSignal(controller.signal);
-
-        clearTimeout(timeoutId);
-
-        if (error) throw error;
-        return data as Restaurant[];
-      } catch (error: any) {
-        clearTimeout(timeoutId);
-        if (error.name === 'AbortError') {
-          throw new Error('Request timed out. Please refresh the page.');
-        }
-        throw error;
-      }
+      if (error) throw error;
+      return data as Restaurant[];
     },
-    staleTime: 60000,
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
   });
 };
 
@@ -56,32 +39,16 @@ export const useRestaurant = (slug: string) => {
   return useQuery({
     queryKey: ["restaurant", slug],
     queryFn: async () => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const { data, error } = await supabase
+        .from("restaurants")
+        .select("*")
+        .eq("slug", slug)
+        .maybeSingle();
 
-      try {
-        const { data, error } = await supabase
-          .from("restaurants")
-          .select("*")
-          .eq("slug", slug)
-          .abortSignal(controller.signal)
-          .maybeSingle();
-
-        clearTimeout(timeoutId);
-
-        if (error) throw error;
-        return data as Restaurant | null;
-      } catch (error: any) {
-        clearTimeout(timeoutId);
-        if (error.name === 'AbortError') {
-          throw new Error('Request timed out. Please refresh the page.');
-        }
-        throw error;
-      }
+      if (error) throw error;
+      return data as Restaurant | null;
     },
     enabled: !!slug,
-    staleTime: 60000,
-    retry: 2,
   });
 };
 
@@ -89,32 +56,16 @@ export const useRestaurantById = (id: string) => {
   return useQuery({
     queryKey: ["restaurant", id],
     queryFn: async () => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const { data, error } = await supabase
+        .from("restaurants")
+        .select("*")
+        .eq("id", id)
+        .single();
 
-      try {
-        const { data, error } = await supabase
-          .from("restaurants")
-          .select("*")
-          .eq("id", id)
-          .abortSignal(controller.signal)
-          .maybeSingle();
-
-        clearTimeout(timeoutId);
-
-        if (error) throw error;
-        return data as Restaurant;
-      } catch (error: any) {
-        clearTimeout(timeoutId);
-        if (error.name === 'AbortError') {
-          throw new Error('Request timed out. Please refresh the page.');
-        }
-        throw error;
-      }
+      if (error) throw error;
+      return data as Restaurant;
     },
     enabled: !!id,
-    staleTime: 60000,
-    retry: 2,
   });
 };
 
@@ -158,11 +109,10 @@ export const useUpdateRestaurant = () => {
       return data;
     },
     onSuccess: (data) => {
-      // Only invalidate what's necessary
-      queryClient.setQueryData(["restaurant", data.id], data);
-      queryClient.setQueryData(["restaurant", data.slug], data);
+      queryClient.invalidateQueries({ queryKey: ["restaurants"] });
+      queryClient.invalidateQueries({ queryKey: ["restaurant", data.id] });
+      queryClient.invalidateQueries({ queryKey: ["restaurant", data.slug] });
     },
-    retry: 1,
   });
 };
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,6 @@ import { useDishOptions, useCreateDishOption, useUpdateDishOption, useDeleteDish
 import { useDishModifiers, useCreateDishModifier, useUpdateDishModifier, useDeleteDishModifier, useUpdateDishModifiersOrder, DishModifier } from "@/hooks/useDishModifiers";
 import { useUpdateDish } from "@/hooks/useDishes";
 import { toast } from "sonner";
-import { useDebouncedCallback } from "use-debounce";
 
 interface DishOptionsEditorProps {
   dishId: string;
@@ -28,56 +27,34 @@ interface SortableItemProps {
   price: string;
   onUpdate: (id: string, field: "name" | "price", value: string) => void;
   onDelete: (id: string) => void;
-  isPending?: boolean;
 }
 
-const SortableItem = ({ id, name, price, onUpdate, onDelete, isPending }: SortableItemProps) => {
+const SortableItem = ({ id, name, price, onUpdate, onDelete }: SortableItemProps) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
-  const [localName, setLocalName] = useState(name);
-  const [localPrice, setLocalPrice] = useState(price);
-
-  useEffect(() => {
-    setLocalName(name);
-    setLocalPrice(price);
-  }, [name, price]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isPending ? 0.5 : 1,
   };
 
   return (
     <div ref={setNodeRef} style={style} className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg border border-border">
-      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing touch-none">
+      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
         <GripVertical className="h-4 w-4 text-muted-foreground" />
       </div>
       <Input
-        value={localName}
-        onChange={(e) => {
-          setLocalName(e.target.value);
-          onUpdate(id, "name", e.target.value);
-        }}
+        value={name}
+        onChange={(e) => onUpdate(id, "name", e.target.value)}
         placeholder="Name"
         className="flex-1"
-        disabled={isPending}
       />
       <Input
-        value={localPrice}
-        onChange={(e) => {
-          setLocalPrice(e.target.value);
-          onUpdate(id, "price", e.target.value);
-        }}
+        value={price}
+        onChange={(e) => onUpdate(id, "price", e.target.value)}
         placeholder="$0.00"
         className="w-24"
-        disabled={isPending}
       />
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        onClick={() => onDelete(id)}
-        disabled={isPending}
-      >
+      <Button variant="ghost" size="icon" onClick={() => onDelete(id)}>
         <Trash2 className="h-4 w-4 text-destructive" />
       </Button>
     </div>
@@ -85,8 +62,8 @@ const SortableItem = ({ id, name, price, onUpdate, onDelete, isPending }: Sortab
 };
 
 export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenChange }: DishOptionsEditorProps) => {
-  const { data: options = [], isLoading: optionsLoading } = useDishOptions(dishId);
-  const { data: modifiers = [], isLoading: modifiersLoading } = useDishModifiers(dishId);
+  const { data: options = [] } = useDishOptions(dishId);
+  const { data: modifiers = [] } = useDishModifiers(dishId);
   
   const createOption = useCreateDishOption();
   const updateOption = useUpdateDishOption();
@@ -100,79 +77,55 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
   
   const updateDish = useUpdateDish();
   
-  const [pendingUpdates, setPendingUpdates] = useState<Set<string>>(new Set());
-
+  const [localOptions, setLocalOptions] = useState<DishOption[]>([]);
+  const [localModifiers, setLocalModifiers] = useState<DishModifier[]>([]);
+  
+  // Sync local state with fetched data
+  useEffect(() => {
+    setLocalOptions(options);
+  }, [options]);
+  
+  useEffect(() => {
+    setLocalModifiers(modifiers);
+  }, [modifiers]);
+  
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
+    useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
 
   const handleToggleOptions = async (enabled: boolean) => {
-    try {
-      await updateDish.mutateAsync({
-        id: dishId,
-        updates: { has_options: enabled },
-      });
-      toast.success(enabled ? "Pricing options enabled" : "Pricing options disabled");
-    } catch (error) {
-      toast.error("Failed to toggle pricing options");
-    }
+    await updateDish.mutateAsync({
+      id: dishId,
+      updates: { has_options: enabled },
+    });
+    toast.success(enabled ? "Pricing options enabled" : "Pricing options disabled");
   };
 
   const handleAddOption = async () => {
-    try {
-      const newOrderIndex = options.length;
-      await createOption.mutateAsync({
-        dish_id: dishId,
-        name: "",
-        price: "0.00",
-        order_index: newOrderIndex,
-      });
-    } catch (error) {
-      toast.error("Failed to add option");
-    }
+    const newOrderIndex = options.length;
+    await createOption.mutateAsync({
+      dish_id: dishId,
+      name: "",
+      price: "",
+      order_index: newOrderIndex,
+    });
   };
 
-  const debouncedUpdateOption = useDebouncedCallback(
-    async (id: string, field: "name" | "price", value: string) => {
-      setPendingUpdates(prev => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-      
-      try {
-        await updateOption.mutateAsync({
-          id,
-          updates: { [field]: value },
-        });
-      } catch (error) {
-        toast.error(`Failed to update ${field}`);
-      }
-    },
-    500
-  );
-
-  const handleUpdateOption = useCallback((id: string, field: "name" | "price", value: string) => {
-    setPendingUpdates(prev => new Set(prev).add(id));
-    debouncedUpdateOption(id, field, value);
-  }, [debouncedUpdateOption]);
+  const handleUpdateOption = async (id: string, field: "name" | "price", value: string) => {
+    await updateOption.mutateAsync({
+      id,
+      updates: { [field]: value },
+    });
+  };
 
   const handleDeleteOption = async (id: string) => {
-    try {
-      await deleteOption.mutateAsync({ id, dishId });
-    } catch (error) {
-      toast.error("Failed to delete option");
-    }
+    await deleteOption.mutateAsync({ id, dishId });
   };
 
-  const handleOptionDragEnd = useCallback((event: DragEndEvent) => {
+  const handleOptionDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -185,56 +138,30 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
     }));
 
     updateOptionsOrder.mutate({ options: reordered, dishId });
-  }, [options, dishId, updateOptionsOrder]);
+  };
 
   const handleAddModifier = async () => {
-    try {
-      const newOrderIndex = modifiers.length;
-      await createModifier.mutateAsync({
-        dish_id: dishId,
-        name: "",
-        price: "0.00",
-        order_index: newOrderIndex,
-      });
-    } catch (error) {
-      toast.error("Failed to add modifier");
-    }
+    const newOrderIndex = modifiers.length;
+    await createModifier.mutateAsync({
+      dish_id: dishId,
+      name: "",
+      price: "",
+      order_index: newOrderIndex,
+    });
   };
 
-  const debouncedUpdateModifier = useDebouncedCallback(
-    async (id: string, field: "name" | "price", value: string) => {
-      setPendingUpdates(prev => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-      
-      try {
-        await updateModifier.mutateAsync({
-          id,
-          updates: { [field]: value },
-        });
-      } catch (error) {
-        toast.error(`Failed to update ${field}`);
-      }
-    },
-    500
-  );
-
-  const handleUpdateModifier = useCallback((id: string, field: "name" | "price", value: string) => {
-    setPendingUpdates(prev => new Set(prev).add(id));
-    debouncedUpdateModifier(id, field, value);
-  }, [debouncedUpdateModifier]);
+  const handleUpdateModifier = async (id: string, field: "name" | "price", value: string) => {
+    await updateModifier.mutateAsync({
+      id,
+      updates: { [field]: value },
+    });
+  };
 
   const handleDeleteModifier = async (id: string) => {
-    try {
-      await deleteModifier.mutateAsync({ id, dishId });
-    } catch (error) {
-      toast.error("Failed to delete modifier");
-    }
+    await deleteModifier.mutateAsync({ id, dishId });
   };
 
-  const handleModifierDragEnd = useCallback((event: DragEndEvent) => {
+  const handleModifierDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -247,13 +174,11 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
     }));
 
     updateModifiersOrder.mutate({ modifiers: reordered, dishId });
-  }, [modifiers, dishId, updateModifiersOrder]);
-
-  const isLoading = optionsLoading || modifiersLoading;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Pricing Options: {dishName}</DialogTitle>
         </DialogHeader>
@@ -268,21 +193,15 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
               id="enable-options"
               checked={hasOptions}
               onCheckedChange={handleToggleOptions}
-              disabled={updateDish.isPending}
             />
           </div>
 
-          {hasOptions && !isLoading && (
+          {hasOptions && (
             <>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-base font-semibold">Size/Type Options</Label>
-                  <Button 
-                    onClick={handleAddOption} 
-                    size="sm" 
-                    variant="outline"
-                    disabled={createOption.isPending}
-                  >
+                  <Button onClick={handleAddOption} size="sm" variant="outline">
                     <Plus className="h-4 w-4 mr-1" />
                     Add Option
                   </Button>
@@ -301,7 +220,6 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
                             price={option.price}
                             onUpdate={handleUpdateOption}
                             onDelete={handleDeleteOption}
-                            isPending={pendingUpdates.has(option.id)}
                           />
                         ))}
                       </div>
@@ -315,12 +233,7 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-base font-semibold">Add-ons / Modifiers</Label>
-                  <Button 
-                    onClick={handleAddModifier} 
-                    size="sm" 
-                    variant="outline"
-                    disabled={createModifier.isPending}
-                  >
+                  <Button onClick={handleAddModifier} size="sm" variant="outline">
                     <Plus className="h-4 w-4 mr-1" />
                     Add Modifier
                   </Button>
@@ -339,7 +252,6 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
                             price={modifier.price}
                             onUpdate={handleUpdateModifier}
                             onDelete={handleDeleteModifier}
-                            isPending={pendingUpdates.has(modifier.id)}
                           />
                         ))}
                       </div>
