@@ -180,9 +180,9 @@ export const SpreadsheetView = ({
         className="flex-1 overflow-x-auto overflow-y-auto bg-background px-12"
       >
         <table className="min-w-[1680px] w-full caption-bottom text-sm border-collapse">
-          <thead className="sticky top-0 z-30 bg-muted border-b">
+          <thead className="sticky top-0 z-50 bg-muted border-b shadow-sm">
             <tr className="border-b">
-              <th className="sticky left-0 z-40 bg-muted h-12 px-6 text-left align-middle font-semibold text-sm w-[40px] border-r-2 border-border">
+              <th className="sticky left-0 z-[60] bg-muted h-12 px-6 text-left align-middle font-semibold text-sm w-[40px] border-r-2 border-border shadow-[2px_0_8px_-2px_rgba(0,0,0,0.15)]">
                 <input
                   type="checkbox"
                   checked={selectedRows.size === dishes.length && dishes.length > 0}
@@ -196,8 +196,8 @@ export const SpreadsheetView = ({
                   className="cursor-pointer"
                 />
               </th>
-              <th className="sticky left-[40px] z-40 bg-muted h-12 px-4 text-left align-middle font-semibold text-sm w-[100px] border-r-2 border-border">Image</th>
-              <th className="sticky left-[140px] z-40 bg-muted h-12 px-4 text-left align-middle font-semibold text-sm w-[220px] border-r-2 border-border shadow-[2px_0_4px_rgba(0,0,0,0.1)]">Name</th>
+              <th className="sticky left-[40px] z-[60] bg-muted h-12 px-4 text-left align-middle font-semibold text-sm w-[100px] border-r-2 border-border shadow-[2px_0_8px_-2px_rgba(0,0,0,0.15)]">Image</th>
+              <th className="sticky left-[140px] z-[60] bg-muted h-12 px-4 text-left align-middle font-semibold text-sm w-[220px] border-r-2 border-border shadow-[4px_0_12px_-2px_rgba(0,0,0,0.2)]">Name</th>
               <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[300px]">Description</th>
               <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[100px]">Price</th>
               <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[280px]">Allergens</th>

@@ -47,7 +47,7 @@ const Navbar = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 group">
               <span className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent group-hover:scale-105 transition-transform">
-                TAPTAB
+                TapMenu
               </span>
             </Link>
 

@@ -48,13 +48,13 @@ const AboutUs = () => {
           <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center">Our Story</h2>
           <div className="prose prose-lg max-w-none dark:prose-invert">
             <p>
-              TAPTAB was born from a simple observation: most restaurants were stuck using outdated paper menus or expensive, clunky digital solutions that required technical expertise to manage.
+              TapMenu was born from a simple observation: most restaurants were stuck using outdated paper menus or expensive, clunky digital solutions that required technical expertise to manage.
             </p>
             <p>
               We saw talented chefs and restaurant owners spending hours manually updating menus, dealing with printing costs, and watching customers struggle with hard-to-read laminated pages. Meanwhile, the few digital menu solutions available were either prohibitively expensive or looked like they were designed in the early 2000s.
             </p>
             <p>
-              We knew there had to be a better way. So we built TAPTAB – a modern, beautiful, and affordable digital menu platform that anyone can use, regardless of technical skill.
+              We knew there had to be a better way. So we built TapMenu – a modern, beautiful, and affordable digital menu platform that anyone can use, regardless of technical skill.
             </p>
             <p>
               Today, we're proud to serve over 1,000 restaurants across 15 countries, helping them create stunning digital experiences that their customers love.

@@ -68,7 +68,7 @@ export const PaywallModal = ({ open, onOpenChange, feature }: PaywallModalProps)
             Upgrade to Premium
           </DialogTitle>
           <DialogDescription className="text-center">
-            Unlock <strong>{feature}</strong> and more with TAPTAB Premium
+            Unlock <strong>{feature}</strong> and more with TapMenu Premium
           </DialogDescription>
         </DialogHeader>
 

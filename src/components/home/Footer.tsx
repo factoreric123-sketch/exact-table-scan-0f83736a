@@ -12,7 +12,7 @@ const Footer = () => {
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2 group">
               <span className="text-2xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent group-hover:scale-105 transition-transform">
-                TAPTAB
+                TapMenu
               </span>
             </Link>
             <p className="text-sm text-muted-foreground">
@@ -44,7 +44,7 @@ const Footer = () => {
                 <Linkedin className="w-5 h-5" />
               </a>
               <a
-                href="mailto:hello@taptab.com"
+                href="mailto:hello@tapmenu.com"
                 className="text-muted-foreground hover:text-accent transition-colors"
               >
                 <Mail className="w-5 h-5" />
@@ -137,7 +137,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-border">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-            <p>© {currentYear} TAPTAB. All rights reserved.</p>
+            <p>© {currentYear} TapMenu. All rights reserved.</p>
             <p>Made with ❤️ for restaurants worldwide</p>
           </div>
         </div>

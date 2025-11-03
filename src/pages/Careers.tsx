@@ -57,7 +57,7 @@ const Careers = () => {
       department: "Customer Success",
       location: "Remote",
       type: "Full-time",
-      description: "Be the voice of our customers. Help restaurant owners succeed with TAPTAB and ensure they're getting maximum value from our platform.",
+      description: "Be the voice of our customers. Help restaurant owners succeed with TapMenu and ensure they're getting maximum value from our platform.",
       responsibilities: [
         "Onboard new restaurant customers and ensure smooth setup",
         "Provide ongoing support and training to customers",
@@ -76,7 +76,7 @@ const Careers = () => {
       department: "Marketing",
       location: "Remote",
       type: "Full-time",
-      description: "Drive growth and brand awareness for TAPTAB. We're looking for a creative marketer who can tell compelling stories and drive results.",
+      description: "Drive growth and brand awareness for TapMenu. We're looking for a creative marketer who can tell compelling stories and drive results.",
       responsibilities: [
         "Develop and execute marketing strategies across channels",
         "Create compelling content (blog posts, case studies, social media)",
@@ -95,7 +95,7 @@ const Careers = () => {
       department: "Sales",
       location: "Remote",
       type: "Full-time",
-      description: "Help restaurants discover how TAPTAB can transform their operations. We're looking for a motivated sales professional who believes in our mission.",
+      description: "Help restaurants discover how TapMenu can transform their operations. We're looking for a motivated sales professional who believes in our mission.",
       responsibilities: [
         "Generate and qualify leads through outbound prospecting",
         "Conduct product demos and handle sales process end-to-end",
@@ -128,7 +128,7 @@ const Careers = () => {
       {/* Culture */}
       <section className="py-24">
         <div className="container mx-auto px-4 max-w-4xl">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center">Why TAPTAB?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center">Why TapMenu?</h2>
           <div className="prose prose-lg max-w-none dark:prose-invert text-center mb-12">
             <p>
               We're a small, passionate team building technology that makes a real difference for restaurant owners. We value craftsmanship, customer empathy, and moving fast without breaking things. If you love solving real problems with elegant solutions, you'll fit right in.
@@ -183,8 +183,8 @@ const Careers = () => {
             We're always looking for talented people. Send us your resume and tell us why you'd be a great addition to the team.
           </p>
           <p className="opacity-90">
-            <a href="mailto:careers@taptab.com" className="underline">
-              careers@taptab.com
+            <a href="mailto:careers@tapmenu.com" className="underline">
+              careers@tapmenu.com
             </a>
           </p>
         </div>
