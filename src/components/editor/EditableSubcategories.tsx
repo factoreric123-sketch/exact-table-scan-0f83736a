@@ -71,20 +71,19 @@ export const EditableSubcategories = ({
     debouncedUpdate(updates);
   }, [subcategories, categoryId, debouncedUpdate]);
 
-  const handleAddSubcategory = async () => {
-    try {
-      const newSubcategory = await createSubcategory.mutateAsync({
-        category_id: categoryId,
-        name: "New Subcategory",
-        order_index: subcategories.length,
-      });
-      toast.success("Subcategory added");
-      if (newSubcategory) {
-        onSubcategoryChange(newSubcategory.id);
+  const handleAddSubcategory = () => {
+    createSubcategory.mutate({
+      category_id: categoryId,
+      name: "New Subcategory",
+      order_index: subcategories.length,
+    }, {
+      onSuccess: () => {
+        toast.success("Subcategory added");
+      },
+      onError: () => {
+        toast.error("Failed to add subcategory");
       }
-    } catch (error) {
-      toast.error("Failed to add subcategory");
-    }
+    });
   };
 
   if (previewMode) {

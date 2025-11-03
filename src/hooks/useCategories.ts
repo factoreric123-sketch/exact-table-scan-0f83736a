@@ -26,6 +26,7 @@ export const useCategories = (restaurantId: string) => {
     enabled: !!restaurantId,
     staleTime: 1000 * 60, // 1 minute
     gcTime: 1000 * 60 * 10, // 10 minutes cache
+    placeholderData: (prev) => prev, // Keep previous data during refetch
   });
 };
 
@@ -43,8 +44,33 @@ export const useCreateCategory = () => {
       if (error) throw error;
       return data;
     },
+    onMutate: async (category) => {
+      // Optimistic create
+      if (!category.restaurant_id) return;
+      
+      await queryClient.cancelQueries({ queryKey: ["categories", category.restaurant_id] });
+      const previous = queryClient.getQueryData<Category[]>(["categories", category.restaurant_id]);
+      
+      if (previous) {
+        const tempCategory: Category = {
+          id: `temp-${Date.now()}`,
+          restaurant_id: category.restaurant_id,
+          name: category.name || "New Category",
+          order_index: category.order_index ?? previous.length,
+          created_at: new Date().toISOString(),
+        };
+        queryClient.setQueryData<Category[]>(["categories", category.restaurant_id], [...previous, tempCategory]);
+      }
+      
+      return { previous, restaurantId: category.restaurant_id };
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["categories", data.restaurant_id] });
+    },
+    onError: (_error, variables, context) => {
+      if (context?.previous && context.restaurantId) {
+        queryClient.setQueryData(["categories", context.restaurantId], context.previous);
+      }
     },
   });
 };

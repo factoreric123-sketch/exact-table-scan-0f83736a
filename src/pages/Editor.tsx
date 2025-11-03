@@ -141,7 +141,14 @@ const Editor = () => {
     }
   }, [restaurant?.editor_view_mode]);
 
-  if (restaurantLoading || categoriesLoading || subcategoriesLoading || dishesLoading) {
+  // Show skeleton only on initial load, not during refetch
+  const isInitialLoading = 
+    restaurantLoading || 
+    (categoriesLoading && categories.length === 0) || 
+    (subcategoriesLoading && activeCategory && subcategories.length === 0) || 
+    (dishesLoading && activeSubcategory && dishes.length === 0);
+
+  if (isInitialLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Skeleton className="h-64 w-full" />

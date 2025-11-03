@@ -27,6 +27,7 @@ export const useDishOptions = (dishId: string) => {
     enabled: !!dishId,
     staleTime: 1000 * 60, // 1 minute
     gcTime: 1000 * 60 * 10, // 10 minutes cache
+    placeholderData: (prev) => prev,
   });
 };
 
@@ -52,9 +53,29 @@ export const useCreateDishOption = () => {
       if (error) throw error;
       return data;
     },
+    onMutate: async (option) => {
+      await queryClient.cancelQueries({ queryKey: ["dish-options", option.dish_id] });
+      const previous = queryClient.getQueryData<DishOption[]>(["dish-options", option.dish_id]);
+      
+      if (previous) {
+        const tempOption: DishOption = {
+          id: `temp-${Date.now()}`,
+          ...option,
+          created_at: new Date().toISOString(),
+        };
+        queryClient.setQueryData<DishOption[]>(["dish-options", option.dish_id], [...previous, tempOption]);
+      }
+      
+      return { previous, dishId: option.dish_id };
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["dish-options", variables.dish_id] });
       toast.success("Option added");
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous && context.dishId) {
+        queryClient.setQueryData(["dish-options", context.dishId], context.previous);
+      }
     },
   });
 };
@@ -74,9 +95,32 @@ export const useUpdateDishOption = () => {
       if (error) throw error;
       return data;
     },
+    onMutate: async ({ id, updates }) => {
+      const allOptions = queryClient.getQueriesData<DishOption[]>({ queryKey: ["dish-options"] });
+      const option = allOptions.flatMap(([, data]) => data || []).find((o) => o.id === id);
+      
+      if (option) {
+        await queryClient.cancelQueries({ queryKey: ["dish-options", option.dish_id] });
+        const previous = queryClient.getQueryData<DishOption[]>(["dish-options", option.dish_id]);
+        
+        if (previous) {
+          queryClient.setQueryData<DishOption[]>(
+            ["dish-options", option.dish_id],
+            previous.map((o) => (o.id === id ? { ...o, ...updates } : o))
+          );
+        }
+        
+        return { previous, dishId: option.dish_id };
+      }
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["dish-options", data.dish_id] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous && context.dishId) {
+        queryClient.setQueryData(["dish-options", context.dishId], context.previous);
+      }
     },
   });
 };
@@ -94,10 +138,28 @@ export const useDeleteDishOption = () => {
       if (error) throw error;
       return { dishId };
     },
+    onMutate: async ({ id, dishId }) => {
+      await queryClient.cancelQueries({ queryKey: ["dish-options", dishId] });
+      const previous = queryClient.getQueryData<DishOption[]>(["dish-options", dishId]);
+      
+      if (previous) {
+        queryClient.setQueryData<DishOption[]>(
+          ["dish-options", dishId],
+          previous.filter((o) => o.id !== id)
+        );
+      }
+      
+      return { previous, dishId };
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["dish-options", variables.dishId] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
       toast.success("Option deleted");
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous && context.dishId) {
+        queryClient.setQueryData(["dish-options", context.dishId], context.previous);
+      }
     },
   });
 };

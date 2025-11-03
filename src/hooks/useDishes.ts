@@ -40,6 +40,7 @@ export const useDishes = (subcategoryId: string) => {
     enabled: !!subcategoryId,
     staleTime: 1000 * 60, // 1 minute
     gcTime: 1000 * 60 * 10, // 10 minutes cache
+    placeholderData: (prev) => prev, // Keep previous data during refetch
   });
 };
 
@@ -156,6 +157,8 @@ export const useUpdateDish = () => {
       if (error) throw error;
       return data;
     },
+    retry: 3,
+    retryDelay: (attempt) => Math.min(200 * Math.pow(2, attempt), 2000),
     onMutate: async ({ id, updates }) => {
       // Optimistic update
       const dish = queryClient.getQueriesData<Dish[]>({ queryKey: ["dishes"] })

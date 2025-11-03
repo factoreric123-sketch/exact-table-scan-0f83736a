@@ -27,6 +27,7 @@ export const useDishModifiers = (dishId: string) => {
     enabled: !!dishId,
     staleTime: 1000 * 60, // 1 minute
     gcTime: 1000 * 60 * 10, // 10 minutes cache
+    placeholderData: (prev) => prev,
   });
 };
 
@@ -52,9 +53,29 @@ export const useCreateDishModifier = () => {
       if (error) throw error;
       return data;
     },
+    onMutate: async (modifier) => {
+      await queryClient.cancelQueries({ queryKey: ["dish-modifiers", modifier.dish_id] });
+      const previous = queryClient.getQueryData<DishModifier[]>(["dish-modifiers", modifier.dish_id]);
+      
+      if (previous) {
+        const tempModifier: DishModifier = {
+          id: `temp-${Date.now()}`,
+          ...modifier,
+          created_at: new Date().toISOString(),
+        };
+        queryClient.setQueryData<DishModifier[]>(["dish-modifiers", modifier.dish_id], [...previous, tempModifier]);
+      }
+      
+      return { previous, dishId: modifier.dish_id };
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["dish-modifiers", variables.dish_id] });
       toast.success("Modifier added");
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous && context.dishId) {
+        queryClient.setQueryData(["dish-modifiers", context.dishId], context.previous);
+      }
     },
   });
 };
@@ -74,9 +95,32 @@ export const useUpdateDishModifier = () => {
       if (error) throw error;
       return data;
     },
+    onMutate: async ({ id, updates }) => {
+      const allModifiers = queryClient.getQueriesData<DishModifier[]>({ queryKey: ["dish-modifiers"] });
+      const modifier = allModifiers.flatMap(([, data]) => data || []).find((m) => m.id === id);
+      
+      if (modifier) {
+        await queryClient.cancelQueries({ queryKey: ["dish-modifiers", modifier.dish_id] });
+        const previous = queryClient.getQueryData<DishModifier[]>(["dish-modifiers", modifier.dish_id]);
+        
+        if (previous) {
+          queryClient.setQueryData<DishModifier[]>(
+            ["dish-modifiers", modifier.dish_id],
+            previous.map((m) => (m.id === id ? { ...m, ...updates } : m))
+          );
+        }
+        
+        return { previous, dishId: modifier.dish_id };
+      }
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["dish-modifiers", data.dish_id] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous && context.dishId) {
+        queryClient.setQueryData(["dish-modifiers", context.dishId], context.previous);
+      }
     },
   });
 };
@@ -94,10 +138,28 @@ export const useDeleteDishModifier = () => {
       if (error) throw error;
       return { dishId };
     },
+    onMutate: async ({ id, dishId }) => {
+      await queryClient.cancelQueries({ queryKey: ["dish-modifiers", dishId] });
+      const previous = queryClient.getQueryData<DishModifier[]>(["dish-modifiers", dishId]);
+      
+      if (previous) {
+        queryClient.setQueryData<DishModifier[]>(
+          ["dish-modifiers", dishId],
+          previous.filter((m) => m.id !== id)
+        );
+      }
+      
+      return { previous, dishId };
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["dish-modifiers", variables.dishId] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
       toast.success("Modifier deleted");
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous && context.dishId) {
+        queryClient.setQueryData(["dish-modifiers", context.dishId], context.previous);
+      }
     },
   });
 };

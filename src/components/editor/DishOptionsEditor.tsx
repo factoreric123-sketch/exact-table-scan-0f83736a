@@ -104,7 +104,17 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
   };
 
   const handleAddOption = () => {
-    const newOrderIndex = options.length;
+    const newOrderIndex = localOptions.length;
+    const tempOption: DishOption = {
+      id: `temp-${Date.now()}`,
+      dish_id: dishId,
+      name: "Size",
+      price: "0.00",
+      order_index: newOrderIndex,
+      created_at: new Date().toISOString(),
+    };
+    setLocalOptions([...localOptions, tempOption]);
+    
     createOption.mutate({
       dish_id: dishId,
       name: "Size",
@@ -114,6 +124,8 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
   };
 
   const handleUpdateOption = (id: string, field: "name" | "price", value: string) => {
+    setLocalOptions(localOptions.map(opt => opt.id === id ? { ...opt, [field]: value } : opt));
+    
     updateOption.mutate({
       id,
       updates: { [field]: value },
@@ -121,6 +133,8 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
   };
 
   const handleDeleteOption = (id: string) => {
+    setLocalOptions(localOptions.filter(opt => opt.id !== id));
+    
     deleteOption.mutate({ id, dishId });
   };
 
@@ -140,7 +154,17 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
   };
 
   const handleAddModifier = () => {
-    const newOrderIndex = modifiers.length;
+    const newOrderIndex = localModifiers.length;
+    const tempModifier: DishModifier = {
+      id: `temp-${Date.now()}`,
+      dish_id: dishId,
+      name: "Extra",
+      price: "0.00",
+      order_index: newOrderIndex,
+      created_at: new Date().toISOString(),
+    };
+    setLocalModifiers([...localModifiers, tempModifier]);
+    
     createModifier.mutate({
       dish_id: dishId,
       name: "Extra",
@@ -150,6 +174,8 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
   };
 
   const handleUpdateModifier = (id: string, field: "name" | "price", value: string) => {
+    setLocalModifiers(localModifiers.map(mod => mod.id === id ? { ...mod, [field]: value } : mod));
+    
     updateModifier.mutate({
       id,
       updates: { [field]: value },
@@ -157,6 +183,8 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
   };
 
   const handleDeleteModifier = (id: string) => {
+    setLocalModifiers(localModifiers.filter(mod => mod.id !== id));
+    
     deleteModifier.mutate({ id, dishId });
   };
 
@@ -207,11 +235,11 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
                 </div>
                 <p className="text-sm text-muted-foreground">Different sizes or variants (e.g., Small, Medium, Large)</p>
                 
-                {options.length > 0 ? (
+                {localOptions.length > 0 ? (
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleOptionDragEnd}>
-                    <SortableContext items={options.map(o => o.id)} strategy={verticalListSortingStrategy}>
+                    <SortableContext items={localOptions.map(o => o.id)} strategy={verticalListSortingStrategy}>
                       <div className="space-y-2">
-                        {options.map((option) => (
+                        {localOptions.map((option) => (
                           <SortableItem
                             key={option.id}
                             id={option.id}
@@ -239,11 +267,11 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
                 </div>
                 <p className="text-sm text-muted-foreground">Optional extras (e.g., Cheese, Egg, Avocado)</p>
                 
-                {modifiers.length > 0 ? (
+                {localModifiers.length > 0 ? (
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleModifierDragEnd}>
-                    <SortableContext items={modifiers.map(m => m.id)} strategy={verticalListSortingStrategy}>
+                    <SortableContext items={localModifiers.map(m => m.id)} strategy={verticalListSortingStrategy}>
                       <div className="space-y-2">
-                        {modifiers.map((modifier) => (
+                        {localModifiers.map((modifier) => (
                           <SortableItem
                             key={modifier.id}
                             id={modifier.id}

@@ -63,20 +63,19 @@ export const EditableCategories = ({
     });
   };
 
-  const handleAddCategory = async () => {
-    try {
-      const newCategory = await createCategory.mutateAsync({
-        restaurant_id: restaurantId,
-        name: "New Category",
-        order_index: categories.length,
-      });
-      toast.success("Category added");
-      if (newCategory) {
-        onCategoryChange(newCategory.id);
+  const handleAddCategory = () => {
+    createCategory.mutate({
+      restaurant_id: restaurantId,
+      name: "New Category",
+      order_index: categories.length,
+    }, {
+      onSuccess: () => {
+        toast.success("Category added");
+      },
+      onError: () => {
+        toast.error("Failed to add category");
       }
-    } catch (error) {
-      toast.error("Failed to add category");
-    }
+    });
   };
 
   if (previewMode) {

@@ -26,6 +26,7 @@ export const useSubcategories = (categoryId: string) => {
     enabled: !!categoryId,
     staleTime: 1000 * 60, // 1 minute
     gcTime: 1000 * 60 * 10, // 10 minutes cache
+    placeholderData: (prev) => prev, // Keep previous data during refetch
   });
 };
 

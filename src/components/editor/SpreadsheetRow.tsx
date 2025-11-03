@@ -1,4 +1,4 @@
-import { useState, CSSProperties } from "react";
+import { useState, useRef, useCallback, CSSProperties } from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2, Upload, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -23,18 +23,32 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showOptionsEditor, setShowOptionsEditor] = useState(false);
 
-  const handleUpdate = async (field: keyof Dish, value: any) => {
-    setLocalDish({ ...localDish, [field]: value });
+  // Batched update mechanism
+  const pendingUpdates = useRef<Partial<Dish>>({});
+  const updateTimer = useRef<any>(null);
+
+  const scheduleUpdate = useCallback((updates: Partial<Dish>) => {
+    pendingUpdates.current = { ...pendingUpdates.current, ...updates };
     
-    try {
-      await updateDish.mutateAsync({
-        id: dish.id,
-        updates: { [field]: value },
-      });
-    } catch (error) {
-      setLocalDish(dish);
-      toast.error("Failed to update dish");
+    if (updateTimer.current) {
+      clearTimeout(updateTimer.current);
     }
+    
+    updateTimer.current = setTimeout(() => {
+      const toUpdate = { ...pendingUpdates.current };
+      pendingUpdates.current = {};
+      updateTimer.current = null;
+      
+      updateDish.mutate({
+        id: dish.id,
+        updates: toUpdate,
+      });
+    }, 200);
+  }, [dish.id, updateDish]);
+
+  const handleUpdate = (field: keyof Dish, value: any) => {
+    setLocalDish({ ...localDish, [field]: value });
+    scheduleUpdate({ [field]: value });
   };
 
   const handleDelete = async () => {
