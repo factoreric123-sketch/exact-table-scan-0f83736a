@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Theme } from "@/lib/types/theme";
+import { generateTempId } from "@/lib/utils/uuid";
 
 export interface Restaurant {
   id: string;
@@ -9,7 +11,7 @@ export interface Restaurant {
   slug: string;
   tagline: string | null;
   hero_image_url: string | null;
-  theme: any;
+  theme: Theme | null;
   published: boolean;
   created_at: string;
   updated_at: string;
@@ -82,18 +84,46 @@ export const useCreateRestaurant = () => {
     mutationFn: async (restaurant: Partial<Restaurant>) => {
       const { data, error } = await supabase
         .from("restaurants")
-        .insert([restaurant as any])
+        .insert([restaurant])
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      return data as Restaurant;
+    },
+    onMutate: async (restaurant) => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: ["restaurants"] });
+      const previous = queryClient.getQueryData<Restaurant[]>(["restaurants"]);
+      
+      // Optimistically add new restaurant to the list
+      if (previous && restaurant.owner_id) {
+        const tempRestaurant: Restaurant = {
+          id: generateTempId(),
+          owner_id: restaurant.owner_id,
+          name: restaurant.name || "New Restaurant",
+          slug: restaurant.slug || "new-restaurant",
+          tagline: restaurant.tagline || null,
+          hero_image_url: restaurant.hero_image_url || null,
+          theme: restaurant.theme || null,
+          published: restaurant.published || false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        queryClient.setQueryData<Restaurant[]>(["restaurants"], [tempRestaurant, ...previous]);
+      }
+      
+      return { previous };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["restaurants"] });
-      toast.success("Restaurant created successfully!");
+      toast.success("Restaurant created");
     },
-    onError: (error: any) => {
+    onError: (error: Error, _variables, context) => {
+      // Rollback on error
+      if (context?.previous) {
+        queryClient.setQueryData(["restaurants"], context.previous);
+      }
       toast.error(error.message || "Failed to create restaurant");
     },
   });
@@ -114,10 +144,27 @@ export const useUpdateRestaurant = () => {
       if (error) throw error;
       return data;
     },
+    onMutate: async ({ id, updates }) => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: ["restaurant", id] });
+      const previous = queryClient.getQueryData<Restaurant>(["restaurant", id]);
+      
+      if (previous) {
+        queryClient.setQueryData<Restaurant>(["restaurant", id], { ...previous, ...updates });
+      }
+      
+      return { previous };
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["restaurants"] });
       queryClient.invalidateQueries({ queryKey: ["restaurant", data.id] });
       queryClient.invalidateQueries({ queryKey: ["restaurant", data.slug] });
+    },
+    onError: (error, { id }, context) => {
+      // Rollback on error
+      if (context?.previous) {
+        queryClient.setQueryData(["restaurant", id], context.previous);
+      }
     },
   });
 };
@@ -134,11 +181,29 @@ export const useDeleteRestaurant = () => {
 
       if (error) throw error;
     },
+    onMutate: async (id) => {
+      // Optimistic delete
+      await queryClient.cancelQueries({ queryKey: ["restaurants"] });
+      const previous = queryClient.getQueryData<Restaurant[]>(["restaurants"]);
+      
+      if (previous) {
+        queryClient.setQueryData<Restaurant[]>(
+          ["restaurants"],
+          previous.filter((r) => r.id !== id)
+        );
+      }
+      
+      return { previous };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["restaurants"] });
-      toast.success("Restaurant deleted successfully!");
+      toast.success("Restaurant deleted");
     },
-    onError: (error: any) => {
+    onError: (error: Error, _id, context) => {
+      // Rollback on error
+      if (context?.previous) {
+        queryClient.setQueryData(["restaurants"], context.previous);
+      }
       toast.error(error.message || "Failed to delete restaurant");
     },
   });

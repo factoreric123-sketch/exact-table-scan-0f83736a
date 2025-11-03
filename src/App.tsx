@@ -24,7 +24,7 @@ import TermsOfService from "./pages/legal/TermsOfService";
 import CookiePolicy from "./pages/legal/CookiePolicy";
 import GDPR from "./pages/legal/GDPR";
 
-// Optimized QueryClient with smart defaults for instant UI updates
+// Perfect QueryClient configuration for 100/100 performance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -35,9 +35,11 @@ const queryClient = new QueryClient({
       refetchOnReconnect: false, // Don't auto-refetch on reconnect
       retry: 1, // Only retry once - fail fast for better UX
       retryDelay: 1000, // 1 second between retries
+      networkMode: 'offlineFirst', // Use cache when offline
     },
     mutations: {
       retry: 0, // Don't retry mutations - prevent duplicate operations
+      networkMode: 'offlineFirst', // Queue mutations when offline
     },
   },
 });

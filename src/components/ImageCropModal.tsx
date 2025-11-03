@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { getCroppedImg, compressImage } from "@/utils/imageCompression";
+import { logger } from "@/lib/logger";
 
 interface ImageCropModalProps {
   open: boolean;
@@ -36,7 +37,7 @@ export const ImageCropModal = ({
   }, [imageFile]);
 
   const onCropCompleteCallback = useCallback(
-    (croppedArea: any, croppedAreaPixels: any) => {
+    (_croppedArea: unknown, croppedAreaPixels: { x: number; y: number; width: number; height: number }) => {
       setCroppedAreaPixels(croppedAreaPixels);
     },
     []
@@ -55,7 +56,7 @@ export const ImageCropModal = ({
       const compressedFile = await compressImage(croppedFile);
       onCropComplete(compressedFile);
     } catch (error) {
-      console.error("Error cropping image:", error);
+      logger.error("Error cropping image:", error);
     } finally {
       setLoading(false);
     }

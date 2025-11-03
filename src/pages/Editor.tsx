@@ -45,14 +45,14 @@ const Editor = () => {
   const handleUndo = () => {
     const prevTheme = undo();
     if (prevTheme && restaurant) {
-      updateRestaurant.mutate({ id: restaurant.id, updates: { theme: prevTheme as any } });
+      updateRestaurant.mutate({ id: restaurant.id, updates: { theme: prevTheme } });
     }
   };
 
   const handleRedo = () => {
     const nextTheme = redo();
     if (nextTheme && restaurant) {
-      updateRestaurant.mutate({ id: restaurant.id, updates: { theme: nextTheme as any } });
+      updateRestaurant.mutate({ id: restaurant.id, updates: { theme: nextTheme } });
     }
   };
 
@@ -60,28 +60,31 @@ const Editor = () => {
     push(theme);
   };
 
-  // Keyboard shortcuts for undo/redo
+  // Keyboard shortcuts for undo/redo - optimized with proper dependencies
   useEffect(() => {
+    if (!restaurant || previewMode) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !previewMode) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        
         if (e.shiftKey) {
           const nextTheme = redo();
-          if (nextTheme && restaurant) {
-            updateRestaurant.mutate({ id: restaurant.id, updates: { theme: nextTheme as any } });
+          if (nextTheme) {
+            updateRestaurant.mutate({ id: restaurant.id, updates: { theme: nextTheme } });
           }
         } else {
           const prevTheme = undo();
-          if (prevTheme && restaurant) {
-            updateRestaurant.mutate({ id: restaurant.id, updates: { theme: prevTheme as any } });
+          if (prevTheme) {
+            updateRestaurant.mutate({ id: restaurant.id, updates: { theme: prevTheme } });
           }
         }
-        e.preventDefault();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [previewMode, undo, redo, restaurant, updateRestaurant]);
+  }, [previewMode, restaurant?.id, undo, redo]);
 
   // Set initial active category
   useEffect(() => {
@@ -92,30 +95,38 @@ const Editor = () => {
 
   // Set initial active subcategory when category changes
   useEffect(() => {
+    if (!activeCategory) return;
+    
     const subsForActiveCategory = subcategories.filter(s => s.category_id === activeCategory);
-    if (subsForActiveCategory.length > 0 && !activeSubcategory) {
+    if (subsForActiveCategory.length > 0) {
       setActiveSubcategory(subsForActiveCategory[0].id);
+    } else {
+      setActiveSubcategory("");
     }
-  }, [subcategories, activeCategory, activeSubcategory]);
+  }, [subcategories, activeCategory]);
 
   const handlePublishToggle = async () => {
     if (!restaurant) return;
     
-    try {
-      await updateRestaurant.mutateAsync({
-        id: restaurant.id,
-        updates: { published: !restaurant.published }
-      });
-      toast.success(restaurant.published ? "Menu unpublished" : "Menu published!");
-    } catch (error) {
-      toast.error("Failed to update publish status");
-    }
+    const newPublishedState = !restaurant.published;
+    
+    // Optimistic UI - update immediately
+    updateRestaurant.mutate({
+      id: restaurant.id,
+      updates: { published: newPublishedState }
+    });
+    
+    // Show success immediately (optimistic)
+    toast.success(newPublishedState ? "Menu published!" : "Menu unpublished");
   };
 
   const handleViewModeChange = async (mode: 'grid' | 'table') => {
+    // Instant UI update
     setViewMode(mode);
+    
+    // Save in background
     if (restaurant) {
-      await updateRestaurant.mutateAsync({
+      updateRestaurant.mutate({
         id: restaurant.id,
         updates: { editor_view_mode: mode }
       });

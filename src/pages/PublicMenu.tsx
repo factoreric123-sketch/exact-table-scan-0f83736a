@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Bookmark, Share2, Menu as MenuIcon, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { useDishes } from "@/hooks/useDishes";
 import { useThemePreview } from "@/hooks/useThemePreview";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 
 const PublicMenu = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -46,10 +47,28 @@ const PublicMenu = () => {
     }
   }, [subcategories]);
 
-  if (restaurantLoading) {
+  // No loading spinner - show skeleton instead
+  if (restaurantLoading || !restaurant) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-background">
+        <div className="h-16 bg-muted/30 animate-skeleton-pulse border-b border-border" />
+        <div className="h-64 md:h-80 bg-muted/50 animate-skeleton-pulse" />
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex gap-3 overflow-x-auto pb-3 mb-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-10 w-24 bg-muted rounded-full animate-skeleton-pulse" />
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div key={i} className="space-y-2">
+                <div className="aspect-square bg-muted rounded-2xl animate-skeleton-pulse" />
+                <div className="h-4 bg-muted rounded animate-skeleton-pulse w-3/4" />
+                <div className="h-3 bg-muted rounded animate-skeleton-pulse w-1/2" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -64,7 +83,7 @@ const PublicMenu = () => {
         .rpc('has_premium_subscription', { user_id_param: restaurant.owner_id });
 
       if (error) {
-        console.error('Error checking premium status:', error);
+        logger.error('Error checking premium status:', error);
         return false;
       }
 
@@ -111,100 +130,80 @@ const PublicMenu = () => {
   const categoryNames = categories?.map((c) => c.name) || [];
   const activeCategoryName = categories?.find((c) => c.id === activeCategory)?.name || "";
 
-  // Filter dishes based on selected allergens and dietary preferences - Optimized with useMemo
+  // Optimized dish transformation function - extract to avoid duplication  
+  const transformDish = useCallback((d: NonNullable<typeof dishes>[number], category: string, subcategory: string) => ({
+    id: d.id,
+    name: d.name,
+    description: d.description || "",
+    price: d.price,
+    image: d.image_url || "",
+    isNew: d.is_new,
+    isSpecial: d.is_special,
+    isPopular: d.is_popular,
+    isChefRecommendation: d.is_chef_recommendation,
+    category,
+    subcategory,
+    allergens: d.allergens,
+    calories: d.calories,
+    isVegetarian: d.is_vegetarian,
+    isVegan: d.is_vegan,
+    isSpicy: d.is_spicy,
+  }), []);
+
+  // Filter dishes based on selected allergens and dietary preferences
   const filteredDishes = useMemo(() => {
     if (!dishes || dishes.length === 0) return [];
 
-    let filtered = dishes;
-
     // Fast path: No filters applied
     if (selectedAllergens.length === 0 && selectedDietary.length === 0) {
-      return dishes.map((d) => ({
-        id: d.id,
-        name: d.name,
-        description: d.description || "",
-        price: d.price,
-        image: d.image_url || "",
-        isNew: d.is_new,
-        isSpecial: d.is_special,
-        isPopular: d.is_popular,
-        isChefRecommendation: d.is_chef_recommendation,
-        category: activeCategoryName,
-        subcategory: activeSubcategoryObj?.name || "",
-        allergens: d.allergens,
-        calories: d.calories,
-        isVegetarian: d.is_vegetarian,
-        isVegan: d.is_vegan,
-        isSpicy: d.is_spicy,
-      }));
+      return dishes.map((d) => transformDish(d, activeCategoryName, activeSubcategoryObj?.name || ""));
     }
 
-    // Filter out dishes with selected allergens
-    if (selectedAllergens.length > 0) {
-      filtered = filtered.filter((dish) => {
-        if (!dish.allergens || dish.allergens.length === 0) return true;
-        return !dish.allergens.some((allergen) =>
-          selectedAllergens.includes(allergen.toLowerCase())
-        );
-      });
-    }
-
-    // Filter by dietary preferences - show ONLY dishes matching selected preferences
-    if (selectedDietary.length > 0) {
-      const isVeganSelected = selectedDietary.includes("vegan");
-      const isVegetarianSelected = selectedDietary.includes("vegetarian");
+    // Apply filters
+    const isVeganSelected = selectedDietary.includes("vegan");
+    const isVegetarianSelected = selectedDietary.includes("vegetarian");
+    
+    const filtered = dishes.filter((dish) => {
+      // Filter allergens
+      if (selectedAllergens.length > 0 && dish.allergens && dish.allergens.length > 0) {
+        if (dish.allergens.some((allergen) => selectedAllergens.includes(allergen.toLowerCase()))) {
+          return false;
+        }
+      }
       
-      filtered = filtered.filter((dish) => {
-        // If vegan is selected, show only vegan dishes
+      // Filter dietary
+      if (selectedDietary.length > 0) {
         if (isVeganSelected && !dish.is_vegan) return false;
-        
-        // If vegetarian is selected (but not vegan), show vegetarian OR vegan dishes
         if (isVegetarianSelected && !isVeganSelected && !dish.is_vegetarian && !dish.is_vegan) return false;
-        
-        return true;
-      });
-    }
+      }
+      
+      return true;
+    });
 
-    return filtered.map((d) => ({
-      id: d.id,
-      name: d.name,
-      description: d.description || "",
-      price: d.price,
-      image: d.image_url || "",
-      isNew: d.is_new,
-      isSpecial: d.is_special,
-      isPopular: d.is_popular,
-      isChefRecommendation: d.is_chef_recommendation,
-      category: activeCategoryName,
-      subcategory: activeSubcategoryObj?.name || "",
-      allergens: d.allergens,
-      calories: d.calories,
-      isVegetarian: d.is_vegetarian,
-      isVegan: d.is_vegan,
-      isSpicy: d.is_spicy,
-    }));
-  }, [dishes, selectedAllergens, selectedDietary, activeCategoryName, activeSubcategoryObj]);
+    return filtered.map((d) => transformDish(d, activeCategoryName, activeSubcategoryObj?.name || ""));
+  }, [dishes, selectedAllergens, selectedDietary, activeCategoryName, activeSubcategoryObj, transformDish]);
 
-  const handleAllergenToggle = (allergen: string) => {
+  // Memoize handlers to prevent re-renders
+  const handleAllergenToggle = useCallback((allergen: string) => {
     setSelectedAllergens((prev) =>
       prev.includes(allergen)
         ? prev.filter((a) => a !== allergen)
         : [...prev, allergen]
     );
-  };
+  }, []);
 
-  const handleDietaryToggle = (dietary: string) => {
+  const handleDietaryToggle = useCallback((dietary: string) => {
     setSelectedDietary((prev) =>
       prev.includes(dietary)
         ? prev.filter((d) => d !== dietary)
         : [...prev, dietary]
     );
-  };
+  }, []);
 
-  const handleClearFilters = () => {
+  const handleClearFilters = useCallback(() => {
     setSelectedAllergens([]);
     setSelectedDietary([]);
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">

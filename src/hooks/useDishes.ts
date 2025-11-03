@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { generateTempId } from "@/lib/utils/uuid";
 
 export interface Dish {
   id: string;
@@ -81,25 +82,60 @@ export const useCreateDish = () => {
 
       const { data, error } = await supabase
         .from("dishes")
-        .insert([dish as any])
+        .insert([dish])
         .select()
         .single();
 
       if (error) {
-        console.error("Error creating dish:", error);
         if (error.code === "42501") {
           throw new Error("Permission denied. Please make sure you're logged in and have access to this restaurant.");
         }
         throw error;
       }
-      return data;
+      return data as Dish;
+    },
+    onMutate: async (dish) => {
+      // Optimistic create
+      if (!dish.subcategory_id) return;
+      
+      await queryClient.cancelQueries({ queryKey: ["dishes", dish.subcategory_id] });
+      const previous = queryClient.getQueryData<Dish[]>(["dishes", dish.subcategory_id]);
+      
+      if (previous) {
+        const tempDish: Dish = {
+          id: generateTempId(),
+          subcategory_id: dish.subcategory_id,
+          name: dish.name || "New Dish",
+          description: dish.description || null,
+          price: dish.price || "0.00",
+          image_url: dish.image_url || null,
+          is_new: dish.is_new || false,
+          is_special: dish.is_special || false,
+          is_popular: dish.is_popular || false,
+          is_chef_recommendation: dish.is_chef_recommendation || false,
+          order_index: dish.order_index ?? previous.length,
+          created_at: new Date().toISOString(),
+          allergens: dish.allergens || null,
+          calories: dish.calories || null,
+          is_vegetarian: dish.is_vegetarian || false,
+          is_vegan: dish.is_vegan || false,
+          is_spicy: dish.is_spicy || false,
+          has_options: dish.has_options || false,
+        };
+        queryClient.setQueryData<Dish[]>(["dishes", dish.subcategory_id], [...previous, tempDish]);
+      }
+      
+      return { previous, subcategoryId: dish.subcategory_id };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["dishes", data.subcategory_id] });
       queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
       toast.success("Dish created");
     },
-    onError: (error: any) => {
+    onError: (error: Error, _variables, context) => {
+      if (context?.previous && context.subcategoryId) {
+        queryClient.setQueryData(["dishes", context.subcategoryId], context.previous);
+      }
       toast.error(error.message || "Failed to create dish");
     },
   });
@@ -120,9 +156,34 @@ export const useUpdateDish = () => {
       if (error) throw error;
       return data;
     },
+    onMutate: async ({ id, updates }) => {
+      // Optimistic update
+      const dish = queryClient.getQueriesData<Dish[]>({ queryKey: ["dishes"] })
+        .flatMap(([, data]) => data || [])
+        .find((d) => d.id === id);
+      
+      if (dish) {
+        await queryClient.cancelQueries({ queryKey: ["dishes", dish.subcategory_id] });
+        const previous = queryClient.getQueryData<Dish[]>(["dishes", dish.subcategory_id]);
+        
+        if (previous) {
+          queryClient.setQueryData<Dish[]>(
+            ["dishes", dish.subcategory_id],
+            previous.map((d) => (d.id === id ? { ...d, ...updates } : d))
+          );
+        }
+        
+        return { previous, subcategoryId: dish.subcategory_id };
+      }
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["dishes", data.subcategory_id] });
       queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous && context.subcategoryId) {
+        queryClient.setQueryData(["dishes", context.subcategoryId], context.previous);
+      }
     },
   });
 };
@@ -140,10 +201,30 @@ export const useDeleteDish = () => {
       if (error) throw error;
       return subcategoryId;
     },
+    onMutate: async ({ id, subcategoryId }) => {
+      // Optimistic delete
+      await queryClient.cancelQueries({ queryKey: ["dishes", subcategoryId] });
+      const previous = queryClient.getQueryData<Dish[]>(["dishes", subcategoryId]);
+      
+      if (previous) {
+        queryClient.setQueryData<Dish[]>(
+          ["dishes", subcategoryId],
+          previous.filter((d) => d.id !== id)
+        );
+      }
+      
+      return { previous, subcategoryId };
+    },
     onSuccess: (subcategoryId) => {
       queryClient.invalidateQueries({ queryKey: ["dishes", subcategoryId] });
       queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
       toast.success("Dish deleted");
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous && context.subcategoryId) {
+        queryClient.setQueryData(["dishes", context.subcategoryId], context.previous);
+      }
+      toast.error("Failed to delete dish");
     },
   });
 };

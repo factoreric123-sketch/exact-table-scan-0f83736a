@@ -5,6 +5,7 @@ import { Check, Crown, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { logger } from "@/lib/logger";
 
 interface PaywallModalProps {
   open: boolean;
@@ -41,7 +42,7 @@ export const PaywallModal = ({ open, onOpenChange, feature }: PaywallModalProps)
         window.location.href = data.checkoutUrl;
       }
     } catch (error) {
-      console.error('Error creating checkout session:', error);
+      logger.error('Error creating checkout session:', error);
       toast({
         title: "Error",
         description: "Failed to start checkout. Please try again.",

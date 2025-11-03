@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { logger } from "@/lib/logger";
 
 export interface SubscriptionStatus {
   has_premium: boolean;
@@ -22,7 +23,7 @@ export const useSubscription = () => {
         .rpc('get_subscription_status');
 
       if (error) {
-        console.error('Error fetching subscription:', error);
+        logger.error('Error fetching subscription:', error);
         return null;
       }
 

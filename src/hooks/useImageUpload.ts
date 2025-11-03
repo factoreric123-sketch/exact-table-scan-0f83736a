@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 interface UploadImageParams {
   file: File;
@@ -29,9 +30,10 @@ export const useImageUpload = () => {
 
       return data.publicUrl;
     },
-    onError: (error: any) => {
-      console.error("Error uploading image:", error);
-      toast.error(error.message || "Failed to upload image");
+    onError: (error) => {
+      logger.error("Error uploading image:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to upload image";
+      toast.error(errorMessage);
     },
   });
 };

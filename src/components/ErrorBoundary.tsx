@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
+import { logger, logErrorToService } from "@/lib/logger";
 
 interface Props {
   children: ReactNode;
@@ -22,8 +23,14 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
-    // TODO: Send to error tracking service (Sentry, LogRocket, etc.)
+    // Development logging
+    logger.error("Uncaught error:", error, errorInfo);
+    
+    // Production error tracking
+    logErrorToService(error, {
+      componentStack: errorInfo.componentStack,
+      errorBoundary: true,
+    });
   }
 
   private handleReset = () => {

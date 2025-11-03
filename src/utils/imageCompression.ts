@@ -1,4 +1,5 @@
 import imageCompression from 'browser-image-compression';
+import { logger } from '@/lib/logger';
 
 export async function getCroppedImg(
   imageSrc: string,
@@ -65,7 +66,7 @@ export async function compressImage(file: File | Blob): Promise<File> {
     const compressedFile = await imageCompression(file as File, options);
     return compressedFile;
   } catch (error) {
-    console.error('Error compressing image:', error);
+    logger.error('Error compressing image:', error);
     // Fallback to JPEG if WebP fails
     try {
       const fallbackOptions = {
@@ -74,7 +75,7 @@ export async function compressImage(file: File | Blob): Promise<File> {
       };
       return await imageCompression(file as File, fallbackOptions);
     } catch (fallbackError) {
-      console.error('Fallback compression also failed:', fallbackError);
+      logger.error('Fallback compression also failed:', fallbackError);
       throw fallbackError;
     }
   }

@@ -120,12 +120,13 @@ export const CreateRestaurantModal = ({ open, onOpenChange }: CreateRestaurantMo
       
       onOpenChange(false);
       navigate(`/editor/${newRestaurant.id}`);
-    } catch (error: any) {
+    } catch (error) {
       // Handle slug collision
-      if (error.message?.includes("duplicate") || error.message?.includes("unique")) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes("duplicate") || errorMessage.includes("unique")) {
         toast.error("A restaurant with this name already exists. Please choose a different name.");
       } else {
-        toast.error(error.message || "Failed to create restaurant");
+        toast.error(errorMessage || "Failed to create restaurant");
       }
     } finally {
       setLoading(false);
