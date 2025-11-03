@@ -1,7 +1,14 @@
+import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { X, Flame, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Salad } from "lucide-react";
+import { X, Flame, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Salad, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { useDishOptions } from "@/hooks/useDishOptions";
+import { useDishModifiers } from "@/hooks/useDishModifiers";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export interface DishDetail {
   id: string;
@@ -14,6 +21,7 @@ export interface DishDetail {
   isVegetarian?: boolean;
   isVegan?: boolean;
   isSpicy?: boolean;
+  hasOptions?: boolean;
 }
 
 interface DishDetailDialogProps {
@@ -37,6 +45,47 @@ const allergenIconMap: Record<string, any> = {
 
 export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogProps) => {
   if (!dish) return null;
+
+  const { data: options = [] } = useDishOptions(dish.id);
+  const { data: modifiers = [] } = useDishModifiers(dish.id);
+  const [selectedOption, setSelectedOption] = useState(options[0]?.id || "");
+  const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
+  const [showOptions, setShowOptions] = useState(false);
+
+  const calculateTotalPrice = () => {
+    let total = 0;
+    
+    // Base price or selected option price
+    if (dish.hasOptions && options.length > 0) {
+      const option = options.find(o => o.id === selectedOption);
+      if (option) {
+        const price = parseFloat(option.price.replace(/[^0-9.]/g, ""));
+        if (!isNaN(price)) total += price;
+      }
+    } else {
+      const price = parseFloat(dish.price.replace(/[^0-9.]/g, ""));
+      if (!isNaN(price)) total += price;
+    }
+    
+    // Add modifiers
+    selectedModifiers.forEach(modId => {
+      const modifier = modifiers.find(m => m.id === modId);
+      if (modifier) {
+        const price = parseFloat(modifier.price.replace(/[^0-9.]/g, ""));
+        if (!isNaN(price)) total += price;
+      }
+    });
+    
+    return `$${total.toFixed(2)}`;
+  };
+
+  const handleModifierToggle = (modifierId: string) => {
+    setSelectedModifiers(prev =>
+      prev.includes(modifierId)
+        ? prev.filter(id => id !== modifierId)
+        : [...prev, modifierId]
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -106,13 +155,65 @@ export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogP
             <p className="text-muted-foreground leading-relaxed">{dish.description}</p>
           </div>
 
-          {/* Price and calories */}
-          <div className="flex items-center justify-between pt-4 border-t border-border">
-            <div className="text-3xl font-semibold text-foreground">{dish.price}</div>
-            {dish.calories && (
-              <div className="text-sm text-muted-foreground">
-                {dish.calories} calories
-              </div>
+          {/* Price and Options */}
+          <div className="pt-4 border-t border-border space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="text-3xl font-semibold text-foreground">{calculateTotalPrice()}</div>
+              {dish.calories && (
+                <div className="text-sm text-muted-foreground">
+                  {dish.calories} calories
+                </div>
+              )}
+            </div>
+
+            {dish.hasOptions && (options.length > 0 || modifiers.length > 0) && (
+              <Collapsible open={showOptions} onOpenChange={setShowOptions}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="default" className="w-full" size="lg">
+                    <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${showOptions ? 'rotate-180' : ''}`} />
+                    Options
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-4 pt-4">
+                  {options.length > 0 && (
+                    <div className="space-y-3">
+                      <Label className="text-base font-semibold">Size / Type</Label>
+                      <RadioGroup value={selectedOption} onValueChange={setSelectedOption} className="space-y-2">
+                        {options.map((option) => (
+                          <div key={option.id} className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value={option.id} id={option.id} />
+                              <Label htmlFor={option.id} className="cursor-pointer">{option.name}</Label>
+                            </div>
+                            <span className="text-sm font-semibold">{option.price}</span>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                  )}
+
+                  {modifiers.length > 0 && (
+                    <div className="space-y-3">
+                      <Label className="text-base font-semibold">Add-ons (Optional)</Label>
+                      <div className="space-y-2">
+                        {modifiers.map((modifier) => (
+                          <div key={modifier.id} className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={modifier.id}
+                                checked={selectedModifiers.includes(modifier.id)}
+                                onCheckedChange={() => handleModifierToggle(modifier.id)}
+                              />
+                              <Label htmlFor={modifier.id} className="cursor-pointer">{modifier.name}</Label>
+                            </div>
+                            <span className="text-sm font-semibold">{modifier.price}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
             )}
           </div>
         </div>

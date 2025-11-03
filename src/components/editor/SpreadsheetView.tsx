@@ -179,7 +179,7 @@ export const SpreadsheetView = ({
         ref={parentRef}
         className="flex-1 overflow-x-auto overflow-y-auto bg-background px-12"
       >
-        <table className="min-w-[1580px] w-full caption-bottom text-sm border-collapse">
+        <table className="min-w-[1680px] w-full caption-bottom text-sm border-collapse">
           <thead className="sticky top-0 z-30 bg-muted border-b">
             <tr className="border-b">
               <th className="sticky left-0 z-40 bg-muted h-12 px-6 text-left align-middle font-semibold text-sm w-[40px] border-r-2 border-border">
@@ -204,6 +204,7 @@ export const SpreadsheetView = ({
               <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[200px]">Dietary Info</th>
               <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[240px]">Badges & Labels</th>
               <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[100px]">Calories</th>
+              <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[100px]">Options</th>
               <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[100px]">Actions</th>
             </tr>
           </thead>

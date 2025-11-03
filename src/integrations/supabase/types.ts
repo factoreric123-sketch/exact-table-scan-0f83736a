@@ -46,12 +46,83 @@ export type Database = {
           },
         ]
       }
+      dish_modifiers: {
+        Row: {
+          created_at: string | null
+          dish_id: string
+          id: string
+          name: string
+          order_index: number
+          price: string
+        }
+        Insert: {
+          created_at?: string | null
+          dish_id: string
+          id?: string
+          name: string
+          order_index?: number
+          price: string
+        }
+        Update: {
+          created_at?: string | null
+          dish_id?: string
+          id?: string
+          name?: string
+          order_index?: number
+          price?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dish_modifiers_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dish_options: {
+        Row: {
+          created_at: string | null
+          dish_id: string
+          id: string
+          name: string
+          order_index: number
+          price: string
+        }
+        Insert: {
+          created_at?: string | null
+          dish_id: string
+          id?: string
+          name: string
+          order_index?: number
+          price: string
+        }
+        Update: {
+          created_at?: string | null
+          dish_id?: string
+          id?: string
+          name?: string
+          order_index?: number
+          price?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dish_options_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dishes: {
         Row: {
           allergens: string[] | null
           calories: number | null
           created_at: string | null
           description: string | null
+          has_options: boolean | null
           id: string
           image_url: string | null
           is_chef_recommendation: boolean | null
@@ -71,6 +142,7 @@ export type Database = {
           calories?: number | null
           created_at?: string | null
           description?: string | null
+          has_options?: boolean | null
           id?: string
           image_url?: string | null
           is_chef_recommendation?: boolean | null
@@ -90,6 +162,7 @@ export type Database = {
           calories?: number | null
           created_at?: string | null
           description?: string | null
+          has_options?: boolean | null
           id?: string
           image_url?: string | null
           is_chef_recommendation?: boolean | null

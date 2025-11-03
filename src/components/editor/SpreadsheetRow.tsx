@@ -1,9 +1,11 @@
 import { useState, CSSProperties } from "react";
 import { Button } from "@/components/ui/button";
-import { Trash2, Upload } from "lucide-react";
+import { Trash2, Upload, DollarSign } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { EditableCell } from "./EditableCell";
 import { useUpdateDish, useDeleteDish, type Dish } from "@/hooks/useDishes";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import { DishOptionsEditor } from "./DishOptionsEditor";
 import { toast } from "sonner";
 
 interface SpreadsheetRowProps {
@@ -19,6 +21,7 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
   const uploadImage = useImageUpload();
   const [localDish, setLocalDish] = useState(dish);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [showOptionsEditor, setShowOptionsEditor] = useState(false);
 
   const handleUpdate = async (field: keyof Dish, value: any) => {
     setLocalDish({ ...localDish, [field]: value });
@@ -176,6 +179,21 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
           onSave={(value) => handleUpdate("calories", value ? parseInt(value as string) : null)}
         />
       </td>
+      <td className="p-4 align-middle w-[100px]">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowOptionsEditor(true)}
+          className="h-8"
+        >
+          <DollarSign className="h-4 w-4 mr-1" />
+          {dish.has_options && (
+            <Badge variant="secondary" className="ml-1 text-xs px-1">
+              ✓
+            </Badge>
+          )}
+        </Button>
+      </td>
       <td className="p-4 align-middle w-[80px]">
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="sm" onClick={handleDelete} className="h-8 w-8 p-0">
@@ -183,6 +201,14 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
           </Button>
         </div>
       </td>
+
+      <DishOptionsEditor
+        dishId={dish.id}
+        dishName={dish.name}
+        hasOptions={dish.has_options}
+        open={showOptionsEditor}
+        onOpenChange={setShowOptionsEditor}
+      />
     </tr>
   );
 };

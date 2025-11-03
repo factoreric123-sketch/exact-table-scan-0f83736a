@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { useDebounce } from "use-debounce";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, Image as ImageIcon, ChevronDown, Flame, Sparkles, Star, TrendingUp, ChefHat, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Leaf, Salad } from "lucide-react";
+import { GripVertical, Trash2, Image as ImageIcon, ChevronDown, Flame, Sparkles, Star, TrendingUp, ChefHat, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Leaf, Salad, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -14,6 +14,7 @@ import { useUpdateDish, useDeleteDish, type Dish } from "@/hooks/useDishes";
 import { ImageCropModal } from "@/components/ImageCropModal";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { ALLERGEN_OPTIONS } from "@/components/AllergenFilter";
+import { DishOptionsEditor } from "./DishOptionsEditor";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +43,7 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
   const [showCropModal, setShowCropModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showOptionsEditor, setShowOptionsEditor] = useState(false);
   const [localCalories, setLocalCalories] = useState(dish.calories?.toString() || "");
   const [debouncedCalories] = useDebounce(localCalories, 500);
   
@@ -364,6 +366,22 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
               </div>
             </CollapsibleContent>
           </Collapsible>
+
+          {/* Pricing Options Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mt-2"
+            onClick={() => setShowOptionsEditor(true)}
+          >
+            <DollarSign className="h-4 w-4 mr-2" />
+            Pricing Options
+            {dish.has_options && (
+              <Badge variant="secondary" className="ml-2">
+                Enabled
+              </Badge>
+            )}
+          </Button>
         </div>
       </div>
 
@@ -375,6 +393,14 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
           onCropComplete={handleImageCrop}
         />
       )}
+
+      <DishOptionsEditor
+        dishId={dish.id}
+        dishName={dish.name}
+        hasOptions={dish.has_options}
+        open={showOptionsEditor}
+        onOpenChange={setShowOptionsEditor}
+      />
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>

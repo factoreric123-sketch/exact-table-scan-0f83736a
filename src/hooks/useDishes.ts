@@ -20,6 +20,7 @@ export interface Dish {
   is_vegetarian: boolean;
   is_vegan: boolean;
   is_spicy: boolean;
+  has_options: boolean;
 }
 
 export const useDishes = (subcategoryId: string) => {
