@@ -48,9 +48,9 @@ export const useDishesByRestaurant = (restaurantId: string) => {
         .from("dishes")
         .select(`
           *,
-          subcategories!inner (
+          subcategories!dishes_subcategory_id_fkey!inner (
             category_id,
-            categories!inner (
+            categories!subcategories_category_id_fkey!inner (
               restaurant_id
             )
           )

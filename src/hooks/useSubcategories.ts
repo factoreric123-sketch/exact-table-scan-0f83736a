@@ -35,7 +35,7 @@ export const useSubcategoriesByRestaurant = (restaurantId: string) => {
         .from("subcategories")
         .select(`
           *,
-          categories!inner (
+          categories!subcategories_category_id_fkey!inner (
             restaurant_id
           )
         `)
