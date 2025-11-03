@@ -78,17 +78,16 @@ export const SortableSubcategory = ({
             ${isActive ? 'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-foreground' : ''}
           `}
         >
-          <span
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <span className="opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
             <GripVertical className="h-3 w-3" />
           </span>
-          <InlineEdit
-            value={subcategory.name}
-            onSave={handleNameUpdate}
-            className="bg-transparent border-none focus:outline-none focus:ring-0 text-xs font-bold uppercase tracking-wider"
-          />
+          <div onClick={(e) => e.stopPropagation()}>
+            <InlineEdit
+              value={subcategory.name}
+              onSave={handleNameUpdate}
+              className="bg-transparent border-none focus:outline-none focus:ring-0 text-xs font-bold uppercase tracking-wider"
+            />
+          </div>
           <button
             onClick={(e) => {
               e.stopPropagation();

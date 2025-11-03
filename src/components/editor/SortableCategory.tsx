@@ -78,17 +78,16 @@ export const SortableCategory = ({
             }
           `}
         >
-          <span
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <span className="opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
             <GripVertical className="h-4 w-4" />
           </span>
-          <InlineEdit
-            value={category.name}
-            onSave={handleNameUpdate}
-            className="bg-transparent border-none focus:outline-none focus:ring-0"
-          />
+          <div onClick={(e) => e.stopPropagation()}>
+            <InlineEdit
+              value={category.name}
+              onSave={handleNameUpdate}
+              className="bg-transparent border-none focus:outline-none focus:ring-0"
+            />
+          </div>
           <button
             onClick={(e) => {
               e.stopPropagation();

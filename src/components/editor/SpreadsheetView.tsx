@@ -10,6 +10,7 @@ import type { Category } from "@/hooks/useCategories";
 import type { Subcategory } from "@/hooks/useSubcategories";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SpreadsheetViewProps {
   dishes: Dish[];
@@ -114,9 +115,36 @@ export const SpreadsheetView = ({
     setSelectedRows(new Set());
   };
 
+  const handleAddDish = async () => {
+    const subcategory = subcategories.find((s) => s.id === activeSubcategoryId);
+    if (!subcategory) {
+      toast.error("Please select a subcategory first");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("dishes")
+        .insert({
+          subcategory_id: activeSubcategoryId,
+          name: "New Dish",
+          description: "",
+          price: "0",
+          order_index: dishes.length,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      toast.success("Dish added successfully");
+    } catch (error) {
+      toast.error("Failed to add dish");
+    }
+  };
+
   return (
     <div className="h-full flex flex-col bg-background">
-      <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
+      <div className="flex items-center justify-between px-8 py-3 border-b bg-background">
         <div className="flex items-center gap-2">
           {selectedRows.size > 0 && (
             <>
@@ -149,12 +177,12 @@ export const SpreadsheetView = ({
 
       <div
         ref={parentRef}
-        className="flex-1 overflow-x-auto overflow-y-auto bg-background"
+        className="flex-1 overflow-x-auto overflow-y-auto bg-background px-8"
       >
         <table className="min-w-[1580px] w-full caption-bottom text-sm border-collapse">
           <thead className="sticky top-0 z-30 bg-muted/30 backdrop-blur-sm border-b">
             <tr className="border-b">
-              <th className="sticky left-0 z-40 bg-muted/30 backdrop-blur-sm h-12 px-4 text-left align-middle font-semibold text-sm w-[40px]">
+              <th className="sticky left-0 z-40 bg-muted/30 backdrop-blur-sm h-12 px-6 text-left align-middle font-semibold text-sm w-[40px]">
                 <input
                   type="checkbox"
                   checked={selectedRows.size === dishes.length && dishes.length > 0}
@@ -173,10 +201,10 @@ export const SpreadsheetView = ({
               <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[300px]">Description</th>
               <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[100px]">Price</th>
               <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[280px]">Allergens</th>
-              <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[200px]">Dietary</th>
-              <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[240px]">Badges</th>
-              <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[80px]">Cal</th>
-              <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[80px]">Actions</th>
+              <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[200px]">Dietary Info</th>
+              <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[240px]">Badges & Labels</th>
+              <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[100px]">Calories</th>
+              <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[100px]">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -196,6 +224,18 @@ export const SpreadsheetView = ({
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Add Dish Button Footer */}
+      <div className="border-t bg-background px-8 py-3">
+        <Button
+          onClick={handleAddDish}
+          variant="outline"
+          className="gap-2"
+        >
+          <Upload className="h-4 w-4" />
+          Add Dish
+        </Button>
       </div>
 
       <ExcelImportDialog

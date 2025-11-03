@@ -129,57 +129,65 @@ export const EditableCell = (props: EditableCellProps) => {
 
   // Multi-select (Allergens)
   if (props.type === "multi-select") {
-    const selected = props.value;
-    const available = props.options.filter((opt) => !selected.includes(opt));
-
-    const handleToggle = (allergen: string) => {
-      const newValue = selected.includes(allergen)
-        ? selected.filter((a) => a !== allergen)
-        : [...selected, allergen];
-      props.onSave(newValue);
-    };
-
     return (
-      <div className="flex flex-wrap items-center gap-1 min-h-[32px]">
-        {selected.map((allergen) => {
-          const Icon = allergenIcons[allergen];
+      <div className="flex flex-wrap gap-1">
+        {(localValue as string[]).map((item) => {
+          const Icon = allergenIcons[item];
           return (
-            <Badge
-              key={allergen}
-              variant="secondary"
-              className="gap-1 px-2 py-0.5 text-xs h-6 cursor-pointer hover:bg-secondary/80 transition-colors"
-              onClick={() => handleToggle(allergen)}
-            >
+            <Badge key={item} variant="secondary" className="gap-1 px-2 py-0.5 text-xs">
               {Icon && <Icon className="h-3 w-3" />}
-              {capitalize(allergen)}
-              <X className="h-2.5 w-2.5 opacity-70 hover:opacity-100" />
+              {capitalize(item)}
+              <X
+                className="h-2.5 w-2.5 cursor-pointer hover:text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const newValue = (localValue as string[]).filter((v) => v !== item);
+                  props.onSave(newValue);
+                }}
+              />
             </Badge>
           );
         })}
         <Popover>
-          <PopoverTrigger asChild>
+          <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
             <Badge
               variant="outline"
-              className="gap-1 px-2 py-0.5 text-xs h-6 cursor-pointer hover:bg-muted transition-colors"
+              className="cursor-pointer gap-1 px-2 py-0.5 text-xs hover:bg-muted"
             >
               <Plus className="h-3 w-3" />
             </Badge>
           </PopoverTrigger>
-          <PopoverContent className="w-64 p-2" align="start">
-            <div className="grid grid-cols-2 gap-1">
-              {available.map((allergen) => {
-                const Icon = allergenIcons[allergen];
-                return (
-                  <button
-                    key={allergen}
-                    onClick={() => handleToggle(allergen)}
-                    className="flex items-center gap-2 px-3 py-2 text-xs rounded hover:bg-muted transition-colors text-left"
-                  >
-                    {Icon && <Icon className="h-3.5 w-3.5 text-muted-foreground" />}
-                    {capitalize(allergen)}
-                  </button>
-                );
-              })}
+          <PopoverContent 
+            className="w-64" 
+            align="start" 
+            onClick={(e) => e.stopPropagation()}
+            onOpenAutoFocus={(e) => e.preventDefault()}
+          >
+            <div className="flex flex-col gap-2">
+              <div className="text-sm font-semibold mb-2">Add Allergens</div>
+              <div className="flex flex-wrap gap-1">
+                {props.options?.map((option) => {
+                  const isSelected = (localValue as string[]).includes(option);
+                  const Icon = allergenIcons[option];
+                  return (
+                    <Badge
+                      key={option}
+                      variant={isSelected ? "default" : "outline"}
+                      className="cursor-pointer gap-1 px-2 py-1 text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const newValue = isSelected
+                          ? (localValue as string[]).filter((v) => v !== option)
+                          : [...(localValue as string[]), option];
+                        props.onSave(newValue);
+                      }}
+                    >
+                      {Icon && <Icon className="h-3 w-3" />}
+                      {capitalize(option)}
+                    </Badge>
+                  );
+                })}
+              </div>
             </div>
           </PopoverContent>
         </Popover>

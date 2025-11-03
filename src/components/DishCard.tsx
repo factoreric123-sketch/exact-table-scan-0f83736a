@@ -1,6 +1,23 @@
 import { Badge } from "@/components/ui/badge";
-import { Flame, Sparkles, Star, TrendingUp, ChefHat } from "lucide-react";
+import { Flame, Sparkles, Star, TrendingUp, ChefHat, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird } from "lucide-react";
 import React from "react";
+
+// Capitalize helper
+const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+
+// Allergen icon map
+const allergenIcons: Record<string, React.ElementType> = {
+  gluten: Wheat,
+  dairy: Milk,
+  eggs: Egg,
+  fish: Fish,
+  shellfish: Shell,
+  nuts: Nut,
+  soy: Sprout,
+  pork: Beef,
+  beef: Beef,
+  poultry: Bird,
+};
 
 export interface Dish {
   id: string;
@@ -66,15 +83,19 @@ const DishCard = ({ dish, onClick }: DishCardProps) => {
         {/* Overlay badges */}
         {(dish.allergens && dish.allergens.length > 0) && (
           <div className="absolute bottom-2 left-2 right-2 flex flex-wrap gap-1">
-            {dish.allergens.slice(0, 3).map((allergen) => (
-              <Badge
-                key={allergen}
-                variant="secondary"
-                className="bg-background/90 backdrop-blur-sm text-xs px-2 py-0.5"
-              >
-                {allergen}
-              </Badge>
-            ))}
+            {dish.allergens.slice(0, 3).map((allergen) => {
+              const Icon = allergenIcons[allergen.toLowerCase()];
+              return (
+                <Badge
+                  key={allergen}
+                  variant="secondary"
+                  className="bg-background/90 backdrop-blur-sm text-xs px-2 py-0.5 gap-1"
+                >
+                  {Icon && <Icon className="h-3 w-3" />}
+                  {capitalize(allergen)}
+                </Badge>
+              );
+            })}
             {dish.allergens.length > 3 && (
               <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm text-xs px-2 py-0.5">
                 +{dish.allergens.length - 3}

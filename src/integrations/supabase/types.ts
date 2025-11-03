@@ -126,6 +126,7 @@ export type Database = {
           name: string
           owner_id: string
           published: boolean | null
+          show_allergen_filter: boolean | null
           slug: string
           tagline: string | null
           theme: Json | null
@@ -142,6 +143,7 @@ export type Database = {
           name: string
           owner_id: string
           published?: boolean | null
+          show_allergen_filter?: boolean | null
           slug: string
           tagline?: string | null
           theme?: Json | null
@@ -158,6 +160,7 @@ export type Database = {
           name?: string
           owner_id?: string
           published?: boolean | null
+          show_allergen_filter?: boolean | null
           slug?: string
           tagline?: string | null
           theme?: Json | null

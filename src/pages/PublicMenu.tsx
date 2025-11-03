@@ -126,14 +126,19 @@ const PublicMenu = () => {
       });
     }
 
-    // Filter by dietary preferences - show dishes matching ANY selected preference
+    // Filter by dietary preferences - show ONLY dishes matching selected preferences
     if (selectedDietary.length > 0) {
       filtered = filtered.filter((dish) => {
-        return selectedDietary.some((pref) => {
-          if (pref === "vegan") return dish.is_vegan;
-          if (pref === "vegetarian") return dish.is_vegetarian || dish.is_vegan;
-          return false;
-        });
+        const isVeganSelected = selectedDietary.includes("vegan");
+        const isVegetarianSelected = selectedDietary.includes("vegetarian");
+        
+        // If vegan is selected, show only vegan dishes
+        if (isVeganSelected && !dish.is_vegan) return false;
+        
+        // If vegetarian is selected (but not vegan), show vegetarian OR vegan dishes
+        if (isVegetarianSelected && !isVeganSelected && !dish.is_vegetarian && !dish.is_vegan) return false;
+        
+        return true;
       });
     }
 
@@ -228,15 +233,17 @@ const PublicMenu = () => {
       </div>
 
       {/* Allergen Filter */}
-      <AllergenFilter
-        selectedAllergens={selectedAllergens}
-        selectedDietary={selectedDietary}
-        onAllergenToggle={handleAllergenToggle}
-        onDietaryToggle={handleDietaryToggle}
-        onClear={handleClearFilters}
-        allergenOrder={restaurant.allergen_filter_order as string[] | undefined}
-        dietaryOrder={restaurant.dietary_filter_order as string[] | undefined}
-      />
+      {restaurant?.show_allergen_filter !== false && (
+        <AllergenFilter
+          selectedAllergens={selectedAllergens}
+          selectedDietary={selectedDietary}
+          onAllergenToggle={handleAllergenToggle}
+          onDietaryToggle={handleDietaryToggle}
+          onClear={handleClearFilters}
+          allergenOrder={restaurant.allergen_filter_order as string[] | undefined}
+          dietaryOrder={restaurant.dietary_filter_order as string[] | undefined}
+        />
+      )}
 
       {/* Main Content */}
       <main>
