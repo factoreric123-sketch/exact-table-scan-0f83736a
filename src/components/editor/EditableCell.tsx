@@ -88,24 +88,16 @@ export const EditableCell = (props: EditableCellProps) => {
           onBlur={handleSave}
           onKeyDown={handleKeyDown}
           className="h-8 text-sm border-border"
-          placeholder={props.type === "number" ? "0" : ""}
         />
       );
     }
-
-    const displayValue = String(localValue);
-    const showPlaceholder = !displayValue || displayValue === "0";
 
     return (
       <div
         onClick={() => setIsEditing(true)}
         className="cursor-text hover:bg-muted/50 rounded px-2 py-1 min-h-[32px] flex items-center transition-colors text-sm"
       >
-        {showPlaceholder ? (
-          <span className="text-muted-foreground">{props.type === "number" ? "" : ""}</span>
-        ) : (
-          displayValue
-        )}
+        {String(localValue) || <span className="text-muted-foreground">Click to edit</span>}
       </div>
     );
   }

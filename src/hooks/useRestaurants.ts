@@ -26,15 +26,12 @@ export const useRestaurants = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("restaurants")
-        .select("id, owner_id, name, slug, tagline, hero_image_url, theme, published, created_at, updated_at, allergen_filter_order, dietary_filter_order, badge_display_order, editor_view_mode, show_allergen_filter")
+        .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
       return data as Restaurant[];
     },
-    staleTime: 60000,
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
   });
 };
 
@@ -44,7 +41,7 @@ export const useRestaurant = (slug: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("restaurants")
-        .select("id, owner_id, name, slug, tagline, hero_image_url, theme, published, created_at, updated_at, allergen_filter_order, dietary_filter_order, badge_display_order, editor_view_mode, show_allergen_filter")
+        .select("*")
         .eq("slug", slug)
         .maybeSingle();
 
@@ -52,8 +49,6 @@ export const useRestaurant = (slug: string) => {
       return data as Restaurant | null;
     },
     enabled: !!slug,
-    staleTime: 60000,
-    retry: 2,
   });
 };
 
@@ -63,16 +58,14 @@ export const useRestaurantById = (id: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("restaurants")
-        .select("id, owner_id, name, slug, tagline, hero_image_url, theme, published, created_at, updated_at, allergen_filter_order, dietary_filter_order, badge_display_order, editor_view_mode, show_allergen_filter")
+        .select("*")
         .eq("id", id)
-        .maybeSingle();
+        .single();
 
       if (error) throw error;
       return data as Restaurant;
     },
     enabled: !!id,
-    staleTime: 60000,
-    retry: 2,
   });
 };
 
@@ -116,11 +109,10 @@ export const useUpdateRestaurant = () => {
       return data;
     },
     onSuccess: (data) => {
-      // Only invalidate what's necessary
-      queryClient.setQueryData(["restaurant", data.id], data);
-      queryClient.setQueryData(["restaurant", data.slug], data);
+      queryClient.invalidateQueries({ queryKey: ["restaurants"] });
+      queryClient.invalidateQueries({ queryKey: ["restaurant", data.id] });
+      queryClient.invalidateQueries({ queryKey: ["restaurant", data.slug] });
     },
-    retry: 1,
   });
 };
 
