@@ -44,6 +44,13 @@ export type Database = {
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_categories_restaurant"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
         ]
       }
       dish_modifiers: {
@@ -79,6 +86,13 @@ export type Database = {
             referencedRelation: "dishes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_dish_modifiers_dish"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
         ]
       }
       dish_options: {
@@ -109,6 +123,13 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "dish_options_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_dish_options_dish"
             columns: ["dish_id"]
             isOneToOne: false
             referencedRelation: "dishes"
@@ -180,6 +201,13 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "dishes_subcategory_id_fkey"
+            columns: ["subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "subcategories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_dishes_subcategory"
             columns: ["subcategory_id"]
             isOneToOne: false
             referencedRelation: "subcategories"
@@ -264,6 +292,13 @@ export type Database = {
           order_index?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_subcategories_category"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "subcategories_category_id_fkey"
             columns: ["category_id"]
