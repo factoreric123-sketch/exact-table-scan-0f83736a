@@ -15,7 +15,7 @@ const Dashboard = () => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { data: restaurants, isLoading } = useRestaurants();
+  const { data: restaurants = [], isLoading } = useRestaurants();
   const { hasPremium, subscription, refetch } = useSubscription();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
@@ -48,16 +48,8 @@ const Dashboard = () => {
     }
   }, [searchParams, setSearchParams, refetch]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" style={{ minHeight: '100vh' }}>
       <header className="border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div>
@@ -84,30 +76,52 @@ const Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Create New Restaurant Card */}
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="border-2 border-dashed border-border rounded-lg p-8 flex flex-col items-center justify-center gap-4 hover:border-primary transition-colors min-h-[300px]"
-          >
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Plus className="h-8 w-8 text-primary" />
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Create card skeleton */}
+            <div className="border-2 border-dashed border-border rounded-lg p-8 min-h-[300px] animate-pulse">
+              <div className="h-16 w-16 rounded-full bg-muted mx-auto mb-4" />
+              <div className="h-4 w-32 bg-muted rounded mx-auto mb-2" />
+              <div className="h-3 w-48 bg-muted rounded mx-auto" />
             </div>
-            <div className="text-center">
-              <h3 className="font-semibold text-lg mb-1">Create New Restaurant</h3>
-              <p className="text-sm text-muted-foreground">
-                Start building your digital menu
-              </p>
-            </div>
-          </button>
+            {/* Restaurant card skeletons */}
+            {[1, 2].map((i) => (
+              <div key={i} className="border border-border rounded-lg overflow-hidden">
+                <div className="aspect-video bg-muted animate-pulse" />
+                <div className="p-4 space-y-3">
+                  <div className="h-5 bg-muted rounded animate-pulse" />
+                  <div className="h-4 bg-muted rounded w-2/3 animate-pulse" />
+                  <div className="h-8 bg-muted rounded animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Create New Restaurant Card */}
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="border-2 border-dashed border-border rounded-lg p-8 flex flex-col items-center justify-center gap-4 hover:border-primary transition-colors min-h-[300px]"
+            >
+              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Plus className="h-8 w-8 text-primary" />
+              </div>
+              <div className="text-center">
+                <h3 className="font-semibold text-lg mb-1">Create New Restaurant</h3>
+                <p className="text-sm text-muted-foreground">
+                  Start building your digital menu
+                </p>
+              </div>
+            </button>
 
-          {/* Restaurant Cards */}
-          {restaurants?.map((restaurant) => (
-            <RestaurantCard key={restaurant.id} restaurant={restaurant} />
-          ))}
-        </div>
+            {/* Restaurant Cards */}
+            {restaurants.map((restaurant) => (
+              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+            ))}
+          </div>
+        )}
 
-        {restaurants?.length === 0 && (
+        {!isLoading && restaurants.length === 0 && (
           <div className="text-center py-12">
             <p className="text-muted-foreground">
               You haven't created any restaurants yet. Click the card above to get started!

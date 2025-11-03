@@ -52,9 +52,13 @@ function createImage(url: string): Promise<HTMLImageElement> {
 
 export async function compressImage(file: File | Blob): Promise<File> {
   const options = {
-    maxSizeMB: 1,
-    maxWidthOrHeight: 800,
-    useWebWorker: true,
+    maxSizeMB: 0.8, // Reduced from 1MB for faster loading
+    maxWidthOrHeight: 1200, // Increased for better quality on retina displays
+    useWebWorker: true, // Use web worker for non-blocking compression
+    maxIteration: 10, // More iterations for better compression
+    initialQuality: 0.85, // Start with high quality
+    alwaysKeepResolution: false, // Allow resolution reduction if needed
+    fileType: 'image/webp' as any, // Use WebP for better compression
   };
 
   try {
@@ -62,6 +66,16 @@ export async function compressImage(file: File | Blob): Promise<File> {
     return compressedFile;
   } catch (error) {
     console.error('Error compressing image:', error);
-    throw error;
+    // Fallback to JPEG if WebP fails
+    try {
+      const fallbackOptions = {
+        ...options,
+        fileType: 'image/jpeg' as any,
+      };
+      return await imageCompression(file as File, fallbackOptions);
+    } catch (fallbackError) {
+      console.error('Fallback compression also failed:', fallbackError);
+      throw fallbackError;
+    }
   }
 }

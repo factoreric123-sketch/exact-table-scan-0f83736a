@@ -24,6 +24,8 @@ export const useCategories = (restaurantId: string) => {
       return data as Category[];
     },
     enabled: !!restaurantId,
+    staleTime: 1000 * 60, // 1 minute
+    gcTime: 1000 * 60 * 10, // 10 minutes cache
   });
 };
 

@@ -32,6 +32,8 @@ export const useRestaurants = () => {
       if (error) throw error;
       return data as Restaurant[];
     },
+    staleTime: 1000 * 60 * 2, // 2 minutes - restaurants don't change often
+    gcTime: 1000 * 60 * 15, // 15 minutes cache
   });
 };
 
@@ -49,6 +51,8 @@ export const useRestaurant = (slug: string) => {
       return data as Restaurant | null;
     },
     enabled: !!slug,
+    staleTime: 1000 * 60 * 3, // 3 minutes - public menus are mostly static
+    gcTime: 1000 * 60 * 20, // 20 minutes cache
   });
 };
 
@@ -66,6 +70,8 @@ export const useRestaurantById = (id: string) => {
       return data as Restaurant;
     },
     enabled: !!id,
+    staleTime: 1000 * 30, // 30 seconds - editor needs fresher data
+    gcTime: 1000 * 60 * 10, // 10 minutes cache
   });
 };
 

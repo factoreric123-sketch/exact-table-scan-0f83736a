@@ -24,6 +24,8 @@ export const useSubcategories = (categoryId: string) => {
       return data as Subcategory[];
     },
     enabled: !!categoryId,
+    staleTime: 1000 * 60, // 1 minute
+    gcTime: 1000 * 60 * 10, // 10 minutes cache
   });
 };
 
@@ -46,6 +48,8 @@ export const useSubcategoriesByRestaurant = (restaurantId: string) => {
       return data as Subcategory[];
     },
     enabled: !!restaurantId,
+    staleTime: 1000 * 30, // 30 seconds
+    gcTime: 1000 * 60 * 10, // 10 minutes cache
   });
 };
 

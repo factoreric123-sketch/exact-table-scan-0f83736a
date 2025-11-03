@@ -3,13 +3,22 @@ import { Restaurant } from "@/hooks/useRestaurants";
 import { Button } from "@/components/ui/button";
 import { Edit, ExternalLink } from "lucide-react";
 import restaurantHeroPlaceholder from "@/assets/restaurant-hero.jpg";
+import { memo, useCallback } from "react";
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
 }
 
-export const RestaurantCard = ({ restaurant }: RestaurantCardProps) => {
+export const RestaurantCard = memo(({ restaurant }: RestaurantCardProps) => {
   const navigate = useNavigate();
+
+  const handleEdit = useCallback(() => {
+    navigate(`/editor/${restaurant.id}`);
+  }, [navigate, restaurant.id]);
+
+  const handleOpen = useCallback(() => {
+    window.open(`/${restaurant.slug}`, "_blank");
+  }, [restaurant.slug]);
 
   return (
     <div className="border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
@@ -18,6 +27,8 @@ export const RestaurantCard = ({ restaurant }: RestaurantCardProps) => {
           src={restaurant.hero_image_url || restaurantHeroPlaceholder}
           alt={restaurant.name}
           className="w-full h-full object-cover"
+          loading="lazy"
+          decoding="async"
         />
       </div>
       <div className="p-4">
@@ -36,7 +47,7 @@ export const RestaurantCard = ({ restaurant }: RestaurantCardProps) => {
 
         <div className="flex gap-2">
           <Button
-            onClick={() => navigate(`/editor/${restaurant.id}`)}
+            onClick={handleEdit}
             className="flex-1"
           >
             <Edit className="h-4 w-4 mr-2" />
@@ -44,7 +55,7 @@ export const RestaurantCard = ({ restaurant }: RestaurantCardProps) => {
           </Button>
           <Button
             variant="outline"
-            onClick={() => window.open(`/${restaurant.slug}`, "_blank")}
+            onClick={handleOpen}
           >
             <ExternalLink className="h-4 w-4" />
           </Button>
@@ -52,4 +63,6 @@ export const RestaurantCard = ({ restaurant }: RestaurantCardProps) => {
       </div>
     </div>
   );
-};
+});
+
+RestaurantCard.displayName = 'RestaurantCard';

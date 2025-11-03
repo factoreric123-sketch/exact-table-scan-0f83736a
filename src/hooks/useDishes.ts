@@ -37,6 +37,8 @@ export const useDishes = (subcategoryId: string) => {
       return data as Dish[];
     },
     enabled: !!subcategoryId,
+    staleTime: 1000 * 60, // 1 minute
+    gcTime: 1000 * 60 * 10, // 10 minutes cache
   });
 };
 
@@ -62,6 +64,8 @@ export const useDishesByRestaurant = (restaurantId: string) => {
       return data as Dish[];
     },
     enabled: !!restaurantId,
+    staleTime: 1000 * 30, // 30 seconds
+    gcTime: 1000 * 60 * 10, // 10 minutes cache
   });
 };
 

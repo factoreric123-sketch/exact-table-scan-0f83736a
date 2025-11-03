@@ -1,10 +1,12 @@
+import { memo } from "react";
+
 interface SubcategoryNavProps {
   subcategories: string[];
   activeSubcategory: string;
   onSubcategoryChange: (subcategory: string) => void;
 }
 
-const SubcategoryNav = ({ subcategories, activeSubcategory, onSubcategoryChange }: SubcategoryNavProps) => {
+const SubcategoryNav = memo(({ subcategories, activeSubcategory, onSubcategoryChange }: SubcategoryNavProps) => {
   return (
     <nav className="flex gap-8 overflow-x-auto px-4 pb-3 scrollbar-hide">
       {subcategories.map((subcategory) => (
@@ -25,6 +27,8 @@ const SubcategoryNav = ({ subcategories, activeSubcategory, onSubcategoryChange 
       ))}
     </nav>
   );
-};
+});
+
+SubcategoryNav.displayName = 'SubcategoryNav';
 
 export default SubcategoryNav;

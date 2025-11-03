@@ -23,7 +23,23 @@ import TermsOfService from "./pages/legal/TermsOfService";
 import CookiePolicy from "./pages/legal/CookiePolicy";
 import GDPR from "./pages/legal/GDPR";
 
-const queryClient = new QueryClient();
+// Optimized QueryClient with smart defaults for instant UI updates
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes - data stays fresh longer
+      gcTime: 1000 * 60 * 10, // 10 minutes - keep cached data longer
+      refetchOnWindowFocus: false, // Don't refetch on tab switch - smoother UX
+      refetchOnMount: false, // Use cached data first - instant loading
+      refetchOnReconnect: false, // Don't auto-refetch on reconnect
+      retry: 1, // Only retry once - fail fast for better UX
+      retryDelay: 1000, // 1 second between retries
+    },
+    mutations: {
+      retry: 0, // Don't retry mutations - prevent duplicate operations
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

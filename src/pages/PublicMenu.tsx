@@ -71,6 +71,7 @@ const PublicMenu = () => {
       return data;
     },
     enabled: !!restaurant?.owner_id,
+    staleTime: 1000 * 60 * 10, // 10 minutes - cache premium status longer
   });
 
   if (!restaurant || !restaurant.published) {
@@ -110,11 +111,33 @@ const PublicMenu = () => {
   const categoryNames = categories?.map((c) => c.name) || [];
   const activeCategoryName = categories?.find((c) => c.id === activeCategory)?.name || "";
 
-  // Filter dishes based on selected allergens and dietary preferences
+  // Filter dishes based on selected allergens and dietary preferences - Optimized with useMemo
   const filteredDishes = useMemo(() => {
-    if (!dishes) return [];
+    if (!dishes || dishes.length === 0) return [];
 
     let filtered = dishes;
+
+    // Fast path: No filters applied
+    if (selectedAllergens.length === 0 && selectedDietary.length === 0) {
+      return dishes.map((d) => ({
+        id: d.id,
+        name: d.name,
+        description: d.description || "",
+        price: d.price,
+        image: d.image_url || "",
+        isNew: d.is_new,
+        isSpecial: d.is_special,
+        isPopular: d.is_popular,
+        isChefRecommendation: d.is_chef_recommendation,
+        category: activeCategoryName,
+        subcategory: activeSubcategoryObj?.name || "",
+        allergens: d.allergens,
+        calories: d.calories,
+        isVegetarian: d.is_vegetarian,
+        isVegan: d.is_vegan,
+        isSpicy: d.is_spicy,
+      }));
+    }
 
     // Filter out dishes with selected allergens
     if (selectedAllergens.length > 0) {
@@ -128,10 +151,10 @@ const PublicMenu = () => {
 
     // Filter by dietary preferences - show ONLY dishes matching selected preferences
     if (selectedDietary.length > 0) {
+      const isVeganSelected = selectedDietary.includes("vegan");
+      const isVegetarianSelected = selectedDietary.includes("vegetarian");
+      
       filtered = filtered.filter((dish) => {
-        const isVeganSelected = selectedDietary.includes("vegan");
-        const isVegetarianSelected = selectedDietary.includes("vegetarian");
-        
         // If vegan is selected, show only vegan dishes
         if (isVeganSelected && !dish.is_vegan) return false;
         

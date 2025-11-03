@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Flame, Sparkles, Star, TrendingUp, ChefHat, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird } from "lucide-react";
-import React from "react";
+import React, { memo } from "react";
 
 // Capitalize helper
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
@@ -43,7 +43,7 @@ interface DishCardProps {
   onClick?: () => void;
 }
 
-const DishCard = ({ dish, onClick }: DishCardProps) => {
+const DishCard = memo(({ dish, onClick }: DishCardProps) => {
   return (
     <div 
       className="group relative cursor-pointer" 
@@ -78,6 +78,7 @@ const DishCard = ({ dish, onClick }: DishCardProps) => {
           alt={`${dish.name} - ${dish.description}`}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
+          decoding="async"
         />
         
         {/* Overlay badges */}
@@ -120,7 +121,7 @@ const DishCard = ({ dish, onClick }: DishCardProps) => {
       </div>
     </div>
   );
-};
+});
 
 DishCard.displayName = 'DishCard';
 

@@ -25,6 +25,8 @@ export const useDishOptions = (dishId: string) => {
       return data as DishOption[];
     },
     enabled: !!dishId,
+    staleTime: 1000 * 60, // 1 minute
+    gcTime: 1000 * 60 * 10, // 10 minutes cache
   });
 };
 

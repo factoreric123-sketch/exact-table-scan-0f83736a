@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo, useCallback } from "react";
 import DishCard, { Dish } from "./DishCard";
 import { DishDetailDialog, DishDetail } from "./DishDetailDialog";
 
@@ -7,18 +7,11 @@ interface MenuGridProps {
   sectionTitle: string;
 }
 
-const MenuGrid = ({ dishes, sectionTitle }: MenuGridProps) => {
+const MenuGrid = memo(({ dishes, sectionTitle }: MenuGridProps) => {
   const [selectedDish, setSelectedDish] = useState<DishDetail | null>(null);
 
-  if (dishes.length === 0) {
-    return (
-      <div className="px-6 py-12 text-center">
-        <p className="text-muted-foreground">No dishes available in this category.</p>
-      </div>
-    );
-  }
-
-  const handleDishClick = (dish: Dish) => {
+  // Memoize callback to prevent re-renders
+  const handleDishClick = useCallback((dish: Dish) => {
     setSelectedDish({
       id: dish.id,
       name: dish.name,
@@ -31,7 +24,15 @@ const MenuGrid = ({ dishes, sectionTitle }: MenuGridProps) => {
       isVegan: dish.isVegan,
       isSpicy: dish.isSpicy,
     });
-  };
+  }, []);
+
+  if (dishes.length === 0) {
+    return (
+      <div className="px-6 py-12 text-center">
+        <p className="text-muted-foreground">No dishes available in this category.</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -51,6 +52,8 @@ const MenuGrid = ({ dishes, sectionTitle }: MenuGridProps) => {
       />
     </>
   );
-};
+});
+
+MenuGrid.displayName = 'MenuGrid';
 
 export default MenuGrid;

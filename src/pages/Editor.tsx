@@ -65,9 +65,15 @@ const Editor = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !previewMode) {
         if (e.shiftKey) {
-          handleRedo();
+          const nextTheme = redo();
+          if (nextTheme && restaurant) {
+            updateRestaurant.mutate({ id: restaurant.id, updates: { theme: nextTheme as any } });
+          }
         } else {
-          handleUndo();
+          const prevTheme = undo();
+          if (prevTheme && restaurant) {
+            updateRestaurant.mutate({ id: restaurant.id, updates: { theme: prevTheme as any } });
+          }
         }
         e.preventDefault();
       }
@@ -75,7 +81,7 @@ const Editor = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleUndo, handleRedo, previewMode]);
+  }, [previewMode, undo, redo, restaurant, updateRestaurant]);
 
   // Set initial active category
   useEffect(() => {

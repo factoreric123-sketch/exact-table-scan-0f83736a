@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { memo } from "react";
 
 interface CategoryNavProps {
   categories: string[];
@@ -6,7 +7,7 @@ interface CategoryNavProps {
   onCategoryChange: (category: string) => void;
 }
 
-const CategoryNav = ({ categories, activeCategory, onCategoryChange }: CategoryNavProps) => {
+const CategoryNav = memo(({ categories, activeCategory, onCategoryChange }: CategoryNavProps) => {
   return (
     <nav className="flex gap-3 overflow-x-auto pb-3 pt-4 px-4 scrollbar-hide">
       {categories.map((category) => (
@@ -27,6 +28,8 @@ const CategoryNav = ({ categories, activeCategory, onCategoryChange }: CategoryN
       ))}
     </nav>
   );
-};
+});
+
+CategoryNav.displayName = 'CategoryNav';
 
 export default CategoryNav;

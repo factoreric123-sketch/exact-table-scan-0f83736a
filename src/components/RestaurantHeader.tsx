@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo, useCallback } from "react";
 import { ImageCropModal } from "./ImageCropModal";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { useUpdateRestaurant } from "@/hooks/useRestaurants";
@@ -15,7 +15,7 @@ interface RestaurantHeaderProps {
   restaurantId?: string;
 }
 
-const RestaurantHeader = ({ 
+const RestaurantHeader = memo(({ 
   name, 
   tagline = "", 
   heroImageUrl, 
@@ -27,15 +27,15 @@ const RestaurantHeader = ({
   const [showCropModal, setShowCropModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedImage(file);
       setShowCropModal(true);
     }
-  };
+  }, []);
 
-  const handleImageCrop = async (croppedFile: File) => {
+  const handleImageCrop = useCallback(async (croppedFile: File) => {
     if (!restaurantId) return;
     
     try {
@@ -56,9 +56,9 @@ const RestaurantHeader = ({
     } catch (error) {
       toast.error("Failed to upload image");
     }
-  };
+  }, [restaurantId, uploadImage, updateRestaurant]);
 
-  const handleNameUpdate = async (newName: string) => {
+  const handleNameUpdate = useCallback(async (newName: string) => {
     if (!restaurantId || !newName.trim()) return;
     try {
       await updateRestaurant.mutateAsync({
@@ -68,9 +68,9 @@ const RestaurantHeader = ({
     } catch (error) {
       toast.error("Failed to update name");
     }
-  };
+  }, [restaurantId, updateRestaurant]);
 
-  const handleTaglineUpdate = async (newTagline: string) => {
+  const handleTaglineUpdate = useCallback(async (newTagline: string) => {
     if (!restaurantId) return;
     try {
       await updateRestaurant.mutateAsync({
@@ -80,7 +80,7 @@ const RestaurantHeader = ({
     } catch (error) {
       toast.error("Failed to update tagline");
     }
-  };
+  }, [restaurantId, updateRestaurant]);
 
   const displayImage = heroImageUrl || heroImage;
 
@@ -91,6 +91,8 @@ const RestaurantHeader = ({
           src={displayImage} 
           alt="Restaurant ambiance" 
           className="w-full h-full object-cover"
+          loading="eager"
+          decoding="async"
         />
         
         {editable && (
@@ -148,6 +150,8 @@ const RestaurantHeader = ({
       )}
     </>
   );
-};
+});
+
+RestaurantHeader.displayName = 'RestaurantHeader';
 
 export default RestaurantHeader;

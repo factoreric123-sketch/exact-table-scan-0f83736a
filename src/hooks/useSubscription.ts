@@ -40,6 +40,8 @@ export const useSubscription = () => {
       return data[0] as SubscriptionStatus;
     },
     enabled: !!user,
+    staleTime: 1000 * 60 * 5, // 5 minutes - subscription doesn't change often
+    gcTime: 1000 * 60 * 30, // 30 minutes cache
   });
 
   const hasPremium = subscription?.has_premium ?? false;

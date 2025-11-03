@@ -15,4 +15,38 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    // Optimize build output
+    target: 'es2015', // Modern browsers for better performance
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: mode === 'production', // Remove console.logs in production
+        drop_debugger: true,
+        pure_funcs: mode === 'production' ? ['console.log', 'console.info'] : [],
+      },
+    },
+    rollupOptions: {
+      output: {
+        // Manual chunk splitting for better caching
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
+          'query-vendor': ['@tanstack/react-query'],
+          'supabase-vendor': ['@supabase/supabase-js'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000, // Increase limit for large chunks
+  },
+  optimizeDeps: {
+    // Pre-bundle dependencies for faster dev server
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@tanstack/react-query',
+      '@supabase/supabase-js',
+    ],
+  },
 }));

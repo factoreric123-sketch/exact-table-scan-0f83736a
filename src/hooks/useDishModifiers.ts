@@ -25,6 +25,8 @@ export const useDishModifiers = (dishId: string) => {
       return data as DishModifier[];
     },
     enabled: !!dishId,
+    staleTime: 1000 * 60, // 1 minute
+    gcTime: 1000 * 60 * 10, // 10 minutes cache
   });
 };
 

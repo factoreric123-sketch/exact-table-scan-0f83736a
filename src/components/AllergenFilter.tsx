@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { X, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Leaf, Flame, Salad } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, memo, useCallback } from "react";
 
 export const ALLERGEN_OPTIONS = [
   { value: "gluten", label: "Gluten", Icon: Wheat },
@@ -33,7 +33,7 @@ interface AllergenFilterProps {
   dietaryOrder?: string[];
 }
 
-export const AllergenFilter = ({
+export const AllergenFilter = memo(({
   selectedAllergens,
   selectedDietary,
   onAllergenToggle,
@@ -42,7 +42,10 @@ export const AllergenFilter = ({
   allergenOrder,
   dietaryOrder,
 }: AllergenFilterProps) => {
-  const hasActiveFilters = selectedAllergens.length > 0 || selectedDietary.length > 0;
+  const hasActiveFilters = useMemo(
+    () => selectedAllergens.length > 0 || selectedDietary.length > 0,
+    [selectedAllergens.length, selectedDietary.length]
+  );
 
   // Sort options based on custom order
   const sortedAllergens = useMemo(() => {
@@ -122,7 +125,9 @@ export const AllergenFilter = ({
       )}
     </div>
   );
-};
+});
+
+AllergenFilter.displayName = 'AllergenFilter';
 
 // Helper for className
 function cn(...classes: (string | boolean | undefined)[]) {

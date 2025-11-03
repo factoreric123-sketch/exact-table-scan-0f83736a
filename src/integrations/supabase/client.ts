@@ -13,5 +13,20 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-  }
+    detectSessionInUrl: true,
+  },
+  global: {
+    headers: {
+      'x-client-info': 'taptab-app',
+    },
+  },
+  db: {
+    schema: 'public',
+  },
+  // Optimize realtime connection
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
 });
