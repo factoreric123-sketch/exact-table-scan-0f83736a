@@ -182,7 +182,7 @@ export const SpreadsheetView = ({
         <table className="min-w-[1580px] w-full caption-bottom text-sm border-collapse">
           <thead className="sticky top-0 z-30 bg-muted/30 backdrop-blur-sm border-b">
             <tr className="border-b">
-              <th className="sticky left-0 z-40 bg-muted/30 backdrop-blur-sm h-12 px-6 text-left align-middle font-semibold text-sm w-[40px]">
+              <th className="sticky left-0 z-40 bg-muted/30 backdrop-blur-sm h-12 px-6 text-left align-middle font-semibold text-sm w-[40px] border-r border-border/50">
                 <input
                   type="checkbox"
                   checked={selectedRows.size === dishes.length && dishes.length > 0}
@@ -196,8 +196,8 @@ export const SpreadsheetView = ({
                   className="cursor-pointer"
                 />
               </th>
-              <th className="sticky left-[40px] z-40 bg-muted/30 backdrop-blur-sm h-12 px-4 text-left align-middle font-semibold text-sm w-[100px]">Image</th>
-              <th className="sticky left-[140px] z-40 bg-muted/30 backdrop-blur-sm h-12 px-4 text-left align-middle font-semibold text-sm w-[220px]">Name</th>
+              <th className="sticky left-[40px] z-40 bg-muted/30 backdrop-blur-sm h-12 px-4 text-left align-middle font-semibold text-sm w-[100px] border-r border-border/50">Image</th>
+              <th className="sticky left-[140px] z-40 bg-muted/30 backdrop-blur-sm h-12 px-4 text-left align-middle font-semibold text-sm w-[220px] border-r border-border/50">Name</th>
               <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[300px]">Description</th>
               <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[100px]">Price</th>
               <th className="h-12 px-4 text-left align-middle font-semibold text-sm w-[280px]">Allergens</th>

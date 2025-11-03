@@ -73,7 +73,7 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
 
   return (
     <tr style={style} className="border-b transition-colors hover:bg-muted/30">
-      <td className="sticky left-0 z-20 bg-background p-4 align-middle w-[40px]">
+      <td className="sticky left-0 z-20 bg-background/95 backdrop-blur-sm p-4 align-middle w-[40px] border-r border-border/50">
         <input
           type="checkbox"
           checked={isSelected}
@@ -81,7 +81,7 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
           className="cursor-pointer"
         />
       </td>
-      <td className="sticky left-[40px] z-20 bg-background p-4 align-middle w-[100px]">
+      <td className="sticky left-[40px] z-20 bg-background/95 backdrop-blur-sm p-4 align-middle w-[100px] border-r border-border/50">
         <div 
           onClick={handleImageClick}
           className="w-16 h-16 rounded-lg overflow-hidden cursor-pointer group relative border border-border hover:border-primary transition-colors"
@@ -108,7 +108,7 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
           )}
         </div>
       </td>
-      <td className="sticky left-[140px] z-20 bg-background p-4 align-middle w-[220px]">
+      <td className="sticky left-[140px] z-20 bg-background/95 backdrop-blur-sm p-4 align-middle w-[220px] border-r border-border/50">
         <EditableCell
           type="text"
           value={localDish.name}

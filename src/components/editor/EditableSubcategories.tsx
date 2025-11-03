@@ -30,7 +30,9 @@ export const EditableSubcategories = ({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5, // Reduced for more responsive drag
+        distance: 3,
+        delay: 0,
+        tolerance: 5,
       },
     })
   );
