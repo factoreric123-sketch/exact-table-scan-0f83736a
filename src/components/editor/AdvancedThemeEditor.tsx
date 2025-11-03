@@ -8,6 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useDebouncedCallback } from 'use-debounce';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { getDefaultTheme } from '@/lib/presetThemes';
 
 interface AdvancedThemeEditorProps {
   theme: Theme;
@@ -27,11 +28,13 @@ export const AdvancedThemeEditor = ({
   onChange,
   onSaveCustom,
 }: AdvancedThemeEditorProps) => {
-  const [localTheme, setLocalTheme] = useState<Theme>(theme);
+  const [localTheme, setLocalTheme] = useState<Theme>(theme || getDefaultTheme());
   const [customName, setCustomName] = useState('');
 
   useEffect(() => {
-    setLocalTheme(theme);
+    if (theme) {
+      setLocalTheme(theme);
+    }
   }, [theme]);
 
   // Debounce onChange to prevent excessive updates
