@@ -127,70 +127,33 @@ export const EditableCell = (props: EditableCellProps) => {
     );
   }
 
-  // Multi-select (Allergens)
+  // Multi-select (Allergens) - Toggle-style like dietary info
   if (props.type === "multi-select") {
     return (
-      <div className="flex flex-wrap gap-1">
-        {(localValue as string[]).map((item) => {
-          const Icon = allergenIcons[item];
+      <div className="flex flex-wrap items-center gap-1 min-h-[32px]">
+        {props.options?.map((option) => {
+          const isSelected = (localValue as string[]).includes(option);
+          const Icon = allergenIcons[option];
           return (
-            <Badge key={item} variant="secondary" className="gap-1 px-2 py-0.5 text-xs">
+            <Badge
+              key={option}
+              variant={isSelected ? "default" : "outline"}
+              className={cn(
+                "gap-1 px-2 py-0.5 text-xs h-6 cursor-pointer transition-all active:scale-95",
+                isSelected ? "hover:opacity-90" : "hover:bg-muted"
+              )}
+              onClick={() => {
+                const newValue = isSelected
+                  ? (localValue as string[]).filter((v) => v !== option)
+                  : [...(localValue as string[]), option];
+                props.onSave(newValue);
+              }}
+            >
               {Icon && <Icon className="h-3 w-3" />}
-              {capitalize(item)}
-              <X
-                className="h-2.5 w-2.5 cursor-pointer hover:text-destructive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const newValue = (localValue as string[]).filter((v) => v !== item);
-                  props.onSave(newValue);
-                }}
-              />
+              {capitalize(option)}
             </Badge>
           );
         })}
-        <Popover>
-          <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
-            <Badge
-              variant="outline"
-              className="cursor-pointer gap-1 px-2 py-0.5 text-xs hover:bg-muted"
-            >
-              <Plus className="h-3 w-3" />
-            </Badge>
-          </PopoverTrigger>
-          <PopoverContent 
-            className="w-64" 
-            align="start" 
-            onClick={(e) => e.stopPropagation()}
-            onOpenAutoFocus={(e) => e.preventDefault()}
-          >
-            <div className="flex flex-col gap-2">
-              <div className="text-sm font-semibold mb-2">Add Allergens</div>
-              <div className="flex flex-wrap gap-1">
-                {props.options?.map((option) => {
-                  const isSelected = (localValue as string[]).includes(option);
-                  const Icon = allergenIcons[option];
-                  return (
-                    <Badge
-                      key={option}
-                      variant={isSelected ? "default" : "outline"}
-                      className="cursor-pointer gap-1 px-2 py-1 text-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const newValue = isSelected
-                          ? (localValue as string[]).filter((v) => v !== option)
-                          : [...(localValue as string[]), option];
-                        props.onSave(newValue);
-                      }}
-                    >
-                      {Icon && <Icon className="h-3 w-3" />}
-                      {capitalize(option)}
-                    </Badge>
-                  );
-                })}
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
       </div>
     );
   }
@@ -221,7 +184,7 @@ export const EditableCell = (props: EditableCellProps) => {
               )}
               onClick={() => handleToggle(key)}
             >
-              {active && Icon && <Icon className="h-3 w-3" />}
+              {Icon && <Icon className="h-3 w-3" />}
               {capitalize(key)}
             </Badge>
           );

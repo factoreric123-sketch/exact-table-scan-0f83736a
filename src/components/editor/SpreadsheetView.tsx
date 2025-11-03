@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Download, Upload, Trash2 } from "lucide-react";
+import { Download, Upload, Trash2, Plus } from "lucide-react";
 import { SpreadsheetRow } from "./SpreadsheetRow";
 import { ExcelImportDialog } from "./ExcelImportDialog";
 import type { Dish } from "@/hooks/useDishes";
@@ -144,7 +144,7 @@ export const SpreadsheetView = ({
 
   return (
     <div className="h-full flex flex-col bg-background">
-      <div className="flex items-center justify-between px-8 py-3 border-b bg-background">
+      <div className="flex items-center justify-between px-12 py-3 border-b bg-background">
         <div className="flex items-center gap-2">
           {selectedRows.size > 0 && (
             <>
@@ -177,7 +177,7 @@ export const SpreadsheetView = ({
 
       <div
         ref={parentRef}
-        className="flex-1 overflow-x-auto overflow-y-auto bg-background px-8"
+        className="flex-1 overflow-x-auto overflow-y-auto bg-background px-12"
       >
         <table className="min-w-[1580px] w-full caption-bottom text-sm border-collapse">
           <thead className="sticky top-0 z-30 bg-muted/30 backdrop-blur-sm border-b">
@@ -227,13 +227,13 @@ export const SpreadsheetView = ({
       </div>
 
       {/* Add Dish Button Footer */}
-      <div className="border-t bg-background px-8 py-3">
+      <div className="border-t bg-background px-12 py-3">
         <Button
           onClick={handleAddDish}
           variant="outline"
           className="gap-2"
         >
-          <Upload className="h-4 w-4" />
+          <Plus className="h-4 w-4" />
           Add Dish
         </Button>
       </div>
