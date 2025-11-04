@@ -91,11 +91,18 @@ export const useCreateSubcategory = () => {
       queryClient.invalidateQueries({ queryKey: ["subcategories", data.category_id] });
       queryClient.invalidateQueries({ queryKey: ["subcategories", "restaurant"] });
     },
-    onError: (_error, _variables, context) => {
+    onError: (error, _variables, context) => {
+      console.error("Failed to create subcategory:", error);
       if (context?.previous && context.categoryId) {
         queryClient.setQueryData(["subcategories", context.categoryId], context.previous);
       }
-      toast.error("Failed to create subcategory");
+      const errorMessage = error instanceof Error ? error.message : "Failed to create subcategory";
+      toast.error(errorMessage);
+    },
+    onSettled: (_, __, variables) => {
+      if (variables.category_id) {
+        queryClient.invalidateQueries({ queryKey: ["subcategories", variables.category_id] });
+      }
     },
   });
 };

@@ -37,24 +37,36 @@ const Auth = () => {
     try {
       const validated = authSchema.parse({ email, password });
       
-      const { error } = isLogin
-        ? await signIn(validated.email, validated.password)
-        : await signUp(validated.email, validated.password);
-
-      if (error) {
-        if (error.message.includes("Invalid login credentials")) {
-          toast.error("Invalid email or password");
-        } else if (error.message.includes("User already registered")) {
-          toast.error("This email is already registered. Please sign in instead.");
-        } else {
-          toast.error(error.message);
-        }
-      } else {
-        if (!isLogin) {
-          toast.success("Account created! You can now sign in.");
+      if (isLogin) {
+        const { error } = await signIn(validated.email, validated.password);
+        if (error) {
+          if (error.message.includes("Invalid login credentials")) {
+            toast.error("Invalid email or password");
+          } else {
+            toast.error(error.message);
+          }
         } else {
           toast.success("Welcome back!");
           navigate(from, { replace: true });
+        }
+      } else {
+        const { data, error } = await signUp(validated.email, validated.password);
+        if (error) {
+          if (error.message.includes("User already registered")) {
+            toast.error("This email is already registered. Please sign in instead.");
+            setIsLogin(true);
+          } else {
+            toast.error(error.message);
+          }
+        } else {
+          // Check if user was immediately signed in (auto-confirm enabled)
+          if (data?.session) {
+            toast.success("Account created! Redirecting...");
+            navigate(from, { replace: true });
+          } else {
+            toast.success("Account created! Please check your email to confirm.");
+            setIsLogin(true);
+          }
         }
       }
     } catch (error) {

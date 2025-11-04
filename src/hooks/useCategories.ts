@@ -67,9 +67,17 @@ export const useCreateCategory = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["categories", data.restaurant_id] });
     },
-    onError: (_error, variables, context) => {
+    onError: (error, variables, context) => {
+      console.error("Failed to create category:", error);
       if (context?.previous && context.restaurantId) {
         queryClient.setQueryData(["categories", context.restaurantId], context.previous);
+      }
+      const errorMessage = error instanceof Error ? error.message : "Failed to create category";
+      toast.error(errorMessage);
+    },
+    onSettled: (_, __, variables) => {
+      if (variables.restaurant_id) {
+        queryClient.invalidateQueries({ queryKey: ["categories", variables.restaurant_id] });
       }
     },
   });
