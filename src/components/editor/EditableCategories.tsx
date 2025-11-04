@@ -14,7 +14,6 @@ interface EditableCategoriesProps {
   onCategoryChange: (categoryId: string) => void;
   restaurantId: string;
   previewMode: boolean;
-  filterSheetTrigger?: React.ReactNode;
 }
 
 export const EditableCategories = ({
@@ -23,7 +22,6 @@ export const EditableCategories = ({
   onCategoryChange,
   restaurantId,
   previewMode,
-  filterSheetTrigger,
 }: EditableCategoriesProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const createCategory = useCreateCategory();
@@ -101,7 +99,6 @@ export const EditableCategories = ({
             </Button>
           ))}
         </div>
-        {filterSheetTrigger && <div className="shrink-0 ml-3">{filterSheetTrigger}</div>}
       </nav>
     );
   }
@@ -138,7 +135,6 @@ export const EditableCategories = ({
                 {createCategory.isPending ? "Adding..." : "Add Category"}
               </Button>
             </div>
-            {filterSheetTrigger && <div className="shrink-0 ml-3">{filterSheetTrigger}</div>}
           </div>
         </SortableContext>
         

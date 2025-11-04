@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Theme } from "@/lib/types/theme";
 import { generateTempId } from "@/lib/utils/uuid";
+import { logger } from "@/lib/logger";
 
 export interface Restaurant {
   id: string;
@@ -81,12 +82,10 @@ export const useCreateRestaurant = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (restaurant: Partial<Restaurant> & { createDefaults?: boolean }) => {
-      const { createDefaults, ...restaurantData } = restaurant;
-      
+    mutationFn: async (restaurant: Partial<Restaurant>) => {
       const { data, error } = await supabase
         .from("restaurants")
-        .insert([restaurantData as any])
+        .insert([restaurant as any])
         .select()
         .single();
 
@@ -94,28 +93,32 @@ export const useCreateRestaurant = () => {
       
       const newRestaurant = data as unknown as Restaurant;
       
-      // Create default category and subcategory if requested
-      if (createDefaults) {
-        const { data: categoryData, error: categoryError } = await supabase
-          .from("categories")
-          .insert([{
-            restaurant_id: newRestaurant.id,
-            name: "Menu",
-            order_index: 0,
-          }])
-          .select()
-          .single();
+      // Always create default category and subcategory for new restaurants
+      const { data: categoryData, error: categoryError } = await supabase
+        .from("categories")
+        .insert([{
+          restaurant_id: newRestaurant.id,
+          name: "Menu",
+          order_index: 0,
+        }])
+        .select()
+        .single();
 
-        if (categoryError) throw categoryError;
-
+      if (categoryError) {
+        logger.error("Failed to create default category:", categoryError);
+      } else {
         // Create default subcategory
-        await supabase
+        const { error: subcategoryError } = await supabase
           .from("subcategories")
           .insert([{
             category_id: categoryData.id,
             name: "Appetizers",
             order_index: 0,
           }]);
+        
+        if (subcategoryError) {
+          logger.error("Failed to create default subcategory:", subcategoryError);
+        }
       }
       
       return newRestaurant;

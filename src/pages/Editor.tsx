@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRestaurantById, useUpdateRestaurant } from "@/hooks/useRestaurants";
 import { useCategories } from "@/hooks/useCategories";
@@ -32,7 +31,6 @@ const Editor = () => {
   const [selectedDietary, setSelectedDietary] = useState<string[]>([]);
   const [selectedSpicy, setSelectedSpicy] = useState<boolean | null>(null);
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
-  const [filterOpen, setFilterOpen] = useState(false);
 
   const { data: restaurant, isLoading: restaurantLoading } = useRestaurantById(restaurantId || "");
   const { data: categories = [], isLoading: categoriesLoading } = useCategories(restaurantId || "");
@@ -130,19 +128,6 @@ const Editor = () => {
     toast.success(newPublishedState ? "Menu published!" : "Menu unpublished");
   };
 
-  const handleViewModeChange = async (mode: 'grid' | 'table') => {
-    // Instant UI update
-    setViewMode(mode);
-    
-    // Save in background
-    if (restaurant) {
-      updateRestaurant.mutate({
-        id: restaurant.id,
-        updates: { editor_view_mode: mode }
-      });
-    }
-  };
-
   const handleFilterToggle = () => {
     if (!restaurant) return;
     
@@ -154,6 +139,19 @@ const Editor = () => {
     });
     
     toast.success(newState ? "Filter enabled" : "Filter disabled");
+  };
+
+  const handleViewModeChange = async (mode: 'grid' | 'table') => {
+    // Instant UI update
+    setViewMode(mode);
+    
+    // Save in background
+    if (restaurant) {
+      updateRestaurant.mutate({
+        id: restaurant.id,
+        updates: { editor_view_mode: mode }
+      });
+    }
   };
 
   // Filter handlers
@@ -272,37 +270,21 @@ const Editor = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
-        <EditorTopBar
+      <EditorTopBar
           restaurant={restaurant}
           previewMode={previewMode}
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
           onPreviewToggle={() => setPreviewMode(!previewMode)}
           onPublishToggle={handlePublishToggle}
-          onFilterToggle={handleFilterToggle}
-          filterOpen={filterOpen}
           onUndo={handleUndo}
           onRedo={handleRedo}
           canUndo={canUndo}
           canRedo={canRedo}
           onThemeChange={handleThemeChange}
-          filterSheetTrigger={
-            <SheetTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-9 w-9 relative"
-              >
-                <Filter className="h-5 w-5" />
-                {(selectedAllergens.length > 0 || selectedDietary.length > 0 || selectedSpicy !== null || selectedBadges.length > 0) && (
-                  <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full" />
-                )}
-              </Button>
-            </SheetTrigger>
-          }
         />
 
+      <Sheet>
         <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
           <SheetHeader className="mb-6">
             <SheetTitle>Filter Menu</SheetTitle>
@@ -341,22 +323,6 @@ const Editor = () => {
           onCategoryChange={setActiveCategory}
           restaurantId={restaurant.id}
           previewMode={previewMode}
-          filterSheetTrigger={
-            previewMode && restaurant.show_allergen_filter !== false ? (
-              <SheetTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-9 w-9 relative"
-                >
-                  <Filter className="h-5 w-5" />
-                  {(selectedAllergens.length > 0 || selectedDietary.length > 0 || selectedSpicy !== null || selectedBadges.length > 0) && (
-                    <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full" />
-                  )}
-                </Button>
-              </SheetTrigger>
-            ) : undefined
-          }
         />
 
         <EditableSubcategories

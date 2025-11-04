@@ -28,6 +28,8 @@ export const useDishes = (subcategoryId: string) => {
   return useQuery({
     queryKey: ["dishes", subcategoryId],
     queryFn: async () => {
+      if (!subcategoryId) return [];
+      
       const { data, error } = await supabase
         .from("dishes")
         .select("*")
@@ -38,9 +40,10 @@ export const useDishes = (subcategoryId: string) => {
       return data as Dish[];
     },
     enabled: !!subcategoryId,
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes cache
     placeholderData: (prev) => prev, // Keep previous data during refetch
+    refetchOnMount: false, // Don't refetch unnecessarily
   });
 };
 

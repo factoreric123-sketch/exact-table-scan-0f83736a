@@ -108,7 +108,6 @@ export const CreateRestaurantModal = ({ open, onOpenChange }: CreateRestaurantMo
         tagline: tagline.trim() || null,
         hero_image_url: heroImageUrl,
         published: false,
-        createDefaults: true, // Signal to create default category and subcategory
       });
 
       toast.success("Restaurant created!");
