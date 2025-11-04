@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { generateTempId } from "@/lib/utils/uuid";
 
 export interface Category {
   id: string;
@@ -53,7 +54,7 @@ export const useCreateCategory = () => {
       
       if (previous) {
         const tempCategory: Category = {
-          id: `temp-${Date.now()}`,
+          id: generateTempId(),
           restaurant_id: category.restaurant_id,
           name: category.name || "New Category",
           order_index: category.order_index ?? previous.length,

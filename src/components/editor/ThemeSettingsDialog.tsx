@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useUpdateRestaurant, type Restaurant } from "@/hooks/useRestaurants";
@@ -61,6 +61,9 @@ export const ThemeSettingsDialog = ({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Theme Settings</DialogTitle>
+          <DialogDescription>
+            Customize the look and feel of your restaurant menu
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
