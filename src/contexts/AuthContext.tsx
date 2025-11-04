@@ -8,6 +8,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string) => Promise<{ data: any; error: Error | null }>;
   signOut: () => Promise<void>;
+  refreshSession: () => Promise<void>;
   loading: boolean;
 }
 
@@ -63,9 +64,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
   };
 
+  const refreshSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setSession(session);
+    setUser(session?.user ?? null);
+  };
+
   // Memoize context value to prevent unnecessary re-renders
   const value = useMemo(
-    () => ({ user, session, signIn, signUp, signOut, loading }),
+    () => ({ user, session, signIn, signUp, signOut, refreshSession, loading }),
     [user, session, loading]
   );
 
