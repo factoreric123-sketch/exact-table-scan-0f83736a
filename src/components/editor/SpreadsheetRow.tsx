@@ -90,7 +90,7 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
 
   return (
     <tr style={style} className="border-b transition-colors hover:bg-muted/30">
-      <td className="sticky left-0 z-50 bg-background p-4 align-middle w-[40px] border-r border-border">
+      <td className="sticky left-0 z-20 bg-background p-4 align-middle w-[40px] border-r-2 border-border">
         <input
           type="checkbox"
           checked={isSelected}
@@ -98,7 +98,7 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
           className="cursor-pointer"
         />
       </td>
-      <td className="sticky left-[40px] z-40 bg-background p-4 align-middle w-[100px] border-r border-border">
+      <td className="sticky left-[40px] z-20 bg-background p-4 align-middle w-[100px] border-r-2 border-border">
         <div 
           onClick={handleImageClick}
           className="w-16 h-16 rounded-lg overflow-hidden cursor-pointer group relative border border-border hover:border-primary transition-colors"
@@ -125,7 +125,7 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
           )}
         </div>
       </td>
-      <td className="sticky left-[140px] z-30 bg-background p-4 align-middle w-[220px] border-r-2 border-border shadow-[2px_0_4px_rgba(0,0,0,0.1)]">
+      <td className="sticky left-[140px] z-20 bg-background p-4 align-middle w-[220px] border-r-2 border-border shadow-[2px_0_4px_rgba(0,0,0,0.1)]">
         <EditableCell
           type="text"
           value={localDish.name}
@@ -163,11 +163,9 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
             spicy: localDish.is_spicy,
           }}
           onSave={(value) => {
-            scheduleUpdate({
-              is_vegetarian: value.vegetarian,
-              is_vegan: value.vegan,
-              is_spicy: value.spicy,
-            });
+            handleUpdate("is_vegetarian", value.vegetarian);
+            handleUpdate("is_vegan", value.vegan);
+            handleUpdate("is_spicy", value.spicy);
           }}
         />
       </td>
@@ -181,12 +179,10 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
             chef: localDish.is_chef_recommendation,
           }}
           onSave={(value) => {
-            scheduleUpdate({
-              is_new: value.new,
-              is_special: value.special,
-              is_popular: value.popular,
-              is_chef_recommendation: value.chef,
-            });
+            handleUpdate("is_new", value.new);
+            handleUpdate("is_special", value.special);
+            handleUpdate("is_popular", value.popular);
+            handleUpdate("is_chef_recommendation", value.chef);
           }}
         />
       </td>
@@ -194,7 +190,6 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
         <EditableCell
           type="number"
           value={localDish.calories || ""}
-          placeholder=""
           onSave={(value) => handleUpdate("calories", value ? parseInt(value as string) : null)}
         />
       </td>

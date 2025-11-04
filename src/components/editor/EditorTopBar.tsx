@@ -112,7 +112,7 @@ export const EditorTopBar = ({
               </Button>
             )}
 
-            
+            {previewMode && restaurant.show_allergen_filter !== false && filterSheetTrigger}
 
             <Button
               variant="outline"

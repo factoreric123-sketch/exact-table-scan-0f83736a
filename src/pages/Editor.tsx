@@ -341,31 +341,17 @@ const Editor = () => {
           onCategoryChange={setActiveCategory}
           restaurantId={restaurant.id}
           previewMode={previewMode}
-          filterSheetTrigger={
-            previewMode && restaurant.show_allergen_filter !== false ? (
-              <SheetTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-9 w-9 relative"
-                >
-                  <Filter className="h-5 w-5" />
-                  {(selectedAllergens.length > 0 || selectedDietary.length > 0 || selectedSpicy !== null || selectedBadges.length > 0) && (
-                    <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full" />
-                  )}
-                </Button>
-              </SheetTrigger>
-            ) : undefined
-          }
         />
 
-        <EditableSubcategories
-          subcategories={subcategories}
-          activeSubcategory={activeSubcategory}
-          onSubcategoryChange={setActiveSubcategory}
-          categoryId={activeCategory}
-          previewMode={previewMode}
-        />
+        {activeCategoryData && (
+          <EditableSubcategories
+            subcategories={subcategories}
+            activeSubcategory={activeSubcategory}
+            onSubcategoryChange={setActiveSubcategory}
+            categoryId={activeCategory}
+            previewMode={previewMode}
+          />
+        )}
 
         {activeSubcategory && viewMode === 'grid' && (
           <EditableDishes

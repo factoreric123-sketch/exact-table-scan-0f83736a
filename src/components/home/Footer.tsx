@@ -12,7 +12,7 @@ const Footer = () => {
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2 group">
               <span className="text-2xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent group-hover:scale-105 transition-transform">
-                MenuTap
+                TAPTAB
               </span>
             </Link>
             <p className="text-sm text-muted-foreground">
@@ -137,7 +137,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-border">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-            © {currentYear} MenuTap. All rights reserved.
+            <p>© {currentYear} TAPTAB. All rights reserved.</p>
             <p>Made with ❤️ for restaurants worldwide</p>
           </div>
         </div>

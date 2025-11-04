@@ -8,9 +8,9 @@ import { Wheat, Milk, Egg, Fish, Shell, Nut, Beef, Flame, Salad, Sprout, Sparkle
 import { cn } from "@/lib/utils";
 
 type EditableCellProps =
-  | { type: "text"; value: string; onSave: (value: string) => void; placeholder?: string }
-  | { type: "textarea"; value: string; onSave: (value: string) => void; placeholder?: string }
-  | { type: "number"; value: string | number; onSave: (value: string | number) => void; placeholder?: string }
+  | { type: "text"; value: string; onSave: (value: string) => void }
+  | { type: "textarea"; value: string; onSave: (value: string) => void }
+  | { type: "number"; value: string | number; onSave: (value: string | number) => void }
   | { type: "multi-select"; value: string[]; onSave: (value: string[]) => void; options: string[] }
   | { type: "boolean-group"; value: Record<string, boolean>; onSave: (value: Record<string, boolean>) => void };
 
@@ -92,16 +92,12 @@ export const EditableCell = (props: EditableCellProps) => {
       );
     }
 
-    const placeholderText = props.type === "number" && props.placeholder !== undefined 
-      ? props.placeholder 
-      : "Click to edit";
-      
     return (
       <div
         onClick={() => setIsEditing(true)}
         className="cursor-text hover:bg-muted/50 rounded px-2 py-1 min-h-[32px] flex items-center transition-colors text-sm"
       >
-        {String(localValue) || (placeholderText && <span className="text-muted-foreground">{placeholderText}</span>)}
+        {String(localValue) || <span className="text-muted-foreground">Click to edit</span>}
       </div>
     );
   }
