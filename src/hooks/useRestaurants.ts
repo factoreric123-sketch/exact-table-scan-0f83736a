@@ -81,15 +81,44 @@ export const useCreateRestaurant = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (restaurant: Partial<Restaurant>) => {
+    mutationFn: async (restaurant: Partial<Restaurant> & { createDefaults?: boolean }) => {
+      const { createDefaults, ...restaurantData } = restaurant;
+      
       const { data, error } = await supabase
         .from("restaurants")
-        .insert([restaurant as any])
+        .insert([restaurantData as any])
         .select()
         .single();
 
       if (error) throw error;
-      return data as unknown as Restaurant;
+      
+      const newRestaurant = data as unknown as Restaurant;
+      
+      // Create default category and subcategory if requested
+      if (createDefaults) {
+        const { data: categoryData, error: categoryError } = await supabase
+          .from("categories")
+          .insert([{
+            restaurant_id: newRestaurant.id,
+            name: "Menu",
+            order_index: 0,
+          }])
+          .select()
+          .single();
+
+        if (categoryError) throw categoryError;
+
+        // Create default subcategory
+        await supabase
+          .from("subcategories")
+          .insert([{
+            category_id: categoryData.id,
+            name: "Appetizers",
+            order_index: 0,
+          }]);
+      }
+      
+      return newRestaurant;
     },
     onMutate: async (restaurant) => {
       // Optimistic update

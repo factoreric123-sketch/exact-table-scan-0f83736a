@@ -76,7 +76,7 @@ export const useCreateSubcategory = () => {
       
       if (previous) {
         const tempSub: Subcategory = {
-          id: `temp-${Date.now()}`,
+          id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           category_id: subcategory.category_id,
           name: subcategory.name || "New Subcategory",
           order_index: subcategory.order_index ?? previous.length,

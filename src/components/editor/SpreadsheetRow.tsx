@@ -190,11 +190,11 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
           }}
         />
       </td>
-      <td className="p-4 align-middle w-[80px]">
+      <td className="p-4 align-middle w-[100px]">
         <EditableCell
           type="number"
-          value={localDish.calories || ""}
-          placeholder=""
+          value={localDish.calories?.toString() || ""}
+          placeholder="0"
           onSave={(value) => handleUpdate("calories", value ? parseInt(value as string) : null)}
         />
       </td>
