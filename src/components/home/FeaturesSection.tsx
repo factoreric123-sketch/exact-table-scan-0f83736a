@@ -1,70 +1,72 @@
-import { Palette, Smartphone, Zap, Lock, Filter, Move } from "lucide-react";
+import { Palette, Smartphone, Zap, QrCode, Filter, Move } from "lucide-react";
 
 const features = [
   {
     icon: Palette,
-    title: "Beautiful Themes",
-    description: "10+ premium themes designed by professionals. Customize colors, fonts, and layouts to match your brand perfectly.",
-  },
-  {
-    icon: Smartphone,
-    title: "Mobile-First Design",
-    description: "Optimized for every device. Your menu looks stunning on phones, tablets, and desktops automatically.",
+    title: "10+ Premium Themes",
+    description: "Professionally designed themes that make your menu stand out. Customize every detail to match your brand identity.",
   },
   {
     icon: Zap,
-    title: "Blazing Fast",
-    description: "Lightning-fast loading times under 100ms. Your customers get instant access to your menu.",
+    title: "Lightning Fast",
+    description: "Under 100ms load times guaranteed. Your customers access menus instantly with zero frustration.",
   },
   {
-    icon: Lock,
-    title: "Secure & Reliable",
-    description: "Enterprise-grade security with 99.9% uptime. Your data is protected and always accessible.",
+    icon: QrCode,
+    title: "QR Code Ready",
+    description: "Generate professional QR codes instantly. Print and place them on tables for seamless contactless ordering.",
   },
   {
     icon: Filter,
-    title: "Smart Allergen Filtering",
-    description: "Filter dishes by allergens, dietary preferences (vegetarian, vegan), and spiciness. Keep your customers safe and informed.",
+    title: "Smart Filtering",
+    description: "Filter by allergens, dietary preferences, and spiciness. Help customers find exactly what they're looking for.",
   },
   {
     icon: Move,
-    title: "Drag & Drop Organization",
-    description: "Easily reorganize your menu with intuitive drag and drop. Reorder categories, subcategories, and dishes in seconds.",
+    title: "Drag & Drop Editor",
+    description: "Reorganize your entire menu in seconds. Intuitive interface that anyone can master in minutes.",
+  },
+  {
+    icon: Smartphone,
+    title: "Mobile Perfection",
+    description: "Flawless experience on every device. Your menu adapts automatically to any screen size.",
   },
 ];
 
 const FeaturesSection = () => {
   return (
-    <section id="features" className="py-24 lg:py-32 bg-muted/30">
+    <section id="features" className="py-24 lg:py-32">
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16 animate-fade-in-up">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-            Everything You Need to{" "}
-            <span className="bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
-              Succeed
-            </span>
+        <div className="text-center max-w-3xl mx-auto mb-20 animate-fade-in-up">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+            Everything you need.{" "}
+            <span className="block">Nothing you don't.</span>
           </h2>
-          <p className="text-lg text-muted-foreground">
-            Powerful features designed for modern restaurants. No technical knowledge required.
+          <p className="text-xl text-muted-foreground">
+            Built for restaurant owners who want results, not complexity.
           </p>
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
               <div
                 key={index}
-                className="group p-6 rounded-xl bg-card border border-border hover:border-accent/50 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 animate-fade-in-up"
+                className="group animate-fade-in-up"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors">
-                  <Icon className="w-6 h-6 text-accent" />
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-foreground text-background flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
               </div>
             );
           })}
