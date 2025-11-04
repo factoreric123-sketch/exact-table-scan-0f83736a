@@ -1,118 +1,106 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play, Check } from "lucide-react";
+import { Store, Users, Sparkles, Zap, Smartphone, QrCode } from "lucide-react";
 
 const HeroSection = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="relative min-h-[85vh] flex items-center py-20 lg:py-32 overflow-hidden">
-      {/* Subtle background */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-muted/20 to-background" />
+    <section className="relative min-h-[90vh] flex items-center py-12 lg:py-24 overflow-hidden">
+      {/* Background Gradients */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-accent/10 via-transparent to-primary/5 animate-gradient-shift" />
+        <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
+      </div>
 
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Left: Main value proposition */}
-          <div className="text-center lg:text-left animate-fade-in-up space-y-8">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-foreground text-background text-sm font-medium">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-background opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-background"></span>
-              </span>
-              Trusted by 500+ restaurants worldwide
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* Left: Restaurant Owners */}
+          <div className="text-center lg:text-left animate-fade-in-up space-y-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20">
+              <Store className="w-4 h-4 text-accent" />
+              <span className="text-sm font-medium text-accent">For Restaurant Owners</span>
             </div>
 
-            {/* Main headline */}
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight">
-              Digital menus that{" "}
-              <span className="inline-block bg-foreground text-background px-3 py-1">
-                just work
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
+              Transform Your Menu Into a{" "}
+              <span className="bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
+                Digital Masterpiece
               </span>
             </h1>
 
-            {/* Subheadline */}
-            <p className="text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Create beautiful, fast-loading digital menus in minutes. No coding, no headaches, no credit card required.
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0">
+              Create stunning digital menus in minutes. 10+ premium themes, instant updates, QR codes, and zero code required.
             </p>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
               <Button
                 onClick={() => navigate("/auth?signup=true")}
                 size="lg"
-                className="bg-foreground hover:bg-foreground/90 text-background font-semibold text-lg h-14 px-8 group"
+                className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold text-lg h-14 px-8 shadow-lg hover:shadow-xl transition-all hover:scale-105"
               >
-                Start for free
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                <Sparkles className="w-5 h-5 mr-2" />
+                Start Free Trial
               </Button>
               <Button
                 onClick={() => navigate("/demo")}
                 variant="outline"
                 size="lg"
-                className="text-lg h-14 px-8 group"
+                className="text-lg h-14 px-8 hover:scale-105 transition-transform"
               >
-                <Play className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
-                See demo
+                View Demo Menu
               </Button>
             </div>
 
-            {/* Trust signals */}
-            <div className="flex flex-wrap items-center gap-x-8 gap-y-3 justify-center lg:justify-start pt-4 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-6 justify-center lg:justify-start pt-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4" />
+                <Zap className="w-4 h-4 text-accent" />
                 <span>Setup in 5 minutes</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4" />
-                <span>Free forever</span>
+                <span className="text-accent">✓</span>
+                <span>No credit card required</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-4 h-4" />
-                <span>No credit card</span>
+                <span className="text-accent">✓</span>
+                <span>Free forever for 1 restaurant</span>
               </div>
             </div>
           </div>
 
-          {/* Right: Product preview */}
-          <div className="relative animate-fade-in-up animation-delay-200">
-            {/* Main device mockup */}
-            <div className="relative mx-auto max-w-sm lg:max-w-md">
-              {/* Phone frame */}
-              <div className="relative bg-foreground rounded-[2.5rem] p-3 shadow-2xl">
-                <div className="bg-background rounded-[2rem] overflow-hidden border-4 border-foreground/5">
-                  {/* Menu preview */}
-                  <div className="aspect-[9/19] bg-gradient-to-b from-card to-background p-6 space-y-4">
-                    <div className="flex items-center justify-between pb-4 border-b border-border">
-                      <div className="space-y-1">
-                        <div className="h-6 w-32 bg-foreground/80 rounded" />
-                        <div className="h-3 w-24 bg-foreground/20 rounded" />
-                      </div>
-                      <div className="h-8 w-8 bg-foreground/10 rounded-full" />
-                    </div>
-                    
-                    <div className="space-y-3">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="flex gap-3 p-3 bg-card rounded-lg border border-border">
-                          <div className="h-16 w-16 bg-muted rounded-md flex-shrink-0" />
-                          <div className="flex-1 space-y-2">
-                            <div className="h-3 w-full bg-foreground/60 rounded" />
-                            <div className="h-2 w-3/4 bg-foreground/20 rounded" />
-                            <div className="h-3 w-16 bg-foreground/40 rounded" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+          {/* Right: Customers */}
+          <div className="text-center lg:text-left animate-fade-in-up animation-delay-200 space-y-6 lg:border-l lg:border-border/50 lg:pl-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+              <Users className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-primary">For Customers</span>
+            </div>
+
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
+              Scan, Browse, Order{" "}
+              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Effortlessly
+              </span>
+            </h2>
+
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto lg:mx-0">
+              Experience restaurant menus the modern way. Fast loading, beautiful design, and instant access with a simple QR code scan.
+            </p>
+
+            <div className="grid grid-cols-2 gap-4 pt-4 max-w-md mx-auto lg:mx-0">
+              <div className="flex flex-col items-center lg:items-start gap-2 p-4 rounded-lg bg-card/50 border border-border/50">
+                <Smartphone className="w-8 h-8 text-accent" />
+                <div className="text-left">
+                  <div className="text-2xl font-bold">{'<100ms'}</div>
+                  <div className="text-sm text-muted-foreground">Load Time</div>
                 </div>
               </div>
-
-              {/* Floating elements */}
-              <div className="absolute -top-4 -right-4 bg-card border border-border rounded-lg p-3 shadow-lg animate-bounce">
-                <div className="text-2xl font-bold">⚡</div>
-              </div>
-              <div className="absolute -bottom-4 -left-4 bg-card border border-border rounded-lg px-4 py-2 shadow-lg">
-                <div className="text-xs font-semibold">{'<100ms'}</div>
+              <div className="flex flex-col items-center lg:items-start gap-2 p-4 rounded-lg bg-card/50 border border-border/50">
+                <QrCode className="w-8 h-8 text-accent" />
+                <div className="text-left">
+                  <div className="text-2xl font-bold">1 Scan</div>
+                  <div className="text-sm text-muted-foreground">Instant Access</div>
+                </div>
               </div>
             </div>
           </div>
