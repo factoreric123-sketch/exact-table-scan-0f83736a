@@ -1,4 +1,4 @@
-import { Palette, Smartphone, Zap, Lock, BarChart3, Globe } from "lucide-react";
+import { Palette, Smartphone, Zap, Lock, Filter, Move } from "lucide-react";
 
 const features = [
   {
@@ -22,14 +22,14 @@ const features = [
     description: "Enterprise-grade security with 99.9% uptime. Your data is protected and always accessible.",
   },
   {
-    icon: BarChart3,
-    title: "Analytics Dashboard",
-    description: "Track menu views, popular items, and customer behavior. Make data-driven decisions for your restaurant.",
+    icon: Filter,
+    title: "Smart Allergen Filtering",
+    description: "Filter dishes by allergens, dietary preferences (vegetarian, vegan), and spiciness. Keep your customers safe and informed.",
   },
   {
-    icon: Globe,
-    title: "Multi-Language Support",
-    description: "Reach international customers with multi-language menus. Easy translation management built-in.",
+    icon: Move,
+    title: "Drag & Drop Organization",
+    description: "Easily reorganize your menu with intuitive drag and drop. Reorder categories, subcategories, and dishes in seconds.",
   },
 ];
 

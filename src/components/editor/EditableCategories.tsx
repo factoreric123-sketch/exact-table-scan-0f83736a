@@ -14,6 +14,7 @@ interface EditableCategoriesProps {
   onCategoryChange: (categoryId: string) => void;
   restaurantId: string;
   previewMode: boolean;
+  filterSheetTrigger?: React.ReactNode;
 }
 
 export const EditableCategories = ({
@@ -22,6 +23,7 @@ export const EditableCategories = ({
   onCategoryChange,
   restaurantId,
   previewMode,
+  filterSheetTrigger,
 }: EditableCategoriesProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
@@ -118,6 +120,11 @@ export const EditableCategories = ({
             </Button>
           ))}
         </div>
+        {filterSheetTrigger && (
+          <div className="flex-shrink-0">
+            {filterSheetTrigger}
+          </div>
+        )}
       </nav>
     );
   }

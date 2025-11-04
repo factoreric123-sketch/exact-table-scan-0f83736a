@@ -13,6 +13,7 @@ import { SpreadsheetView } from "@/components/editor/SpreadsheetView";
 import RestaurantHeader from "@/components/RestaurantHeader";
 import { AllergenFilter } from "@/components/AllergenFilter";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Filter } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useThemeHistory } from "@/hooks/useThemeHistory";
@@ -334,6 +335,16 @@ const Editor = () => {
           onCategoryChange={setActiveCategory}
           restaurantId={restaurant.id}
           previewMode={previewMode}
+          filterSheetTrigger={
+            previewMode && restaurant.show_allergen_filter !== false ? (
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Filter className="h-4 w-4" />
+                  Filters
+                </Button>
+              </SheetTrigger>
+            ) : null
+          }
         />
 
         <EditableSubcategories
