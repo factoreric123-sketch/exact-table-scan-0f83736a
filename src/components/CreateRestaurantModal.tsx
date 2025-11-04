@@ -119,7 +119,11 @@ export const CreateRestaurantModal = ({ open, onOpenChange }: CreateRestaurantMo
       setSelectedFile(null);
       
       onOpenChange(false);
-      navigate(`/editor/${newRestaurant.id}`);
+      
+      // Small delay to ensure backend operations complete before navigating
+      setTimeout(() => {
+        navigate(`/editor/${newRestaurant.id}`);
+      }, 300);
     } catch (error) {
       // Handle slug collision
       const errorMessage = error instanceof Error ? error.message : String(error);

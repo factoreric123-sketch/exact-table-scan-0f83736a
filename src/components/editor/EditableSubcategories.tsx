@@ -25,8 +25,15 @@ export const EditableSubcategories = ({
   previewMode,
 }: EditableSubcategoriesProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false);
   const createSubcategory = useCreateSubcategory();
   const updateSubcategoriesOrder = useUpdateSubcategoriesOrder();
+
+  // Prevent flicker by ensuring content is ready
+  useState(() => {
+    const timer = setTimeout(() => setIsReady(true), 50);
+    return () => clearTimeout(timer);
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -85,6 +92,18 @@ export const EditableSubcategories = ({
       }
     });
   };
+
+  if (!isReady) {
+    return (
+      <div className="px-4 pb-3">
+        <div className="flex gap-4 border-b">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-6 w-20 bg-muted animate-skeleton-pulse mb-3" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (previewMode) {
     return (

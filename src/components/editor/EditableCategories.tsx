@@ -24,8 +24,15 @@ export const EditableCategories = ({
   previewMode,
 }: EditableCategoriesProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false);
   const createCategory = useCreateCategory();
   const updateCategoriesOrder = useUpdateCategoriesOrder();
+
+  // Prevent flicker by ensuring content is ready
+  useState(() => {
+    const timer = setTimeout(() => setIsReady(true), 50);
+    return () => clearTimeout(timer);
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -77,6 +84,18 @@ export const EditableCategories = ({
       }
     });
   };
+
+  if (!isReady) {
+    return (
+      <div className="pt-4 px-4">
+        <div className="flex gap-3 pb-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-9 w-24 rounded-full bg-muted animate-skeleton-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (previewMode) {
     return (

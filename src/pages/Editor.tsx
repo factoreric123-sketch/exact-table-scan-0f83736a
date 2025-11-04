@@ -232,20 +232,31 @@ const Editor = () => {
   // Show skeleton only on initial load, not during refetch
   const isInitialLoading = 
     restaurantLoading || 
-    (categoriesLoading && categories.length === 0) || 
-    (subcategoriesLoading && activeCategory && subcategories.length === 0) || 
-    (dishesLoading && activeSubcategory && dishes.length === 0);
+    (categoriesLoading && categories.length === 0);
 
   if (isInitialLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Skeleton className="h-64 w-full" />
-        <div className="container mx-auto px-4 py-8">
-          <Skeleton className="h-12 w-full mb-4" />
-          <Skeleton className="h-12 w-full mb-4" />
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="h-16 bg-muted animate-skeleton-pulse" />
+        <div className="h-64 bg-muted animate-skeleton-pulse" />
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex gap-3 py-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-9 w-24 rounded-full bg-muted animate-skeleton-pulse" />
+            ))}
+          </div>
+          <div className="flex gap-4 py-3 border-b">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-6 w-20 bg-muted animate-skeleton-pulse" />
+            ))}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6 py-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Skeleton key={i} className="aspect-square" />
+              <div key={i} className="space-y-2">
+                <div className="aspect-square rounded-2xl bg-muted animate-skeleton-pulse" />
+                <div className="h-4 w-3/4 bg-muted animate-skeleton-pulse" />
+                <div className="h-3 w-1/2 bg-muted animate-skeleton-pulse" />
+              </div>
             ))}
           </div>
         </div>

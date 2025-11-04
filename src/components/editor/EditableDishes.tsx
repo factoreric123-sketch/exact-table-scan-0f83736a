@@ -22,8 +22,15 @@ export const EditableDishes = ({
   previewMode,
 }: EditableDishesProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false);
   const createDish = useCreateDish();
   const updateDishesOrder = useUpdateDishesOrder();
+
+  // Prevent flicker by ensuring content is ready
+  useState(() => {
+    const timer = setTimeout(() => setIsReady(true), 50);
+    return () => clearTimeout(timer);
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -76,6 +83,22 @@ export const EditableDishes = ({
       toast.error("Failed to add dish");
     }
   };
+
+  if (!isReady) {
+    return (
+      <div className="px-4 py-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="space-y-2">
+              <div className="aspect-square rounded-2xl bg-muted animate-skeleton-pulse" />
+              <div className="h-4 w-3/4 bg-muted animate-skeleton-pulse" />
+              <div className="h-3 w-1/2 bg-muted animate-skeleton-pulse" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (previewMode) {
     const dishCards = dishes.map((dish) => ({
