@@ -1,16 +1,60 @@
 import { Dish } from "@/components/DishCard";
 
-// Import Victory Restaurant images
-import victoryShrimp from "@/assets/victory/victory-shrimp.png";
-import mamboWings from "@/assets/victory/mambo-wings.png";
-import crabFries from "@/assets/victory/crab-fries.png";
-import jerkChickenEggrolls from "@/assets/victory/jerk-chicken-eggrolls.png";
-import lambChops from "@/assets/victory/lamb-chops.png";
-import salmon from "@/assets/victory/salmon.png";
-import chickenPasta from "@/assets/victory/chicken-pasta.png";
-import shrimpPasta from "@/assets/victory/shrimp-pasta.png";
-import steak from "@/assets/victory/steak.png";
-import cocktails from "@/assets/victory/cocktails.png";
+// Import Victory Restaurant images - SIDES
+import lobsterMacCheese from "@/assets/victory/lobster-mac-cheese.jpg";
+import collardGreens from "@/assets/victory/collard-greens.jpg";
+import truffleFries from "@/assets/victory/truffle-fries.jpg";
+import garlicMashedPotatoes from "@/assets/victory/garlic-mashed-potatoes.jpg";
+
+// SALADS
+import caesarSalad from "@/assets/victory/caesar-salad.jpg";
+import grilledChickenSalad from "@/assets/victory/grilled-chicken-salad.jpg";
+import strawberrySpinachSalad from "@/assets/victory/strawberry-spinach-salad.jpg";
+
+// HOT APPETIZERS
+import victoryShrimp from "@/assets/victory/victory-shrimp-new.jpg";
+import mamboWings from "@/assets/victory/mambo-wings-new.jpg";
+import crabFries from "@/assets/victory/crab-fries-new.jpg";
+import jerkChickenEggrolls from "@/assets/victory/jerk-eggrolls-new.jpg";
+import loadedNachos from "@/assets/victory/loaded-nachos.jpg";
+import friedCalamari from "@/assets/victory/fried-calamari.jpg";
+
+// ENTRÉES
+import lambChops from "@/assets/victory/lamb-chops-new.jpg";
+import grilledSalmon from "@/assets/victory/grilled-salmon-new.jpg";
+import chickenShrimpPasta from "@/assets/victory/chicken-shrimp-pasta-new.jpg";
+import shrimpGrits from "@/assets/victory/shrimp-grits-new.jpg";
+import ribeyeSteak from "@/assets/victory/ribeye-steak-new.jpg";
+import surfNTurf from "@/assets/victory/surf-n-turf.jpg";
+import jerkChicken from "@/assets/victory/jerk-chicken-new.jpg";
+import blackenedCatfish from "@/assets/victory/blackened-catfish.jpg";
+import bbqRibs from "@/assets/victory/bbq-ribs.jpg";
+import vegetableStirFry from "@/assets/victory/vegetable-stir-fry.jpg";
+
+// DESSERTS
+import chocolateLavaCake from "@/assets/victory/chocolate-lava-cake.jpg";
+import peachCobbler from "@/assets/victory/peach-cobbler.jpg";
+import nyCheesecake from "@/assets/victory/ny-cheesecake.jpg";
+import bananaPudding from "@/assets/victory/banana-pudding.jpg";
+
+// SANGRIA
+import redSangria from "@/assets/victory/red-sangria.jpg";
+import whiteSangria from "@/assets/victory/white-sangria.jpg";
+import tropicalSangria from "@/assets/victory/tropical-sangria.jpg";
+
+// SPECIALTY COCKTAILS
+import topNotch from "@/assets/victory/top-notch.jpg";
+import pantyDropper from "@/assets/victory/panty-dropper.jpg";
+import sneakyLink from "@/assets/victory/sneaky-link.jpg";
+import soakCity from "@/assets/victory/soak-city.jpg";
+import sweetEscape from "@/assets/victory/sweet-escape.jpg";
+import victoryMule from "@/assets/victory/victory-mule.jpg";
+import bourbonSmash from "@/assets/victory/bourbon-smash.jpg";
+
+// MOCKTAILS
+import virginMojito from "@/assets/victory/virgin-mojito.jpg";
+import strawberryLemonade from "@/assets/victory/strawberry-lemonade.jpg";
+import tropicalPunch from "@/assets/victory/tropical-punch.jpg";
 
 export const menuData: Dish[] = [
   // SIDES
@@ -19,7 +63,7 @@ export const menuData: Dish[] = [
     name: "Lobster Mac N Cheese",
     description: "Creamy mac and cheese with succulent lobster pieces",
     price: "$18",
-    image: crabFries,
+    image: lobsterMacCheese,
     category: "Dinner",
     subcategory: "SIDES",
     allergens: ["Shellfish", "Dairy", "Gluten"],
@@ -32,7 +76,7 @@ export const menuData: Dish[] = [
     name: "Collard Greens",
     description: "Slow-cooked Southern-style collard greens",
     price: "$12",
-    image: mamboWings,
+    image: collardGreens,
     category: "Dinner",
     subcategory: "SIDES",
     allergens: ["Allium"],
@@ -44,7 +88,7 @@ export const menuData: Dish[] = [
     name: "Truffle Parmesan Fries",
     description: "Hand-cut fries tossed in truffle oil and parmesan",
     price: "$14",
-    image: crabFries,
+    image: truffleFries,
     category: "Dinner",
     subcategory: "SIDES",
     allergens: ["Dairy"],
@@ -57,7 +101,7 @@ export const menuData: Dish[] = [
     name: "Garlic Mashed Potatoes",
     description: "Creamy mashed potatoes infused with roasted garlic",
     price: "$12",
-    image: steak,
+    image: garlicMashedPotatoes,
     category: "Dinner",
     subcategory: "SIDES",
     allergens: ["Dairy", "Allium"],
@@ -71,7 +115,7 @@ export const menuData: Dish[] = [
     name: "Caesar Salad",
     description: "Crisp romaine, parmesan, croutons, classic Caesar dressing",
     price: "$14",
-    image: salmon,
+    image: caesarSalad,
     category: "Dinner",
     subcategory: "SALADS",
     allergens: ["Dairy", "Gluten", "Eggs"],
@@ -83,7 +127,7 @@ export const menuData: Dish[] = [
     name: "Grilled Chicken Salad",
     description: "Mixed greens, grilled chicken, cherry tomatoes, balsamic vinaigrette",
     price: "$18",
-    image: chickenPasta,
+    image: grilledChickenSalad,
     category: "Dinner",
     subcategory: "SALADS",
     allergens: ["Dairy"],
@@ -95,7 +139,7 @@ export const menuData: Dish[] = [
     name: "Strawberry Spinach Salad",
     description: "Fresh spinach, strawberries, candied pecans, goat cheese, poppy seed dressing",
     price: "$16",
-    image: salmon,
+    image: strawberrySpinachSalad,
     category: "Dinner",
     subcategory: "SALADS",
     allergens: ["Dairy"],
@@ -163,7 +207,7 @@ export const menuData: Dish[] = [
     name: "Loaded Nachos",
     description: "Tortilla chips loaded with cheese, jalapeños, sour cream, and pico de gallo",
     price: "$15",
-    image: crabFries,
+    image: loadedNachos,
     category: "Dinner",
     subcategory: "HOT APPETIZERS",
     allergens: ["Dairy", "Gluten"],
@@ -176,7 +220,7 @@ export const menuData: Dish[] = [
     name: "Fried Calamari",
     description: "Tender calamari rings, lightly fried with marinara sauce",
     price: "$17",
-    image: victoryShrimp,
+    image: friedCalamari,
     category: "Dinner",
     subcategory: "HOT APPETIZERS",
     allergens: ["Shellfish", "Gluten"],
@@ -201,7 +245,7 @@ export const menuData: Dish[] = [
     name: "Grilled Salmon",
     description: "Atlantic salmon with lemon butter sauce and seasonal vegetables",
     price: "$32",
-    image: salmon,
+    image: grilledSalmon,
     category: "Dinner",
     subcategory: "ENTRÉES",
     allergens: ["Dairy", "Allium"],
@@ -213,7 +257,7 @@ export const menuData: Dish[] = [
     name: "Chicken & Shrimp Pasta",
     description: "Sautéed chicken and shrimp in creamy Alfredo sauce over fettuccine",
     price: "$28",
-    image: chickenPasta,
+    image: chickenShrimpPasta,
     category: "Dinner",
     subcategory: "ENTRÉES",
     allergens: ["Shellfish", "Dairy", "Gluten"],
@@ -225,7 +269,7 @@ export const menuData: Dish[] = [
     name: "Shrimp & Grits",
     description: "Jumbo shrimp over creamy stone-ground grits with Cajun cream sauce",
     price: "$26",
-    image: shrimpPasta,
+    image: shrimpGrits,
     category: "Dinner",
     subcategory: "ENTRÉES",
     allergens: ["Shellfish", "Dairy", "Allium"],
@@ -237,7 +281,7 @@ export const menuData: Dish[] = [
     name: "Ribeye Steak",
     description: "16oz prime ribeye with garlic butter and mashed potatoes",
     price: "$48",
-    image: steak,
+    image: ribeyeSteak,
     category: "Dinner",
     subcategory: "ENTRÉES",
     allergens: ["Dairy", "Allium"],
@@ -249,7 +293,7 @@ export const menuData: Dish[] = [
     name: "Surf 'N' Turf",
     description: "8oz filet mignon and lobster tail with drawn butter",
     price: "$65",
-    image: steak,
+    image: surfNTurf,
     category: "Dinner",
     subcategory: "ENTRÉES",
     allergens: ["Shellfish", "Dairy", "Allium"],
@@ -261,7 +305,7 @@ export const menuData: Dish[] = [
     name: "Jerk Chicken",
     description: "Caribbean jerk-spiced chicken with rice and peas",
     price: "$24",
-    image: jerkChickenEggrolls,
+    image: jerkChicken,
     category: "Dinner",
     subcategory: "ENTRÉES",
     allergens: ["Soy", "Allium"],
@@ -274,7 +318,7 @@ export const menuData: Dish[] = [
     name: "Blackened Catfish",
     description: "Cajun-spiced catfish with dirty rice and coleslaw",
     price: "$26",
-    image: salmon,
+    image: blackenedCatfish,
     category: "Dinner",
     subcategory: "ENTRÉES",
     allergens: ["Dairy", "Allium"],
@@ -286,7 +330,7 @@ export const menuData: Dish[] = [
     name: "BBQ Ribs",
     description: "Fall-off-the-bone baby back ribs with house BBQ sauce",
     price: "$32",
-    image: lambChops,
+    image: bbqRibs,
     category: "Dinner",
     subcategory: "ENTRÉES",
     allergens: ["Soy", "Allium"],
@@ -297,7 +341,7 @@ export const menuData: Dish[] = [
     name: "Vegetable Stir Fry",
     description: "Fresh seasonal vegetables in teriyaki sauce over jasmine rice",
     price: "$22",
-    image: chickenPasta,
+    image: vegetableStirFry,
     category: "Dinner",
     subcategory: "ENTRÉES",
     allergens: ["Soy", "Gluten", "Allium"],
@@ -312,7 +356,7 @@ export const menuData: Dish[] = [
     name: "Chocolate Lava Cake",
     description: "Warm chocolate cake with molten center, vanilla ice cream",
     price: "$12",
-    image: crabFries,
+    image: chocolateLavaCake,
     category: "Dinner",
     subcategory: "DESSERTS",
     allergens: ["Dairy", "Gluten", "Eggs"],
@@ -324,7 +368,7 @@ export const menuData: Dish[] = [
     name: "Peach Cobbler",
     description: "Warm peach cobbler with cinnamon and vanilla ice cream",
     price: "$10",
-    image: mamboWings,
+    image: peachCobbler,
     category: "Dinner",
     subcategory: "DESSERTS",
     allergens: ["Dairy", "Gluten", "Eggs"],
@@ -335,7 +379,7 @@ export const menuData: Dish[] = [
     name: "New York Cheesecake",
     description: "Classic creamy cheesecake with berry compote",
     price: "$11",
-    image: salmon,
+    image: nyCheesecake,
     category: "Dinner",
     subcategory: "DESSERTS",
     allergens: ["Dairy", "Gluten", "Eggs"],
@@ -346,7 +390,7 @@ export const menuData: Dish[] = [
     name: "Banana Pudding",
     description: "Southern-style banana pudding with vanilla wafers",
     price: "$9",
-    image: chickenPasta,
+    image: bananaPudding,
     category: "Dinner",
     subcategory: "DESSERTS",
     allergens: ["Dairy", "Gluten", "Eggs"],
@@ -359,7 +403,7 @@ export const menuData: Dish[] = [
     name: "Red Sangria",
     description: "Red wine with fresh fruit and brandy",
     price: "$12",
-    image: cocktails,
+    image: redSangria,
     category: "Cocktails",
     subcategory: "SANGRIA",
     calories: 180,
@@ -369,7 +413,7 @@ export const menuData: Dish[] = [
     name: "White Sangria",
     description: "White wine with peaches, citrus, and elderflower",
     price: "$12",
-    image: cocktails,
+    image: whiteSangria,
     category: "Cocktails",
     subcategory: "SANGRIA",
     calories: 160,
@@ -379,7 +423,7 @@ export const menuData: Dish[] = [
     name: "Tropical Sangria",
     description: "White wine with mango, pineapple, and coconut rum",
     price: "$14",
-    image: cocktails,
+    image: tropicalSangria,
     category: "Cocktails",
     subcategory: "SANGRIA",
     calories: 200,
@@ -392,7 +436,7 @@ export const menuData: Dish[] = [
     name: "Top Notch",
     description: "Premium vodka, elderflower, champagne, fresh berries",
     price: "$16",
-    image: cocktails,
+    image: topNotch,
     category: "Cocktails",
     subcategory: "SPECIALTY",
     calories: 220,
@@ -403,7 +447,7 @@ export const menuData: Dish[] = [
     name: "Panty Dropper",
     description: "Vodka, peach schnapps, cranberry, pineapple juice",
     price: "$14",
-    image: cocktails,
+    image: pantyDropper,
     category: "Cocktails",
     subcategory: "SPECIALTY",
     calories: 240,
@@ -414,7 +458,7 @@ export const menuData: Dish[] = [
     name: "Sneaky Link",
     description: "Tequila, triple sec, lime, agave, jalapeño",
     price: "$15",
-    image: cocktails,
+    image: sneakyLink,
     category: "Cocktails",
     subcategory: "SPECIALTY",
     calories: 190,
@@ -425,7 +469,7 @@ export const menuData: Dish[] = [
     name: "Soak City",
     description: "Rum, coconut cream, pineapple, blue curaçao",
     price: "$14",
-    image: cocktails,
+    image: soakCity,
     category: "Cocktails",
     subcategory: "SPECIALTY",
     calories: 280,
@@ -435,7 +479,7 @@ export const menuData: Dish[] = [
     name: "Sweet Escape",
     description: "Gin, lavender, lemon, prosecco, honey",
     price: "$15",
-    image: cocktails,
+    image: sweetEscape,
     category: "Cocktails",
     subcategory: "SPECIALTY",
     calories: 200,
@@ -446,7 +490,7 @@ export const menuData: Dish[] = [
     name: "Victory Mule",
     description: "Vodka, ginger beer, lime, fresh mint",
     price: "$13",
-    image: cocktails,
+    image: victoryMule,
     category: "Cocktails",
     subcategory: "SPECIALTY",
     calories: 180,
@@ -456,7 +500,7 @@ export const menuData: Dish[] = [
     name: "Bourbon Smash",
     description: "Bourbon, mint, lemon, simple syrup",
     price: "$14",
-    image: cocktails,
+    image: bourbonSmash,
     category: "Cocktails",
     subcategory: "SPECIALTY",
     calories: 210,
@@ -468,7 +512,7 @@ export const menuData: Dish[] = [
     name: "Virgin Mojito",
     description: "Fresh mint, lime, soda water, sugar",
     price: "$8",
-    image: cocktails,
+    image: virginMojito,
     category: "Cocktails",
     subcategory: "MOCKTAILS",
     calories: 120,
@@ -478,7 +522,7 @@ export const menuData: Dish[] = [
     name: "Strawberry Lemonade",
     description: "Fresh strawberries, lemon juice, sparkling water",
     price: "$7",
-    image: cocktails,
+    image: strawberryLemonade,
     category: "Cocktails",
     subcategory: "MOCKTAILS",
     calories: 110,
@@ -488,7 +532,7 @@ export const menuData: Dish[] = [
     name: "Tropical Punch",
     description: "Pineapple, mango, passion fruit, coconut water",
     price: "$8",
-    image: cocktails,
+    image: tropicalPunch,
     category: "Cocktails",
     subcategory: "MOCKTAILS",
     calories: 140,
