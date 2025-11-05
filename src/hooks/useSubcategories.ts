@@ -92,7 +92,6 @@ export const useCreateSubcategory = () => {
       queryClient.invalidateQueries({ queryKey: ["subcategories", "restaurant"] });
     },
     onError: (error, _variables, context) => {
-      console.error("Failed to create subcategory:", error);
       if (context?.previous && context.categoryId) {
         queryClient.setQueryData(["subcategories", context.categoryId], context.previous);
       }

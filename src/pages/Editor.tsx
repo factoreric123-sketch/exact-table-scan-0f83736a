@@ -376,7 +376,13 @@ const Editor = () => {
           previewMode={previewMode}
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
-          onPreviewToggle={() => setPreviewMode(!previewMode)}
+          onPreviewToggle={() => {
+            const newPreviewMode = !previewMode;
+            if (newPreviewMode && viewMode === 'table') {
+              setViewMode('grid');
+            }
+            setPreviewMode(newPreviewMode);
+          }}
           onPublishToggle={handlePublishToggle}
           onUndo={handleUndo}
           onRedo={handleRedo}

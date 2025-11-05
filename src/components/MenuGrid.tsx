@@ -36,7 +36,7 @@ const MenuGrid = memo(({ dishes, sectionTitle }: MenuGridProps) => {
 
   return (
     <>
-      <div className="px-6 py-8">
+      <div className="px-6 py-8" style={{ contentVisibility: 'auto' }}>
         <h2 className="text-3xl font-bold text-foreground mb-6">{sectionTitle}</h2>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
           {dishes.map((dish) => (

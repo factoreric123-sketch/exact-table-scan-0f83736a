@@ -184,12 +184,13 @@ const PublicMenu = () => {
         .from('dishes')
         .select('*, subcategories!inner(id, name, category_id)')
         .eq('subcategories.category_id', activeCategoryObj.id)
-        .order('display_order');
+        .order('order_index');
       
       if (error) throw error;
       return data || [];
     },
     enabled: !!activeCategoryObj?.id,
+    staleTime: 1000 * 60 * 10, // 10 minutes for public menu
   });
 
   // Group dishes by subcategory
@@ -315,9 +316,6 @@ const PublicMenu = () => {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-                  <SheetHeader className="mb-6">
-                    <SheetTitle>Filter Menu</SheetTitle>
-                  </SheetHeader>
                   <AllergenFilter
                     selectedAllergens={selectedAllergens}
                     selectedDietary={selectedDietary}

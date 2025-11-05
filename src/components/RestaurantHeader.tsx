@@ -105,7 +105,7 @@ const RestaurantHeader = memo(({
           src={displayImage} 
           alt="Restaurant ambiance" 
           className="w-full h-full object-cover"
-          loading="eager"
+          loading="lazy"
           decoding="async"
         />
         
