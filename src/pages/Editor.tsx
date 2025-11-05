@@ -296,30 +296,6 @@ const Editor = () => {
           onThemeChange={handleThemeChange}
         />
 
-      <Sheet>
-        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-          <SheetHeader className="mb-6">
-            <SheetTitle>Filter Menu</SheetTitle>
-          </SheetHeader>
-          {previewMode && restaurant.show_allergen_filter !== false && (
-            <AllergenFilter
-              selectedAllergens={selectedAllergens}
-              selectedDietary={selectedDietary}
-              selectedSpicy={selectedSpicy}
-              selectedBadges={selectedBadges}
-              onAllergenToggle={handleAllergenToggle}
-              onDietaryToggle={handleDietaryToggle}
-              onSpicyToggle={handleSpicyToggle}
-              onBadgeToggle={handleBadgeToggle}
-              onClear={handleClearFilters}
-              allergenOrder={restaurant.allergen_filter_order as string[] | undefined}
-              dietaryOrder={restaurant.dietary_filter_order as string[] | undefined}
-              badgeOrder={restaurant.badge_display_order as string[] | undefined}
-            />
-          )}
-        </SheetContent>
-      </Sheet>
-
       <RestaurantHeader
         name={restaurant.name}
         tagline={restaurant.tagline || ""}
@@ -329,23 +305,47 @@ const Editor = () => {
       />
 
       <div className="container mx-auto max-w-6xl">
-        <EditableCategories
-          categories={categories}
-          activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
-          restaurantId={restaurant.id}
-          previewMode={previewMode}
-          filterSheetTrigger={
-            previewMode && restaurant.show_allergen_filter !== false ? (
-              <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Filter className="h-4 w-4" />
-                  Filters
-                </Button>
-              </SheetTrigger>
-            ) : null
-          }
-        />
+        <Sheet>
+          <EditableCategories
+            categories={categories}
+            activeCategory={activeCategory}
+            onCategoryChange={setActiveCategory}
+            restaurantId={restaurant.id}
+            previewMode={previewMode}
+            filterSheetTrigger={
+              previewMode && restaurant.show_allergen_filter !== false ? (
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Filter className="h-4 w-4" />
+                    Filters
+                  </Button>
+                </SheetTrigger>
+              ) : null
+            }
+          />
+          
+          <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+            <SheetHeader className="mb-6">
+              <SheetTitle>Filter Menu</SheetTitle>
+            </SheetHeader>
+            {previewMode && restaurant.show_allergen_filter !== false && (
+              <AllergenFilter
+                selectedAllergens={selectedAllergens}
+                selectedDietary={selectedDietary}
+                selectedSpicy={selectedSpicy}
+                selectedBadges={selectedBadges}
+                onAllergenToggle={handleAllergenToggle}
+                onDietaryToggle={handleDietaryToggle}
+                onSpicyToggle={handleSpicyToggle}
+                onBadgeToggle={handleBadgeToggle}
+                onClear={handleClearFilters}
+                allergenOrder={restaurant.allergen_filter_order as string[] | undefined}
+                dietaryOrder={restaurant.dietary_filter_order as string[] | undefined}
+                badgeOrder={restaurant.badge_display_order as string[] | undefined}
+              />
+            )}
+          </SheetContent>
+        </Sheet>
 
         <EditableSubcategories
           subcategories={subcategories}
