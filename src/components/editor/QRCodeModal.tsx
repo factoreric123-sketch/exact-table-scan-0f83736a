@@ -25,21 +25,13 @@ export const QRCodeModal = ({
   const [size, setSize] = useState<number>(250);
   const [copied, setCopied] = useState(false);
   
-  // Direct link for "Open Live" and clipboard
+  // Short link for everything: display, copy, open, QR
   const baseUrl = import.meta.env.VITE_PUBLIC_SITE_URL || window.location.origin;
-  const directUrl = `${baseUrl}/menu/${restaurantSlug}`;
-  
-  // Universal resolver for QR code (resilient) - fallback
-  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-  const defaultResolverUrl = `https://${projectId}.supabase.co/functions/v1/resolve-menu?slug=${restaurantSlug}`;
-  const [qrUrl, setQrUrl] = useState<string>(defaultResolverUrl);
+  const [qrUrl, setQrUrl] = useState<string>("");
 
   // Ensure a short link exists: /m/{restaurant_hash}/{menu_id}
   useEffect(() => {
-    if (!open || !isPublished) {
-      setQrUrl(defaultResolverUrl);
-      return;
-    }
+    if (!open) return;
 
     let cancelled = false;
 
@@ -65,11 +57,6 @@ export const QRCodeModal = ({
 
         if (rErr || !restaurant) {
           console.warn("[QRCodeModal] restaurant not found", rErr);
-          setQrUrl(defaultResolverUrl);
-          return;
-        }
-        if (!restaurant.published) {
-          setQrUrl(defaultResolverUrl);
           return;
         }
 
@@ -104,8 +91,7 @@ export const QRCodeModal = ({
           .maybeSingle();
 
         if (uErr) {
-          console.warn("[QRCodeModal] upsert failed, falling back", uErr);
-          setQrUrl(defaultResolverUrl);
+          console.warn("[QRCodeModal] upsert failed", uErr);
           return;
         }
 
@@ -114,16 +100,19 @@ export const QRCodeModal = ({
         if (!cancelled) setQrUrl(shortUrl);
       } catch (e) {
         console.warn("[QRCodeModal] ensureLink error", e);
-        if (!cancelled) setQrUrl(defaultResolverUrl);
       }
     };
 
     ensureLink();
     return () => { cancelled = true; };
-  }, [open, isPublished, restaurantSlug, baseUrl, defaultResolverUrl]);
+  }, [open, restaurantSlug, baseUrl]);
   const handleCopyLink = async () => {
+    if (!qrUrl) {
+      toast.error("Link is generating, please wait...");
+      return;
+    }
     try {
-      await navigator.clipboard.writeText(directUrl);
+      await navigator.clipboard.writeText(qrUrl);
       setCopied(true);
       toast.success("Link copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
@@ -133,7 +122,11 @@ export const QRCodeModal = ({
   };
 
   const handleOpenLive = () => {
-    window.open(directUrl, "_blank");
+    if (!qrUrl) {
+      toast.error("Link is generating, please wait...");
+      return;
+    }
+    window.open(qrUrl, "_blank");
   };
 
   const handleDownloadPNG = () => {
@@ -198,7 +191,7 @@ export const QRCodeModal = ({
               Scan this QR code or share the link to view your menu:
             </div>
             <code className="text-xs bg-muted px-2 py-1 rounded block overflow-x-auto">
-              {directUrl}
+              {qrUrl || "Generating link..."}
             </code>
             <div className="flex gap-2">
               <Button
@@ -206,6 +199,7 @@ export const QRCodeModal = ({
                 variant="outline"
                 size="sm"
                 className="flex-1 gap-2"
+                disabled={!qrUrl}
               >
                 {copied ? (
                   <>
@@ -224,6 +218,7 @@ export const QRCodeModal = ({
                 variant="outline"
                 size="sm"
                 className="flex-1 gap-2"
+                disabled={!qrUrl}
               >
                 <ExternalLink className="h-4 w-4" />
                 Open Live

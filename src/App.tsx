@@ -13,7 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Editor from "./pages/Editor";
 import PublicMenu from "./pages/PublicMenu";
 import MenuRedirect from "./pages/MenuRedirect";
-import MenuShortRedirect from "./pages/MenuShortRedirect";
+import MenuShortDisplay from "./pages/MenuShortDisplay";
 import NotFound from "./pages/NotFound";
 import AboutUs from "./pages/AboutUs";
 import Pricing from "./pages/Pricing";
@@ -87,7 +87,7 @@ const App = () => (
             {/* Canonical route for public menus */}
             <Route path="/menu/:slug" element={<PublicMenu />} />
             {/* Short link format compatible with TapTab-like URLs */}
-            <Route path="/m/:restaurantHash/:menuId" element={<MenuShortRedirect />} />
+            <Route path="/m/:restaurantHash/:menuId" element={<MenuShortDisplay />} />
             {/* Legacy redirect for old QR codes */}
             <Route path= "/:slug" element={<MenuRedirect />} />
             <Route path="*" element={<NotFound />} />

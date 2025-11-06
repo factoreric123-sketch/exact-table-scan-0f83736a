@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download, Copy, ExternalLink, CheckCheck, QrCode } from "lucide-react";
 import { toast } from "sonner";
 import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ShareDialogProps {
   open: boolean;
@@ -24,17 +25,95 @@ export const ShareDialog = ({
   const [size, setSize] = useState<number>(250);
   const [copied, setCopied] = useState(false);
   
-  // Direct live link (fast, for in-app use)
+  // Short link for everything: display, copy, open, QR
   const baseUrl = import.meta.env.VITE_PUBLIC_SITE_URL || window.location.origin;
-  const liveUrl = `${baseUrl}/menu/${restaurantSlug}`;
-  
-  // Universal resolver URL (resilient, for QR codes)
-  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-  const resolverUrl = `https://${projectId}.supabase.co/functions/v1/resolve-menu?slug=${restaurantSlug}`;
+  const [shortUrl, setShortUrl] = useState<string>("");
+
+  // Generate short link when dialog opens
+  useEffect(() => {
+    if (!open) return;
+
+    let cancelled = false;
+
+    const hex = (buffer: ArrayBuffer) =>
+      Array.from(new Uint8Array(buffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+
+    const sha256Hex = async (input: string) => {
+      const enc = new TextEncoder().encode(input);
+      const digest = await crypto.subtle.digest("SHA-256", enc);
+      return hex(digest);
+    };
+
+    const ensureLink = async () => {
+      try {
+        // 1) Lookup restaurant by slug
+        const { data: restaurant, error: rErr } = await supabase
+          .from("restaurants")
+          .select("id, slug, published")
+          .eq("slug", restaurantSlug)
+          .maybeSingle();
+
+        if (rErr || !restaurant) {
+          console.warn("[ShareDialog] restaurant not found", rErr);
+          return;
+        }
+
+        // 2) Existing link?
+        const { data: existing, error: lErr } = await supabase
+          .from("menu_links")
+          .select("restaurant_hash, menu_id, active")
+          .eq("restaurant_id", restaurant.id)
+          .eq("active", true)
+          .maybeSingle();
+
+        if (!lErr && existing) {
+          const url = `${baseUrl}/m/${existing.restaurant_hash}/${existing.menu_id}`;
+          if (!cancelled) setShortUrl(url);
+          return;
+        }
+
+        // 3) Create deterministic IDs and upsert
+        const fullHex = await sha256Hex(restaurant.id);
+        const restaurant_hash = fullHex.slice(0, 8);
+        const numBase = parseInt(fullHex.slice(8, 16), 16);
+        const menu_num = (numBase % 100000).toString().padStart(5, "0");
+        const menu_id = menu_num;
+
+        const { data: upserted, error: uErr } = await supabase
+          .from("menu_links")
+          .upsert(
+            { restaurant_id: restaurant.id, restaurant_hash, menu_id, active: true },
+            { onConflict: "restaurant_id" }
+          )
+          .select("restaurant_hash, menu_id")
+          .maybeSingle();
+
+        if (uErr) {
+          console.warn("[ShareDialog] upsert failed", uErr);
+          return;
+        }
+
+        const link = upserted || { restaurant_hash, menu_id };
+        const url = `${baseUrl}/m/${link.restaurant_hash}/${link.menu_id}`;
+        if (!cancelled) setShortUrl(url);
+      } catch (e) {
+        console.warn("[ShareDialog] ensureLink error", e);
+      }
+    };
+
+    ensureLink();
+    return () => { cancelled = true; };
+  }, [open, restaurantSlug, baseUrl]);
 
   const handleCopyLink = async () => {
+    if (!shortUrl) {
+      toast.error("Link is generating, please wait...");
+      return;
+    }
     try {
-      await navigator.clipboard.writeText(liveUrl);
+      await navigator.clipboard.writeText(shortUrl);
       setCopied(true);
       toast.success("Link copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
@@ -44,7 +123,11 @@ export const ShareDialog = ({
   };
 
   const handleOpenLive = () => {
-    window.open(liveUrl, "_blank");
+    if (!shortUrl) {
+      toast.error("Link is generating, please wait...");
+      return;
+    }
+    window.open(shortUrl, "_blank");
   };
 
   const handleDownloadPNG = () => {
@@ -108,7 +191,7 @@ export const ShareDialog = ({
             <label className="text-sm font-medium block">Live Menu Link</label>
             <div className="flex gap-2">
               <code className="flex-1 text-xs bg-muted px-3 py-2 rounded border border-border overflow-x-auto">
-                {liveUrl}
+                {shortUrl || "Generating link..."}
               </code>
             </div>
             <div className="flex gap-2">
@@ -116,7 +199,7 @@ export const ShareDialog = ({
                 onClick={handleCopyLink}
                 variant="outline"
                 className="flex-1 gap-2"
-                disabled={!isPublished}
+                disabled={!shortUrl || !isPublished}
               >
                 {copied ? (
                   <>
@@ -134,6 +217,7 @@ export const ShareDialog = ({
                 onClick={handleOpenLive}
                 variant="outline"
                 className="flex-1 gap-2"
+                disabled={!shortUrl}
               >
                 <ExternalLink className="h-4 w-4" />
                 Open Live
@@ -149,25 +233,33 @@ export const ShareDialog = ({
             
             <div className="flex justify-center mb-4">
               <div className="bg-white p-4 rounded-lg">
-                <QRCodeCanvas
-                  id="share-qr-canvas"
-                  value={resolverUrl}
-                  size={size}
-                  level="H"
-                  includeMargin
-                />
+                {shortUrl ? (
+                  <QRCodeCanvas
+                    id="share-qr-canvas"
+                    value={shortUrl}
+                    size={size}
+                    level="H"
+                    includeMargin
+                  />
+                ) : (
+                  <div className="flex items-center justify-center" style={{ width: size, height: size }}>
+                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Hidden SVG for download */}
             <div className="hidden">
-              <QRCodeSVG
-                id="share-qr-svg"
-                value={resolverUrl}
-                size={size}
-                level="H"
-                includeMargin
-              />
+              {shortUrl && (
+                <QRCodeSVG
+                  id="share-qr-svg"
+                  value={shortUrl}
+                  size={size}
+                  level="H"
+                  includeMargin
+                />
+              )}
             </div>
 
             <div className="space-y-3">
@@ -206,7 +298,7 @@ export const ShareDialog = ({
                   onClick={handleDownloadPNG} 
                   variant="outline" 
                   className="flex-1 gap-2"
-                  disabled={!isPublished}
+                  disabled={!isPublished || !shortUrl}
                 >
                   <Download className="h-4 w-4" />
                   Download PNG
@@ -215,7 +307,7 @@ export const ShareDialog = ({
                   onClick={handleDownloadSVG} 
                   variant="outline" 
                   className="flex-1 gap-2"
-                  disabled={!isPublished}
+                  disabled={!isPublished || !shortUrl}
                 >
                   <Download className="h-4 w-4" />
                   Download SVG

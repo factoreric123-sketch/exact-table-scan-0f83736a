@@ -17,8 +17,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 
-const PublicMenu = () => {
-  const { slug } = useParams<{ slug: string }>();
+interface PublicMenuProps {
+  slugOverride?: string;
+}
+
+const PublicMenu = ({ slugOverride }: PublicMenuProps = {}) => {
+  const { slug: urlSlug } = useParams<{ slug: string }>();
+  const slug = slugOverride || urlSlug;
   
   // Step 1: Resolve restaurant first (resolve-first pattern)
   const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(slug || "");
