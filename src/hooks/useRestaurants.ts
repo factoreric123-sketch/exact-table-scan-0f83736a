@@ -41,13 +41,23 @@ export const useRestaurants = () => {
 };
 
 export const useRestaurant = (slug: string) => {
+  // Normalize slug to avoid passing route placeholders like ":slug"
+  const normalizedSlug = (slug || '')
+    .trim()
+    .replace(/^:+/, '') // remove leading colon(s)
+    .replace(/^menu\//, '') // strip optional /menu/ prefix if present
+    .split('/')
+    .filter(Boolean)
+    .pop()?.toLowerCase() || '';
+
   return useQuery({
-    queryKey: ["restaurant", slug],
+    queryKey: ["restaurant", normalizedSlug],
     queryFn: async () => {
+      if (!normalizedSlug) return null;
       const { data, error } = await supabase
         .from("restaurants")
         .select("*")
-        .eq("slug", slug)
+        .eq("slug", normalizedSlug)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -55,7 +65,7 @@ export const useRestaurant = (slug: string) => {
       if (error) throw error;
       return data as unknown as Restaurant | null;
     },
-    enabled: !!slug,
+    enabled: !!normalizedSlug,
     staleTime: 1000 * 60 * 3, // 3 minutes - public menus are mostly static
     gcTime: 1000 * 60 * 20, // 20 minutes cache
   });
