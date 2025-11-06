@@ -29,22 +29,11 @@ export const ShareDialog = ({
   const baseUrl = import.meta.env.VITE_PUBLIC_SITE_URL || window.location.origin;
   const [shortUrl, setShortUrl] = useState<string>("");
 
-  // Generate short link when dialog opens
+  // Generate short link when dialog opens - now using backend function for guaranteed reliability
   useEffect(() => {
     if (!open) return;
 
     let cancelled = false;
-
-    const hex = (buffer: ArrayBuffer) =>
-      Array.from(new Uint8Array(buffer))
-        .map(b => b.toString(16).padStart(2, "0"))
-        .join("");
-
-    const sha256Hex = async (input: string) => {
-      const enc = new TextEncoder().encode(input);
-      const digest = await crypto.subtle.digest("SHA-256", enc);
-      return hex(digest);
-    };
 
     const ensureLink = async () => {
       try {
@@ -57,49 +46,44 @@ export const ShareDialog = ({
 
         if (rErr || !restaurant) {
           console.warn("[ShareDialog] restaurant not found", rErr);
+          toast.error("Restaurant not found");
           return;
         }
 
-        // 2) Existing link?
-        const { data: existing, error: lErr } = await supabase
-          .from("menu_links")
-          .select("restaurant_hash, menu_id, active")
-          .eq("restaurant_id", restaurant.id)
-          .eq("active", true)
-          .maybeSingle();
+        if (!restaurant.published) {
+          console.warn("[ShareDialog] restaurant not published");
+          // Still show the link but it won't work until published
+          toast.warning("Publish your restaurant first to make the link work");
+        }
 
-        if (!lErr && existing) {
-          const url = `${baseUrl}/m/${existing.restaurant_hash}/${existing.menu_id}`;
-          if (!cancelled) setShortUrl(url);
+        // 2) Call backend function to ensure link exists AND is verified
+        const { data: result, error: funcError } = await supabase.functions.invoke(
+          'ensure-menu-link',
+          {
+            body: { restaurant_id: restaurant.id }
+          }
+        );
+
+        if (funcError) {
+          console.error("[ShareDialog] ensure-menu-link failed:", funcError);
+          toast.error("Failed to create menu link. Please try again.");
           return;
         }
 
-        // 3) Create deterministic IDs and upsert
-        const fullHex = await sha256Hex(restaurant.id);
-        const restaurant_hash = fullHex.slice(0, 8);
-        const numBase = parseInt(fullHex.slice(8, 16), 16);
-        const menu_num = (numBase % 100000).toString().padStart(5, "0");
-        const menu_id = menu_num;
-
-        const { data: upserted, error: uErr } = await supabase
-          .from("menu_links")
-          .upsert(
-            { restaurant_id: restaurant.id, restaurant_hash, menu_id, active: true },
-            { onConflict: "restaurant_id" }
-          )
-          .select("restaurant_hash, menu_id")
-          .maybeSingle();
-
-        if (uErr) {
-          console.warn("[ShareDialog] upsert failed", uErr);
+        if (!result?.verified) {
+          console.error("[ShareDialog] Link not verified:", result);
+          toast.error(result?.error || "Link created but not accessible. Ensure your menu is published.");
           return;
         }
 
-        const link = upserted || { restaurant_hash, menu_id };
-        const url = `${baseUrl}/m/${link.restaurant_hash}/${link.menu_id}`;
-        if (!cancelled) setShortUrl(url);
+        const url = result.url || `${baseUrl}/m/${result.restaurant_hash}/${result.menu_id}`;
+        if (!cancelled) {
+          setShortUrl(url);
+          console.log("[ShareDialog] Link verified and ready:", url);
+        }
       } catch (e) {
-        console.warn("[ShareDialog] ensureLink error", e);
+        console.error("[ShareDialog] ensureLink error:", e);
+        toast.error("Failed to generate link. Please try again.");
       }
     };
 
