@@ -48,6 +48,8 @@ export const useRestaurant = (slug: string) => {
         .from("restaurants")
         .select("*")
         .eq("slug", slug)
+        .order("created_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (error) throw error;
