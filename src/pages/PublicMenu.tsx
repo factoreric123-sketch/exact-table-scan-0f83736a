@@ -91,8 +91,8 @@ const PublicMenu = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [subcategories]);
 
-  // No loading spinner - show skeleton instead
-  if (restaurantLoading || !restaurant) {
+  // Show skeleton while loading
+  if (restaurantLoading) {
     return (
       <div className="min-h-screen bg-background">
         <div className="h-16 bg-muted/30 animate-skeleton-pulse border-b border-border" />
@@ -112,6 +112,23 @@ const PublicMenu = () => {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show not found if restaurant doesn't exist or isn't published
+  if (!restaurant || !restaurant.published) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl font-bold">Restaurant Not Found</h1>
+          <p className="text-muted-foreground text-lg">
+            This menu doesn't exist or is not currently available.
+          </p>
+          <Button onClick={() => window.location.href = '/'} className="mt-4">
+            Return Home
+          </Button>
         </div>
       </div>
     );
@@ -137,16 +154,6 @@ const PublicMenu = () => {
     staleTime: 1000 * 60 * 10, // 10 minutes - cache premium status longer
   });
 
-  if (!restaurant || !restaurant.published) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Restaurant Not Found</h1>
-          <p className="text-muted-foreground">This menu is not available.</p>
-        </div>
-      </div>
-    );
-  }
 
   // Show upgrade prompt if owner doesn't have premium
   if (!premiumLoading && !ownerHasPremium) {
