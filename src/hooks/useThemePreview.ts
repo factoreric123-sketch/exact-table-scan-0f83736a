@@ -1,27 +1,72 @@
 import { useEffect } from 'react';
 import { Theme } from '@/lib/types/theme';
 import { camelToKebab, loadGoogleFont } from '@/lib/fontUtils';
+import { getDefaultTheme } from '@/lib/presetThemes';
+
+// Normalize legacy theme objects from DB into the current Theme shape
+function normalizeTheme(raw: any): Theme | null {
+  if (!raw) return null;
+
+  // Already in new format
+  if (raw.colors && raw.fonts && raw.visual) {
+    return raw as Theme;
+  }
+
+  // Legacy format handling: { mode: 'dark' | 'light', primaryColor?: 'hsl(…)' }
+  const base = getDefaultTheme();
+
+  const toToken = (value?: string): string | undefined => {
+    if (!value) return undefined;
+    const v = value.trim();
+    if (v.startsWith('hsl(')) {
+      const inner = v.slice(v.indexOf('(') + 1, v.lastIndexOf(')'));
+      // Remove commas to match "H S% L%" tokens
+      return inner.replace(/,/g, '').trim();
+    }
+    return v;
+  };
+
+  const mode = raw.mode === 'light' ? 'light' : 'dark';
+  const primary = toToken(raw.primaryColor);
+
+  const normalized: Theme = {
+    ...base,
+    visual: {
+      ...base.visual,
+      mode,
+    },
+    colors: {
+      ...base.colors,
+      ...(primary ? { primary, ring: primary, accent: primary } : {}),
+    },
+    // keep base fonts
+  };
+
+  return normalized;
+}
 
 /**
- * Hook to apply theme preview instantly (<16ms latency)
- * Injects CSS custom properties into document.documentElement
+ * Hook to apply theme preview safely with legacy support
  */
-export const useThemePreview = (theme: Theme | null | undefined, enabled: boolean = true) => {
+export const useThemePreview = (theme: Theme | any | null | undefined, enabled: boolean = true) => {
   useEffect(() => {
-    if (!theme || !enabled) return;
+    if (!enabled) return;
+
+    const normalized = normalizeTheme(theme);
+    if (!normalized) return;
 
     const root = document.documentElement;
 
-    // Apply colors instantly
-    Object.entries(theme.colors).forEach(([key, value]) => {
-      root.style.setProperty(`--${camelToKebab(key)}`, value);
+    // Apply colors
+    Object.entries(normalized.colors).forEach(([key, value]) => {
+      if (value) root.style.setProperty(`--${camelToKebab(key)}`, value as string);
     });
 
     // Apply corner radius
-    root.style.setProperty('--radius', theme.visual.cornerRadius);
+    root.style.setProperty('--radius', normalized.visual.cornerRadius);
 
     // Apply mode class
-    if (theme.visual.mode === 'dark') {
+    if (normalized.visual.mode === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
     } else {
@@ -30,12 +75,12 @@ export const useThemePreview = (theme: Theme | null | undefined, enabled: boolea
     }
 
     // Load fonts dynamically
-    loadGoogleFont(theme.fonts.heading);
-    loadGoogleFont(theme.fonts.body);
+    loadGoogleFont(normalized.fonts.heading);
+    loadGoogleFont(normalized.fonts.body);
 
     // Apply fonts via CSS variables
-    root.style.setProperty('--font-heading', theme.fonts.heading);
-    root.style.setProperty('--font-body', theme.fonts.body);
+    root.style.setProperty('--font-heading', normalized.fonts.heading);
+    root.style.setProperty('--font-body', normalized.fonts.body);
 
   }, [theme, enabled]);
 };

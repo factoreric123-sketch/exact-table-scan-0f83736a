@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Download, Copy, ExternalLink, CheckCheck, QrCode } from "lucide-react";
 import { toast } from "sonner";
-import { QRCodeCanvas } from "qrcode.react";
+import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ShareDialogProps {
@@ -157,14 +157,13 @@ export const ShareDialog = ({
 
             {/* Hidden SVG for download */}
             <div className="hidden">
-              <svg id="share-qr-svg" xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${size} ${size}`}>
-                <QRCodeCanvas
-                  value={liveUrl}
-                  size={size}
-                  level="H"
-                  includeMargin
-                />
-              </svg>
+              <QRCodeSVG
+                id="share-qr-svg"
+                value={liveUrl}
+                size={size}
+                level="H"
+                includeMargin
+              />
             </div>
 
             <div className="space-y-3">
