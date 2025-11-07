@@ -26,10 +26,10 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps = {}) => {
   const slug = slugOverride || urlSlug;
   
   // Step 1: Resolve restaurant first (resolve-first pattern)
-  const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(slug || "");
+  const { data: restaurant, isLoading: restaurantLoading, error: restaurantError, isError } = useRestaurant(slug || "");
   
   // Step 2: Only fetch categories if restaurant exists and is published
-  const { data: categories } = useCategories(restaurant?.id || "", {
+  const { data: categories, error: categoriesError } = useCategories(restaurant?.id || "", {
     enabled: !!restaurant?.id && restaurant?.published === true,
   });
   const [activeCategory, setActiveCategory] = useState<string>("");
@@ -47,7 +47,7 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps = {}) => {
   const activeCategoryObj = categories?.find((c) => c.id === activeCategory);
   
   // Step 3: Only fetch subcategories if category exists and restaurant is published
-  const { data: subcategories } = useSubcategories(activeCategoryObj?.id || "", {
+  const { data: subcategories, error: subcategoriesError } = useSubcategories(activeCategoryObj?.id || "", {
     enabled: !!activeCategoryObj?.id && restaurant?.published === true,
   });
 
@@ -127,6 +127,24 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps = {}) => {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if restaurant query failed
+  if (isError || restaurantError) {
+    console.error('[PublicMenu] Restaurant query error:', restaurantError);
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl font-bold">Unable to Load Menu</h1>
+          <p className="text-muted-foreground text-lg">
+            We couldn't load this menu. Please try again later.
+          </p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Retry
+          </Button>
         </div>
       </div>
     );
@@ -215,11 +233,22 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps = {}) => {
     );
   }
 
+  // Log any data fetching errors
+  if (categoriesError) {
+    console.error('[PublicMenu] Categories error:', categoriesError);
+  }
+  if (subcategoriesError) {
+    console.error('[PublicMenu] Subcategories error:', subcategoriesError);
+  }
+  if (dishesError) {
+    console.error('[PublicMenu] Dishes error:', dishesError);
+  }
+
   const categoryNames = categories?.map((c) => c.name) || [];
   const activeCategoryName = categories?.find((c) => c.id === activeCategory)?.name || "";
 
   // Step 5: Get all dishes only if category exists and restaurant is published
-  const { data: allDishesForCategory } = useQuery({
+  const { data: allDishesForCategory, error: dishesError } = useQuery({
     queryKey: ['all-dishes-for-category', activeCategoryObj?.id],
     queryFn: async () => {
       if (!activeCategoryObj?.id) return [];
@@ -230,7 +259,10 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps = {}) => {
         .eq('subcategories.category_id', activeCategoryObj.id)
         .order('order_index');
       
-      if (error) throw error;
+      if (error) {
+        console.error('[PublicMenu] Dishes query error:', error);
+        throw error;
+      }
       return data || [];
     },
     enabled: !!activeCategoryObj?.id && restaurant?.published === true,

@@ -38,6 +38,7 @@ const queryClient = new QueryClient({
       retry: 1, // Only retry once - fail fast for better UX
       retryDelay: 1000, // 1 second between retries
       networkMode: 'offlineFirst', // Use cache when offline
+      throwOnError: false, // Never throw errors in components - use error states instead
     },
     mutations: {
       retry: 0, // Don't retry mutations - prevent duplicate operations
