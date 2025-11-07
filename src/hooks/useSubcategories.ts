@@ -15,19 +15,34 @@ export const useSubcategories = (categoryId: string, options?: { enabled?: boole
   return useQuery({
     queryKey: ["subcategories", categoryId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("subcategories")
-        .select("*")
-        .eq("category_id", categoryId)
-        .order("order_index", { ascending: true });
+      try {
+        console.log('[useSubcategories] Fetching subcategories for category:', categoryId);
+        const { data, error } = await supabase
+          .from("subcategories")
+          .select("*")
+          .eq("category_id", categoryId)
+          .order("order_index", { ascending: true });
 
-      if (error) throw error;
-      return data as Subcategory[];
+        if (error) {
+          console.error('[useSubcategories] Query error:', error);
+          // Don't throw for public menus - return empty array
+          return [];
+        }
+        console.log('[useSubcategories] Subcategories fetched:', data?.length || 0);
+        return (data as Subcategory[]) || [];
+      } catch (err) {
+        console.error('[useSubcategories] Exception:', err);
+        // Never throw - return empty array
+        return [];
+      }
     },
     enabled: !!categoryId && (options?.enabled ?? true),
     staleTime: 1000 * 60, // 1 minute
     gcTime: 1000 * 60 * 10, // 10 minutes cache
     placeholderData: (prev) => prev, // Keep previous data during refetch
+    // CRITICAL: Never throw for public menus
+    retry: 3,
+    throwOnError: false,
   });
 };
 

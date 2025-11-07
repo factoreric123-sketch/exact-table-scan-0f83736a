@@ -16,19 +16,34 @@ export const useCategories = (restaurantId: string, options?: { enabled?: boolea
   return useQuery({
     queryKey: ["categories", restaurantId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .eq("restaurant_id", restaurantId)
-        .order("order_index", { ascending: true });
+      try {
+        console.log('[useCategories] Fetching categories for restaurant:', restaurantId);
+        const { data, error } = await supabase
+          .from("categories")
+          .select("*")
+          .eq("restaurant_id", restaurantId)
+          .order("order_index", { ascending: true });
 
-      if (error) throw error;
-      return data as Category[];
+        if (error) {
+          console.error('[useCategories] Query error:', error);
+          // Don't throw for public menus - return empty array
+          return [];
+        }
+        console.log('[useCategories] Categories fetched:', data?.length || 0);
+        return (data as Category[]) || [];
+      } catch (err) {
+        console.error('[useCategories] Exception:', err);
+        // Never throw - return empty array
+        return [];
+      }
     },
     enabled: !!restaurantId && (options?.enabled ?? true),
     staleTime: 1000 * 60, // 1 minute
     gcTime: 1000 * 60 * 10, // 10 minutes cache
     placeholderData: (prev) => prev, // Keep previous data during refetch
+    // CRITICAL: Never throw for public menus
+    retry: 3,
+    throwOnError: false,
   });
 };
 

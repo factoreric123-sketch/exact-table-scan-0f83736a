@@ -106,6 +106,12 @@ const PublicMenuContent = ({ slugOverride }: PublicMenuProps = {}) => {
   const { data: categories, error: categoriesError } = useCategories(restaurant?.id || "", {
     enabled: !!restaurant?.id && restaurant?.published === true,
   });
+  
+  console.log('[PublicMenu] Categories loaded:', {
+    count: categories?.length || 0,
+    hasError: !!categoriesError,
+    enabled: !!restaurant?.id && restaurant?.published === true
+  });
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [activeSubcategory, setActiveSubcategory] = useState<string>("");
   const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
@@ -120,9 +126,21 @@ const PublicMenuContent = ({ slugOverride }: PublicMenuProps = {}) => {
 
   const activeCategoryObj = categories?.find((c) => c.id === activeCategory);
   
+  console.log('[PublicMenu] Active category:', {
+    activeCategory,
+    activeCategoryObj: activeCategoryObj ? 'FOUND' : 'NOT FOUND',
+    categoriesCount: categories?.length || 0
+  });
+  
   // Step 3: Only fetch subcategories if category exists and restaurant is published
   const { data: subcategories, error: subcategoriesError } = useSubcategories(activeCategoryObj?.id || "", {
     enabled: !!activeCategoryObj?.id && restaurant?.published === true,
+  });
+  
+  console.log('[PublicMenu] Subcategories loaded:', {
+    count: subcategories?.length || 0,
+    hasError: !!subcategoriesError,
+    enabled: !!activeCategoryObj?.id && restaurant?.published === true
   });
 
   // Set initial active category and subcategory

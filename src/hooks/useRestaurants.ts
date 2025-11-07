@@ -50,24 +50,46 @@ export const useRestaurant = (slug: string) => {
     .filter(Boolean)
     .pop()?.toLowerCase() || '';
 
+  console.log('[useRestaurant] Normalized slug:', { input: slug, normalized: normalizedSlug });
+
   return useQuery({
     queryKey: ["restaurant", normalizedSlug],
     queryFn: async () => {
-      if (!normalizedSlug) return null;
-      const { data, error } = await supabase
-        .from("restaurants")
-        .select("*")
-        .eq("slug", normalizedSlug)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      if (!normalizedSlug) {
+        console.log('[useRestaurant] No slug provided, returning null');
+        return null;
+      }
+      
+      try {
+        console.log('[useRestaurant] Querying restaurant with slug:', normalizedSlug);
+        const { data, error } = await supabase
+          .from("restaurants")
+          .select("*")
+          .eq("slug", normalizedSlug)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      if (error) throw error;
-      return data as unknown as Restaurant | null;
+        if (error) {
+          console.error('[useRestaurant] Query error:', error);
+          // Don't throw - return null and let enabled: false handle it
+          return null;
+        }
+        
+        console.log('[useRestaurant] Query result:', data ? 'FOUND' : 'NOT FOUND');
+        return data as unknown as Restaurant | null;
+      } catch (err) {
+        console.error('[useRestaurant] Query exception:', err);
+        // Never throw - return null
+        return null;
+      }
     },
     enabled: !!normalizedSlug,
     staleTime: 1000 * 60 * 3, // 3 minutes - public menus are mostly static
     gcTime: 1000 * 60 * 20, // 20 minutes cache
+    // CRITICAL: Never throw
+    retry: 3,
+    throwOnError: false,
   });
 };
 
