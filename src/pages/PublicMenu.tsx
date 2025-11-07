@@ -60,9 +60,6 @@ class PublicMenuErrorBoundary extends Component<{ children: ReactNode }, { hasEr
     if (error instanceof ReferenceError) {
       console.error('[PublicMenu] ReferenceError detected - variable not defined');
     }
-    
-    // Alert to make it obvious
-    alert('ERROR CAUGHT! Check the console for details (press F12)');
   }
 
   render() {
@@ -430,9 +427,6 @@ const PublicMenuContent = ({ slugOverride }: PublicMenuProps = {}) => {
   if (subcategoriesError) {
     console.error('[PublicMenu] Subcategories error:', subcategoriesError);
   }
-  if (dishesError) {
-    console.error('[PublicMenu] Dishes error:', dishesError);
-  }
 
   const categoryNames = categories?.map((c) => c.name) || [];
   const activeCategoryName = categories?.find((c) => c.id === activeCategory)?.name || "";
@@ -474,6 +468,11 @@ const PublicMenuContent = ({ slugOverride }: PublicMenuProps = {}) => {
     retry: 3,
     throwOnError: false,
   });
+
+  // Log dishes error after declaration
+  if (dishesError) {
+    console.error('[PublicMenu] Dishes error:', dishesError);
+  }
 
   // Group dishes by subcategory
   const dishesBySubcategory = useMemo(() => {
