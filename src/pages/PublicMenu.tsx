@@ -481,9 +481,10 @@ const PublicMenuContent = ({ slugOverride }: PublicMenuProps = {}) => {
     const grouped: Record<string, any[]> = {};
     
     subcategories.forEach(sub => {
-      grouped[sub.name] = allDishesForCategory.filter(
-        dish => (dish as any).subcategories.id === sub.id
-      );
+      grouped[sub.name] = allDishesForCategory.filter(dish => {
+        const sc = (dish as any)?.subcategories;
+        return sc && sc.id === sub.id;
+      });
     });
     
     return grouped;
