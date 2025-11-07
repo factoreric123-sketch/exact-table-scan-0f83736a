@@ -605,7 +605,7 @@ const PublicMenuContent = ({ slugOverride }: PublicMenuProps = {}) => {
 
       {/* Restaurant Hero */}
       <RestaurantHeader 
-        name={restaurant.name}
+        name={restaurant.name || "Restaurant Menu"}
         tagline={restaurant.tagline || ""}
         heroImageUrl={restaurant.hero_image_url}
       />
@@ -637,40 +637,49 @@ const PublicMenuContent = ({ slugOverride }: PublicMenuProps = {}) => {
       {/* Main Content - All Subcategories in One Page */}
       <main>
         {subcategories?.map((subcategory) => {
-          const subcategoryDishes = dishesBySubcategory[subcategory.name] || [];
-          const filteredSubcategoryDishes = getFilteredDishes(subcategoryDishes);
+          try {
+            const subcategoryDishes = dishesBySubcategory[subcategory?.name] || [];
+            const filteredSubcategoryDishes = getFilteredDishes(subcategoryDishes);
+            
+            // Transform dishes to the format expected by MenuGrid
+            const transformedDishes = filteredSubcategoryDishes
+              .filter(d => d && d.id) // Filter out malformed dishes
+              .map((d) => ({
+                id: d.id,
+                name: d.name || "Unnamed Dish",
+                description: d.description || "",
+                price: d.price || 0,
+                image: d.image_url || "",
+                isNew: d.is_new || false,
+                isSpecial: d.is_special || false,
+                isPopular: d.is_popular || false,
+                isChefRecommendation: d.is_chef_recommendation || false,
+                category: activeCategoryName || "",
+                subcategory: subcategory?.name || "",
+                allergens: d.allergens || [],
+                calories: d.calories || null,
+                isVegetarian: d.is_vegetarian || false,
+                isVegan: d.is_vegan || false,
+                isSpicy: d.is_spicy || false,
+              }));
           
-          // Transform dishes to the format expected by MenuGrid
-          const transformedDishes = filteredSubcategoryDishes.map((d) => ({
-            id: d.id,
-            name: d.name,
-            description: d.description || "",
-            price: d.price,
-            image: d.image_url || "",
-            isNew: d.is_new,
-            isSpecial: d.is_special,
-            isPopular: d.is_popular,
-            isChefRecommendation: d.is_chef_recommendation,
-            category: activeCategoryName,
-            subcategory: subcategory.name,
-            allergens: d.allergens,
-            calories: d.calories,
-            isVegetarian: d.is_vegetarian,
-            isVegan: d.is_vegan,
-            isSpicy: d.is_spicy,
-          }));
-          
-          return (
-            <div 
-              key={subcategory.id}
-              ref={(el) => subcategoryRefs.current[subcategory.name] = el}
-            >
-              <MenuGrid 
-                dishes={transformedDishes}
-                sectionTitle={subcategory.name}
-              />
-            </div>
-          );
+            if (filteredSubcategoryDishes.length === 0) return null;
+
+            return (
+              <div 
+                key={subcategory?.id || subcategory?.name}
+                ref={(el) => { if (subcategory?.name) subcategoryRefs.current[subcategory.name] = el; }}
+              >
+                <MenuGrid 
+                  dishes={transformedDishes}
+                  sectionTitle={subcategory?.name || "Menu Items"}
+                />
+              </div>
+            );
+          } catch (err) {
+            console.error('[PublicMenu] Error rendering subcategory:', subcategory?.name, err);
+            return null; // Skip this subcategory if it fails
+          }
         })}
       </main>
 
