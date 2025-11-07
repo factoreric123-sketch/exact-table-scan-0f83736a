@@ -8,13 +8,22 @@ import PublicMenu from "./PublicMenu";
  * Keeps the clean hash-based URL in the browser
  */
 const MenuShortDisplay = () => {
+  console.log('═══════════════════════════════════════════════════════');
+  console.log('[MenuShortDisplay] COMPONENT MOUNTED');
+  console.log('═══════════════════════════════════════════════════════');
+  
   const { restaurantHash, menuId } = useParams<{ restaurantHash: string; menuId: string }>();
+  console.log('[MenuShortDisplay] URL params:', { restaurantHash, menuId });
+  
   const [status, setStatus] = useState<"loading" | "found" | "not-found" | "unpublished">("loading");
   const [restaurantSlug, setRestaurantSlug] = useState<string>("");
 
   useEffect(() => {
+    console.log('[MenuShortDisplay] useEffect triggered');
+    
     const resolveMenu = async () => {
       if (!restaurantHash || !menuId) {
+        console.error('[MenuShortDisplay] Missing hash or ID!');
         setStatus("not-found");
         return;
       }

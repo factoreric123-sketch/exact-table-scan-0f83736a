@@ -32,7 +32,7 @@ class PublicMenuErrorBoundary extends Component<{ children: ReactNode }, { hasEr
   componentDidCatch(error: Error, errorInfo: any) {
     // CRITICAL LOGGING: This is where we catch React rendering errors
     console.error('═══════════════════════════════════════════════════════');
-    console.error('[PublicMenu] ⚠️  ERROR BOUNDARY CAUGHT A RENDERING ERROR!');
+    console.error('[PublicMenu] ⚠️⚠️⚠️ ERROR BOUNDARY CAUGHT A RENDERING ERROR! ⚠️⚠️⚠️');
     console.error('═══════════════════════════════════════════════════════');
     console.error('[PublicMenu] Error:', error);
     console.error('[PublicMenu] Error message:', error.message);
@@ -41,7 +41,16 @@ class PublicMenuErrorBoundary extends Component<{ children: ReactNode }, { hasEr
     console.error(error.stack);
     console.error('[PublicMenu] Component stack:');
     console.error(errorInfo.componentStack);
-    console.error('[PublicMenu] Full errorInfo:', JSON.stringify(errorInfo, null, 2));
+    
+    // Log as string to ensure it shows
+    try {
+      console.error('[PublicMenu] Full errorInfo:', JSON.stringify(errorInfo, null, 2));
+    } catch (e) {
+      console.error('[PublicMenu] Could not stringify errorInfo:', errorInfo);
+    }
+    
+    console.error('═══════════════════════════════════════════════════════');
+    console.error('COPY THIS ERROR AND SEND IT TO THE DEVELOPER');
     console.error('═══════════════════════════════════════════════════════');
     
     // Try to extract more context
@@ -51,6 +60,9 @@ class PublicMenuErrorBoundary extends Component<{ children: ReactNode }, { hasEr
     if (error instanceof ReferenceError) {
       console.error('[PublicMenu] ReferenceError detected - variable not defined');
     }
+    
+    // Alert to make it obvious
+    alert('ERROR CAUGHT! Check the console for details (press F12)');
   }
 
   render() {
@@ -78,6 +90,10 @@ class PublicMenuErrorBoundary extends Component<{ children: ReactNode }, { hasEr
 }
 
 const PublicMenuContent = ({ slugOverride }: PublicMenuProps = {}) => {
+  console.log('═══════════════════════════════════════════════════════');
+  console.log('[PublicMenu] COMPONENT MOUNTED');
+  console.log('═══════════════════════════════════════════════════════');
+  
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const slug = slugOverride || urlSlug;
   
