@@ -30,7 +30,11 @@ class PublicMenuErrorBoundary extends Component<{ children: ReactNode }, { hasEr
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
-    console.error('[PublicMenu] Caught error:', error, errorInfo);
+    console.error('[PublicMenu] ERROR BOUNDARY CAUGHT:', error);
+    console.error('[PublicMenu] Error message:', error.message);
+    console.error('[PublicMenu] Error stack:', error.stack);
+    console.error('[PublicMenu] Component stack:', errorInfo.componentStack);
+    console.error('[PublicMenu] Full errorInfo:', errorInfo);
   }
 
   render() {
@@ -180,26 +184,18 @@ const PublicMenuContent = ({ slugOverride }: PublicMenuProps = {}) => {
     );
   }
 
-  // Show error if restaurant query failed
-  if (isError || restaurantError) {
-    console.error('[PublicMenu] Restaurant query error:', restaurantError);
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold">Unable to Load Menu</h1>
-          <p className="text-muted-foreground text-lg">
-            We couldn't load this menu. Please try again later.
-          </p>
-          <Button onClick={() => window.location.reload()} className="mt-4">
-            Retry
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  // DEBUG: Log all restaurant query details
+  console.log('[PublicMenu] Restaurant query status:', {
+    slug,
+    slugOverride,
+    isError,
+    restaurantError: restaurantError?.message,
+    restaurant,
+    restaurantLoading
+  });
 
-  // Show not found if restaurant doesn't exist
-  if (!restaurant) {
+  // Show not found if restaurant doesn't exist (check this FIRST, before error handling)
+  if (!restaurant && !restaurantLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
@@ -210,6 +206,54 @@ const PublicMenuContent = ({ slugOverride }: PublicMenuProps = {}) => {
           <Button onClick={() => window.location.href = '/'} className="mt-4">
             Return Home
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // If we have an error but also have restaurant data, log it but continue
+  // (the error might be from a failed retry or something non-critical)
+  if ((isError || restaurantError) && restaurant) {
+    console.warn('[PublicMenu] Query has error but restaurant data exists, continuing:', {
+      error: restaurantError?.message,
+      restaurant: restaurant.slug
+    });
+  }
+
+  // If we have an error AND no restaurant data, show error
+  if ((isError || restaurantError) && !restaurant && !restaurantLoading) {
+    console.error('[PublicMenu] Restaurant query FAILED with no data');
+    console.error('[PublicMenu] Error details:', {
+      isError,
+      errorMessage: restaurantError?.message,
+      errorCode: (restaurantError as any)?.code,
+      errorDetails: (restaurantError as any)?.details,
+      errorHint: (restaurantError as any)?.hint,
+      fullError: restaurantError
+    });
+    
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl font-bold">Unable to Load Menu</h1>
+          <p className="text-muted-foreground text-lg">
+            Database error. Please try again later.
+          </p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // If restaurant doesn't exist at this point, we already handled it above
+  if (!restaurant) {
+    // This should never be reached, but just in case
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl font-bold">Loading...</h1>
         </div>
       </div>
     );
