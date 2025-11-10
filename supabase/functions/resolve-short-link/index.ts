@@ -15,21 +15,23 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const isGet = req.method === 'GET';
 
-    // Support both GET query params and POST JSON body
-    let body: any = {};
+    // Support both GET query params and POST JSON body (handles various shapes)
+    let rawBody: any = {};
     if (!isGet) {
       try {
-        body = await req.json();
+        rawBody = await req.json();
       } catch {
-        body = {};
+        rawBody = {};
       }
     }
+    const payload: any = rawBody && typeof rawBody === 'object' && 'body' in rawBody ? rawBody.body : rawBody;
+
     const restaurantHash = isGet
-      ? url.searchParams.get('restaurant_hash')
-      : body.restaurant_hash;
+      ? (url.searchParams.get('restaurant_hash') || url.searchParams.get('restaurantHash') || url.searchParams.get('hash'))
+      : (payload?.restaurant_hash ?? payload?.restaurantHash ?? payload?.hash);
     const menuId = isGet
-      ? url.searchParams.get('menu_id')
-      : body.menu_id;
+      ? (url.searchParams.get('menu_id') || url.searchParams.get('menuId') || url.searchParams.get('id'))
+      : (payload?.menu_id ?? payload?.menuId ?? payload?.id);
 
     console.log('[resolve-short-link] Incoming:', { restaurantHash, menuId, method: req.method });
 
