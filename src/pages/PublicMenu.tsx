@@ -628,14 +628,16 @@ const PublicMenuContent = ({ slugOverride }: PublicMenuProps = {}) => {
 
       {/* Category & Subcategory Navigation */}
       <div className="sticky top-[57px] z-40 bg-background border-b border-border">
-        <CategoryNav 
-          categories={categoryNames}
-          activeCategory={activeCategoryName}
-          onCategoryChange={(name) => {
-            const cat = categories?.find((c) => c.name === name);
-            if (cat) setActiveCategory(cat.id);
-          }}
-        />
+        {categoryNames.length > 0 && activeCategoryName && (
+          <CategoryNav 
+            categories={categoryNames}
+            activeCategory={activeCategoryName}
+            onCategoryChange={(name) => {
+              const cat = categories?.find((c) => c.name === name);
+              if (cat) setActiveCategory(cat.id);
+            }}
+          />
+        )}
 
         {subcategories && subcategories.length > 0 && (
           <SubcategoryNav
@@ -664,19 +666,21 @@ const PublicMenuContent = ({ slugOverride }: PublicMenuProps = {}) => {
                 id: d.id,
                 name: d.name || "Unnamed Dish",
                 description: d.description || "",
-                price: d.price || 0,
-                image: d.image_url || "",
-                isNew: d.is_new || false,
-                isSpecial: d.is_special || false,
-                isPopular: d.is_popular || false,
-                isChefRecommendation: d.is_chef_recommendation || false,
+                // Ensure price is ALWAYS a string for downstream components
+                price: typeof d.price === 'string' ? d.price : String(d.price ?? ''),
+                // Provide a safe image fallback
+                image: d.image_url || '/placeholder.svg',
+                isNew: !!d.is_new,
+                isSpecial: !!d.is_special,
+                isPopular: !!d.is_popular,
+                isChefRecommendation: !!d.is_chef_recommendation,
                 category: activeCategoryName || "",
                 subcategory: subcategory?.name || "",
-                allergens: d.allergens || [],
-                calories: d.calories || null,
-                isVegetarian: d.is_vegetarian || false,
-                isVegan: d.is_vegan || false,
-                isSpicy: d.is_spicy || false,
+                allergens: Array.isArray(d.allergens) ? d.allergens : [],
+                calories: typeof d.calories === 'number' ? d.calories : null,
+                isVegetarian: !!d.is_vegetarian,
+                isVegan: !!d.is_vegan,
+                isSpicy: !!d.is_spicy,
               }));
           
             if (filteredSubcategoryDishes.length === 0) return null;
