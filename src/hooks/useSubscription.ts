@@ -14,6 +14,9 @@ export interface SubscriptionStatus {
 export const useSubscription = () => {
   const { user } = useAuth();
 
+  // TEMPORARY: All accounts are premium until further notice
+  // Uncomment below to re-enable premium checks
+  /*
   const { data: subscription, isLoading, refetch } = useQuery({
     queryKey: ['subscription', user?.id],
     queryFn: async () => {
@@ -47,6 +50,28 @@ export const useSubscription = () => {
 
   const hasPremium = subscription?.has_premium ?? false;
   const isFreeTier = !hasPremium;
+  */
+
+  // TEMPORARY: Mock premium subscription for all users
+  const { data: subscription, isLoading, refetch } = useQuery({
+    queryKey: ['subscription', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      // Return mock premium subscription
+      return {
+        has_premium: true,
+        status: 'active',
+        plan_type: 'premium',
+        current_period_end: null,
+        cancel_at_period_end: false,
+      } as SubscriptionStatus;
+    },
+    enabled: !!user,
+  });
+
+  const hasPremium = true; // Always premium
+  const isFreeTier = false; // Never free tier
 
   return {
     subscription,
