@@ -38,81 +38,60 @@ const MenuShortDisplay = () => {
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-          // Look up the menu_links entry
-          const { data: linkData, error: linkError } = await supabase
-            .from("menu_links")
-            .select("restaurant_id")
-            .eq("restaurant_hash", cleanHash)
-            .eq("menu_id", cleanId)
-            .eq("active", true)
-            .maybeSingle();
+          // Resolve via secure backend function to avoid client-side RLS issues
+          const { data, error } = await supabase.functions.invoke('resolve-short-link', {
+            body: {
+              restaurant_hash: cleanHash,
+              menu_id: cleanId,
+            },
+          });
 
-          if (linkError) {
-            lastError = linkError;
-            console.log(`[MenuShortDisplay] Attempt ${attempt + 1} link query error:`, linkError);
-            
-            // Retry with backoff if not last attempt
+          if (error) {
+            lastError = error;
+            console.log(`[MenuShortDisplay] Attempt ${attempt + 1} function error:`, error);
+
+            const status = (error as any)?.status;
+            if (status === 403) {
+              console.log('[MenuShortDisplay] Unpublished menu via resolver');
+              setStatus('unpublished');
+              return;
+            }
+            if (status === 404) {
+              console.log('[MenuShortDisplay] Link not found via resolver');
+              setStatus('not-found');
+              return;
+            }
+            if (status === 400) {
+              console.log('[MenuShortDisplay] Invalid parameters via resolver');
+              setStatus('not-found');
+              return;
+            }
+
+            // Retry with backoff if not last attempt and not a terminal error
             if (attempt < maxRetries - 1) {
               await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt)));
               continue;
             }
-            setStatus("not-found");
+
+            setStatus('not-found');
             return;
           }
 
-          if (!linkData) {
-            // Link not found - retry with backoff for potential replication lag
+          const slug = (data as any)?.slug as string | undefined;
+          if (!slug) {
             if (attempt < maxRetries - 1) {
-              console.log(`[MenuShortDisplay] Attempt ${attempt + 1} link not found, retrying...`);
+              console.log(`[MenuShortDisplay] Resolver returned no slug, retrying (attempt ${attempt + 1})...`);
               await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt)));
               continue;
             }
-            console.log("[MenuShortDisplay] Link not found after all retries");
-            setStatus("not-found");
+            setStatus('not-found');
             return;
           }
 
-          // Get the restaurant slug and published status
-          const { data: restaurant, error: restaurantError } = await supabase
-            .from("restaurants")
-            .select("slug, published")
-            .eq("id", linkData.restaurant_id)
-            .maybeSingle();
-
-          if (restaurantError) {
-            lastError = restaurantError;
-            console.log(`[MenuShortDisplay] Attempt ${attempt + 1} restaurant query error:`, restaurantError);
-            
-            if (attempt < maxRetries - 1) {
-              await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt)));
-              continue;
-            }
-            setStatus("not-found");
-            return;
-          }
-
-          if (!restaurant) {
-            if (attempt < maxRetries - 1) {
-              console.log(`[MenuShortDisplay] Attempt ${attempt + 1} restaurant not found, retrying...`);
-              await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt)));
-              continue;
-            }
-            console.log("[MenuShortDisplay] Restaurant not found after all retries");
-            setStatus("not-found");
-            return;
-          }
-
-          if (!restaurant.published) {
-            // If unpublished, no need to retry
-            console.log("[MenuShortDisplay] Restaurant not published");
-            setStatus("unpublished");
-            return;
-          }
-
-          // Success! Found it and it's published
-          console.log(`[MenuShortDisplay] Successfully resolved on attempt ${attempt + 1}`);
-          setRestaurantSlug(restaurant.slug);
-          setStatus("found");
+          // Success! Found and published
+          console.log(`[MenuShortDisplay] Successfully resolved via function on attempt ${attempt + 1}`);
+          setRestaurantSlug(slug);
+          setStatus('found');
           return;
 
         } catch (err) {
