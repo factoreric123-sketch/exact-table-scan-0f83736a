@@ -90,7 +90,7 @@ const App = () => (
             {/* Short link format compatible with TapTab-like URLs */}
             <Route path="/m/:restaurantHash/:menuId" element={<MenuShortDisplay />} />
             {/* Legacy redirect for old QR codes */}
-            <Route path= "/:slug" element={<MenuRedirect />} />
+            <Route path="/:slug" element={<MenuRedirect />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
