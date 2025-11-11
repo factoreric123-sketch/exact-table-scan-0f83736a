@@ -12,10 +12,13 @@ import { PaywallModal } from "@/components/PaywallModal";
 import { toast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { data: restaurants = [], isLoading } = useRestaurants();
+  const { data: allRestaurants = [], isLoading } = useRestaurants();
+  
+  // Defensive filter: only show restaurants owned by current user
+  const restaurants = allRestaurants.filter(r => r.owner_id === user?.id);
   const { hasPremium, subscription, refetch } = useSubscription();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);

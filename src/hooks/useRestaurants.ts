@@ -39,6 +39,7 @@ export const useRestaurants = () => {
       const { data, error } = await supabase
         .from("restaurants")
         .select("*")
+        .eq("owner_id", userId) // Explicitly filter by owner
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -192,10 +193,11 @@ export const useCreateRestaurant = () => {
       
       return { previous };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["restaurants"] });
-      toast.success("Restaurant created");
-    },
+      onSuccess: (data) => {
+        // Only invalidate the current user's restaurants
+        queryClient.invalidateQueries({ queryKey: ["restaurants", data.owner_id] });
+        toast.success("Restaurant created");
+      },
     onError: (error: Error, _variables, context) => {
       // Rollback on error
       if (context?.previous && _variables.owner_id) {
@@ -232,11 +234,12 @@ export const useUpdateRestaurant = () => {
       
       return { previous };
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["restaurants"] });
-      queryClient.invalidateQueries({ queryKey: ["restaurant", data.id] });
-      queryClient.invalidateQueries({ queryKey: ["restaurant", data.slug] });
-    },
+      onSuccess: (data) => {
+        // Invalidate specific user's cache only
+        queryClient.invalidateQueries({ queryKey: ["restaurants", data.owner_id] });
+        queryClient.invalidateQueries({ queryKey: ["restaurant", data.id] });
+        queryClient.invalidateQueries({ queryKey: ["restaurant", data.slug] });
+      },
     onError: (error, { id }, context) => {
       // Rollback on error
       if (context?.previous) {
@@ -276,10 +279,11 @@ export const useDeleteRestaurant = () => {
       
       return { contexts };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["restaurants"] });
-      toast.success("Restaurant deleted");
-    },
+      onSuccess: (_, deletedId) => {
+        // Invalidate all restaurant queries to catch any cached data
+        queryClient.invalidateQueries({ queryKey: ["restaurants"] });
+        toast.success("Restaurant deleted");
+      },
     onError: (error: Error, _id, context) => {
       // Rollback on error
       if (context?.contexts) {

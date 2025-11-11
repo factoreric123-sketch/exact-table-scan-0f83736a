@@ -26,6 +26,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Clear React Query cache on auth changes to prevent data leakage between accounts
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+          window.location.reload();
+        }
       }
     );
 
