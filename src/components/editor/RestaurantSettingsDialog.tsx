@@ -46,8 +46,39 @@ export const RestaurantSettingsDialog = ({
           
           <Separator />
           
-          <div className="text-xs text-muted-foreground">
-            More settings coming soon...
+          <div>
+            <h3 className="text-sm font-semibold mb-4">Badge Display</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="show-badges-before-click" className="text-base">
+                    Show badges before clicking
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Display "New Addition" and "Special" badges on dish cards
+                  </p>
+                </div>
+                <Switch
+                  id="show-badges-before-click"
+                  defaultChecked={true}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="show-allergens-before-click" className="text-base">
+                    Show allergen icons before clicking
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Display allergen icons (Fish, Soy, Dairy) on dish cards
+                  </p>
+                </div>
+                <Switch
+                  id="show-allergens-before-click"
+                  defaultChecked={true}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </DialogContent>

@@ -78,8 +78,10 @@ export const EditableCategories = ({
       name: "New Category",
       order_index: categories.length,
     }, {
-      onSuccess: () => {
+      onSuccess: (newCategory) => {
         toast.success("Category added");
+        // Automatically navigate to the newly created category
+        onCategoryChange(newCategory.id);
       },
       onError: () => {
         toast.error("Failed to add category");

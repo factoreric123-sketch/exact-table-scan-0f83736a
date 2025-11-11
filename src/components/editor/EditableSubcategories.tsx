@@ -84,8 +84,10 @@ export const EditableSubcategories = ({
       name: "New Subcategory",
       order_index: subcategories.length,
     }, {
-      onSuccess: () => {
+      onSuccess: (newSubcategory) => {
         toast.success("Subcategory added");
+        // Automatically navigate to the newly created subcategory
+        onSubcategoryChange(newSubcategory.id);
       },
       onError: () => {
         toast.error("Failed to add subcategory");

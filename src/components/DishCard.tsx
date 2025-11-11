@@ -72,7 +72,7 @@ const DishCard = memo(({ dish, onClick }: DishCardProps) => {
         )}
       </div>
       
-      <div className="bg-dish-card rounded-2xl overflow-hidden aspect-square mb-2.5 relative shadow-md">
+      <div className="bg-dish-card rounded-2xl overflow-hidden aspect-square mb-2.5 relative shadow-md border border-border">
         <img 
           src={dish.image} 
           alt={`${dish.name} - ${dish.description}`}

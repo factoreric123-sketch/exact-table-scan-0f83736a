@@ -113,7 +113,7 @@ const RestaurantHeader = memo(({
           <label className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10">
             <div className="text-center">
               <Camera className="h-12 w-12 mx-auto mb-2 text-foreground" />
-              <span className="text-sm font-medium text-foreground">Change Hero Image</span>
+              <span className="text-sm font-medium text-foreground">Change Header Image</span>
             </div>
             <input
               type="file"

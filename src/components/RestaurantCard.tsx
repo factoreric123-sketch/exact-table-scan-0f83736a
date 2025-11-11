@@ -1,9 +1,20 @@
 import { useNavigate } from "react-router-dom";
-import { Restaurant } from "@/hooks/useRestaurants";
+import { Restaurant, useDeleteRestaurant } from "@/hooks/useRestaurants";
 import { Button } from "@/components/ui/button";
-import { Edit, ExternalLink } from "lucide-react";
+import { Edit, ExternalLink, Trash2 } from "lucide-react";
 import restaurantHeroPlaceholder from "@/assets/restaurant-hero.jpg";
 import { memo, useCallback } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
@@ -11,6 +22,7 @@ interface RestaurantCardProps {
 
 export const RestaurantCard = memo(({ restaurant }: RestaurantCardProps) => {
   const navigate = useNavigate();
+  const deleteRestaurant = useDeleteRestaurant();
 
   const handleEdit = useCallback(() => {
     navigate(`/editor/${restaurant.id}`);
@@ -19,6 +31,10 @@ export const RestaurantCard = memo(({ restaurant }: RestaurantCardProps) => {
   const handleOpen = useCallback(() => {
     window.open(`/${restaurant.slug}`, "_blank");
   }, [restaurant.slug]);
+
+  const handleDelete = useCallback(() => {
+    deleteRestaurant.mutate(restaurant.id);
+  }, [deleteRestaurant, restaurant.id]);
 
   return (
     <div className="border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
@@ -59,6 +75,30 @@ export const RestaurantCard = memo(({ restaurant }: RestaurantCardProps) => {
           >
             <ExternalLink className="h-4 w-4" />
           </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Restaurant?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete "{restaurant.name}" and all its menu data. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>

@@ -45,10 +45,8 @@ const Navbar = () => {
         <nav className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
-              <span className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent group-hover:scale-105 transition-transform">
-                MenuTap
-              </span>
+            <Link to="/" className="flex items-center gap-3 group">
+              <img src="/logo.png" alt="menu" className="h-8 lg:h-10 group-hover:scale-105 transition-transform" />
             </Link>
 
             {/* Desktop Navigation */}
