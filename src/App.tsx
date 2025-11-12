@@ -26,23 +26,22 @@ import TermsOfService from "./pages/legal/TermsOfService";
 import CookiePolicy from "./pages/legal/CookiePolicy";
 import GDPR from "./pages/legal/GDPR";
 
-// Perfect QueryClient configuration for 100/100 performance
+// Apple-level instant loading configuration
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes - data stays fresh longer
-      gcTime: 1000 * 60 * 10, // 10 minutes - keep cached data longer
-      refetchOnWindowFocus: false, // Don't refetch on tab switch - smoother UX
-      refetchOnMount: false, // Use cached data first - instant loading
-      refetchOnReconnect: false, // Don't auto-refetch on reconnect
-      retry: 1, // Only retry once - fail fast for better UX
-      retryDelay: 1000, // 1 second between retries
-      networkMode: 'offlineFirst', // Use cache when offline
-      throwOnError: false, // Never throw errors in components - use error states instead
+      staleTime: 1000 * 60 * 30, // 30 minutes - menus don't change often
+      gcTime: 1000 * 60 * 60 * 2, // 2 hours - aggressive memory cache
+      refetchOnWindowFocus: false, // Never refetch on tab switch
+      refetchOnMount: false, // Always use cache first - instant
+      refetchOnReconnect: false, // Don't auto-refetch
+      retry: 0, // Never retry - instant fail for better UX
+      networkMode: 'online', // Only fetch when online
+      throwOnError: false, // Use error states, never throw
     },
     mutations: {
-      retry: 0, // Don't retry mutations - prevent duplicate operations
-      networkMode: 'offlineFirst', // Queue mutations when offline
+      retry: 0, // Never retry mutations
+      networkMode: 'online',
     },
   },
 });

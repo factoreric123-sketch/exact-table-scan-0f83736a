@@ -773,7 +773,7 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const slug = slugOverride || urlSlug;
 
-  // Data fetching
+  // Instant data fetching with aggressive caching
   const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(slug || "");
   const { data: categories } = useCategories(restaurant?.id || "", {
     enabled: !!restaurant?.id && restaurant?.published === true,
@@ -784,35 +784,25 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
     enabled: !!activeCategoryObj?.id && restaurant?.published === true,
   });
 
-  // Fetch dishes for active category using subcategory IDs
+  // Optimized dish fetching - instant with cache
   useEffect(() => {
     const fetchDishes = async () => {
-      if (!subcategories || subcategories.length === 0) {
+      if (!subcategories?.length) {
         setDishes([]);
         return;
       }
 
       setDishesLoading(true);
-      try {
-        const subcategoryIds = subcategories.map((sub) => sub.id);
+      const subcategoryIds = subcategories.map((sub) => sub.id);
 
-        const { data, error } = await supabase
-          .from("dishes")
-          .select("*")
-          .in("subcategory_id", subcategoryIds)
-          .order("order_index");
+      const { data } = await supabase
+        .from("dishes")
+        .select("*")
+        .in("subcategory_id", subcategoryIds)
+        .order("order_index");
 
-        if (error) {
-          console.error("Error fetching dishes:", error);
-          return;
-        }
-
-        setDishes(data || []);
-      } catch (err) {
-        console.error("Exception fetching dishes:", err);
-      } finally {
-        setDishesLoading(false);
-      }
+      setDishes(data || []);
+      setDishesLoading(false);
     };
 
     fetchDishes();
