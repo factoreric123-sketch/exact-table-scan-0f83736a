@@ -726,16 +726,13 @@ import { Bookmark, Share2, Menu as MenuIcon, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import CategoryNav from "@/components/CategoryNav";
-import NeoCategoryNav from "@/components/NeoCategoryNav";
 import SubcategoryNav from "@/components/SubcategoryNav";
 import MenuGrid from "@/components/MenuGrid";
-import NeoMenuList from "@/components/NeoMenuList";
 import RestaurantHeader from "@/components/RestaurantHeader";
 import { AllergenFilter } from "@/components/AllergenFilter";
 import { useRestaurant } from "@/hooks/useRestaurants";
 import { useCategories } from "@/hooks/useCategories";
 import { useSubcategories } from "@/hooks/useSubcategories";
-import { useThemePreview } from "@/hooks/useThemePreview";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PublicMenuProps {
@@ -781,16 +778,6 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
   const { data: categories } = useCategories(restaurant?.id || "", {
     enabled: !!restaurant?.id && restaurant?.published === true,
   });
-
-  // Apply theme
-  useThemePreview(restaurant?.theme as any, !!restaurant);
-
-  // Detect if using Neo theme
-  const isNeoTheme = useMemo(() => {
-    if (!restaurant?.theme) return false;
-    const theme = typeof restaurant.theme === 'string' ? JSON.parse(restaurant.theme) : restaurant.theme;
-    return theme?.id === 'neo';
-  }, [restaurant?.theme]);
 
   const activeCategoryObj = categories?.find((c) => c.id === activeCategory);
   const { data: subcategories } = useSubcategories(activeCategoryObj?.id || "", {
@@ -1093,28 +1080,17 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
       {/* Category & Subcategory Navigation */}
       <div className="sticky top-[57px] z-40 bg-background border-b border-border">
         {categoryNames.length > 0 && activeCategoryName && (
-          isNeoTheme ? (
-            <NeoCategoryNav
-              categories={categoryNames}
-              activeCategory={activeCategoryName}
-              onCategoryChange={(name) => {
-                const category = categories?.find((c) => c.name === name);
-                if (category) setActiveCategory(category.id);
-              }}
-            />
-          ) : (
-            <CategoryNav
-              categories={categoryNames}
-              activeCategory={activeCategoryName}
-              onCategoryChange={(name) => {
-                const category = categories?.find((c) => c.name === name);
-                if (category) setActiveCategory(category.id);
-              }}
-            />
-          )
+          <CategoryNav
+            categories={categoryNames}
+            activeCategory={activeCategoryName}
+            onCategoryChange={(name) => {
+              const category = categories?.find((c) => c.name === name);
+              if (category) setActiveCategory(category.id);
+            }}
+          />
         )}
 
-        {!isNeoTheme && subcategories && subcategories.length > 0 && (
+        {subcategories && subcategories.length > 0 && (
           <SubcategoryNav
             subcategories={subcategories.map((s) => s.name)}
             activeSubcategory={subcategories.find((s) => s.id === activeSubcategory)?.name || ""}
@@ -1173,11 +1149,7 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
                   subcategoryRefs.current[subcategory.name] = el;
                 }}
               >
-                {isNeoTheme ? (
-                  <NeoMenuList dishes={transformedDishes} sectionTitle={subcategory.name} />
-                ) : (
-                  <MenuGrid dishes={transformedDishes} sectionTitle={subcategory.name} />
-                )}
+                <MenuGrid dishes={transformedDishes} sectionTitle={subcategory.name} />
               </div>
             );
           })
@@ -1188,7 +1160,7 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
       <footer className="py-8 text-center">
         <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
           Powered By
-          <span className="font-semibold text-foreground">menu</span>
+          <span className="font-semibold text-foreground">TAPTAB</span>
         </p>
       </footer>
     </div>
