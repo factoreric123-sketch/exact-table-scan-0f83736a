@@ -21,6 +21,18 @@ export interface Restaurant {
   badge_display_order?: string[];
   editor_view_mode?: 'grid' | 'table';
   show_allergen_filter?: boolean;
+  show_prices?: boolean;
+  show_images?: boolean;
+  layout_density?: 'compact' | 'spacious';
+  grid_columns?: 1 | 2 | 3;
+  menu_font_size?: 'small' | 'medium' | 'large';
+  image_size?: 'compact' | 'large';
+  badge_colors?: {
+    new_addition: string;
+    special: string;
+    popular: string;
+    chef_recommendation: string;
+  };
 }
 
 export const useRestaurants = () => {

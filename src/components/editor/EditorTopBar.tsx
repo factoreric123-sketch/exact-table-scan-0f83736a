@@ -25,6 +25,7 @@ interface EditorTopBarProps {
   canRedo?: boolean;
   onThemeChange?: (theme: Theme) => void;
   onFilterToggle?: () => void;
+  onRefresh?: () => void;
 }
 
 export const EditorTopBar = ({
@@ -40,6 +41,7 @@ export const EditorTopBar = ({
   canRedo = false,
   onThemeChange,
   onFilterToggle,
+  onRefresh,
 }: EditorTopBarProps) => {
   const navigate = useNavigate();
   const [showQRModal, setShowQRModal] = useState(false);
@@ -263,6 +265,7 @@ export const EditorTopBar = ({
           onOpenChange={setShowSettingsDialog}
           restaurant={restaurant}
           onFilterToggle={onFilterToggle}
+          onSettingsUpdate={() => onRefresh?.()}
         />
       )}
 
