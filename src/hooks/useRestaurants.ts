@@ -222,6 +222,12 @@ export const useCreateRestaurant = () => {
 
 export const useUpdateRestaurant = () => {
   const queryClient = useQueryClient();
+  const { data: sessionData } = useQuery({
+    queryKey: ['auth-session'],
+    queryFn: async () => supabase.auth.getSession(),
+  });
+  
+  const userId = sessionData?.data?.session?.user?.id;
 
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Restaurant> }) => {
@@ -246,17 +252,41 @@ export const useUpdateRestaurant = () => {
       
       return { previous };
     },
-      onSuccess: (data) => {
-        // Invalidate specific user's cache only
-        queryClient.invalidateQueries({ queryKey: ["restaurants", data.owner_id] });
-        queryClient.invalidateQueries({ queryKey: ["restaurant", data.id] });
-        queryClient.invalidateQueries({ queryKey: ["restaurant", data.slug] });
-      },
+    onSuccess: (data) => {
+      // Update all restaurant caches
+      queryClient.setQueryData(["restaurant", data.id], data);
+      queryClient.setQueryData(["restaurant", data.slug], data);
+      
+      // Invalidate list queries
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: ["restaurants", userId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ["restaurant", data.id] });
+      queryClient.invalidateQueries({ queryKey: ["restaurant", data.slug] });
+      
+      // CRITICAL: Invalidate full menu cache for public menu updates
+      queryClient.invalidateQueries({ queryKey: ["full-menu", data.id] });
+      
+      // CRITICAL: Clear localStorage cache for instant public menu updates
+      const cacheKey = `fullMenu:${data.id}`;
+      try {
+        localStorage.removeItem(cacheKey);
+      } catch (err) {
+        console.warn('Failed to clear menu cache:', err);
+      }
+      
+      // Invalidate all-dishes-for-category for editor preview
+      queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
+      
+      toast.success("Settings updated");
+    },
     onError: (error, { id }, context) => {
       // Rollback on error
       if (context?.previous) {
         queryClient.setQueryData(["restaurant", id], context.previous);
       }
+      logger.error('Failed to update restaurant', { error });
+      toast.error("Failed to update settings");
     },
   });
 };

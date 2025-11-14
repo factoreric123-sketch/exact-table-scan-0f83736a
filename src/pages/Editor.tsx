@@ -42,6 +42,16 @@ const Editor = () => {
   const { data: dishes = [], isLoading: dishesLoading } = useDishes(activeSubcategory);
   const updateRestaurant = useUpdateRestaurant();
 
+  // Force refetch restaurant when settings change (for instant preview updates)
+  useEffect(() => {
+    if (previewMode && restaurantId) {
+      const interval = setInterval(() => {
+        refetchRestaurant();
+      }, 1000); // Check for updates every second in preview mode
+      return () => clearInterval(interval);
+    }
+  }, [previewMode, restaurantId, refetchRestaurant]);
+
   // Get current category's subcategories for preview mode
   const currentSubcategories = useMemo(() => 
     subcategories.filter(s => s.category_id === activeCategory),

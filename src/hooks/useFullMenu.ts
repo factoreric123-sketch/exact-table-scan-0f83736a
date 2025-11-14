@@ -13,11 +13,12 @@ interface UseFullMenuReturn {
 }
 
 const CACHE_KEY_PREFIX = 'fullMenu:';
-const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
+const CACHE_TTL = 1000 * 60 * 5; // 5 minutes - reduced for faster settings updates
 
 interface CacheEntry {
   data: FullMenuData;
   timestamp: number;
+  version: string; // Add version based on restaurant updated_at
 }
 
 /**
@@ -48,7 +49,15 @@ export const useFullMenu = (restaurantId: string | undefined): UseFullMenuReturn
         const entry: CacheEntry = JSON.parse(cached);
         const age = Date.now() - entry.timestamp;
 
+        // Check if cache is expired
         if (age > CACHE_TTL) {
+          localStorage.removeItem(cacheKey);
+          return null;
+        }
+
+        // Check if restaurant settings have changed by comparing version
+        const currentVersion = entry.data?.restaurant?.updated_at || '';
+        if (entry.version !== currentVersion) {
           localStorage.removeItem(cacheKey);
           return null;
         }
@@ -59,12 +68,13 @@ export const useFullMenu = (restaurantId: string | undefined): UseFullMenuReturn
       }
     };
 
-    // Write to cache
+    // Write to cache with version
     const writeCache = (menuData: FullMenuData) => {
       try {
         const entry: CacheEntry = {
           data: menuData,
           timestamp: Date.now(),
+          version: menuData?.restaurant?.updated_at || '',
         };
         localStorage.setItem(cacheKey, JSON.stringify(entry));
       } catch (err) {

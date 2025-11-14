@@ -5,9 +5,11 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Restaurant } from "@/hooks/useRestaurants";
-import { supabase } from "@/integrations/supabase/client";
+import { useUpdateRestaurant } from "@/hooks/useRestaurants";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDebouncedCallback } from "use-debounce";
+import { Loader2 } from "lucide-react";
 
 interface RestaurantSettingsDialogProps {
   open: boolean;
@@ -24,6 +26,7 @@ export const RestaurantSettingsDialog = ({
   onFilterToggle,
   onSettingsUpdate,
 }: RestaurantSettingsDialogProps) => {
+  const updateRestaurant = useUpdateRestaurant();
   const [badgeColors, setBadgeColors] = useState(
     restaurant.badge_colors || {
       new_addition: "34, 197, 94",
@@ -33,30 +36,49 @@ export const RestaurantSettingsDialog = ({
     }
   );
 
-  const updateSetting = async (field: string, value: any) => {
-    const { error } = await supabase
-      .from("restaurants")
-      .update({ [field]: value })
-      .eq("id", restaurant.id);
-
-    if (error) {
-      toast.error("Failed to update setting");
-      return;
+  // Sync badge colors when restaurant prop changes
+  useEffect(() => {
+    if (restaurant.badge_colors) {
+      setBadgeColors(restaurant.badge_colors);
     }
-    onSettingsUpdate();
+  }, [restaurant.badge_colors]);
+
+  // Debounced update function for instant UI feedback
+  const debouncedUpdate = useDebouncedCallback(
+    async (field: string, value: any) => {
+      try {
+        await updateRestaurant.mutateAsync({
+          id: restaurant.id,
+          updates: { [field]: value },
+        });
+        onSettingsUpdate();
+      } catch (error) {
+        console.error("Error updating setting:", error);
+      }
+    },
+    300
+  );
+
+  const updateSetting = (field: string, value: any) => {
+    debouncedUpdate(field, value);
   };
 
-  const updateBadgeColor = async (badge: string, rgb: string) => {
+  const updateBadgeColor = (badge: string, rgb: string) => {
     const newColors = { ...badgeColors, [badge]: rgb };
     setBadgeColors(newColors);
-    await updateSetting("badge_colors", newColors);
+    updateSetting("badge_colors", newColors);
   };
+
+  const isUpdating = updateRestaurant.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Restaurant Settings</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            Restaurant Settings
+            {isUpdating && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+          </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6 py-4">
@@ -77,6 +99,7 @@ export const RestaurantSettingsDialog = ({
                   id="show-prices"
                   checked={restaurant.show_prices !== false}
                   onCheckedChange={(checked) => updateSetting("show_prices", checked)}
+                  disabled={isUpdating}
                 />
               </div>
 
@@ -93,6 +116,7 @@ export const RestaurantSettingsDialog = ({
                   id="show-images"
                   checked={restaurant.show_images !== false}
                   onCheckedChange={(checked) => updateSetting("show_images", checked)}
+                  disabled={isUpdating}
                 />
               </div>
 
@@ -108,7 +132,11 @@ export const RestaurantSettingsDialog = ({
                 <Switch
                   id="filter-toggle"
                   checked={restaurant.show_allergen_filter !== false}
-                  onCheckedChange={onFilterToggle}
+                  onCheckedChange={(checked) => {
+                    updateSetting("show_allergen_filter", checked);
+                    onFilterToggle();
+                  }}
+                  disabled={isUpdating}
                 />
               </div>
             </div>
@@ -129,6 +157,7 @@ export const RestaurantSettingsDialog = ({
                       variant={restaurant.grid_columns === cols ? "default" : "outline"}
                       size="sm"
                       onClick={() => updateSetting("grid_columns", cols)}
+                      disabled={isUpdating}
                     >
                       {cols} Column{cols > 1 ? 's' : ''}
                     </Button>
@@ -146,6 +175,7 @@ export const RestaurantSettingsDialog = ({
                       size="sm"
                       onClick={() => updateSetting("layout_density", density)}
                       className="capitalize"
+                      disabled={isUpdating}
                     >
                       {density}
                     </Button>
@@ -163,6 +193,7 @@ export const RestaurantSettingsDialog = ({
                       size="sm"
                       onClick={() => updateSetting("image_size", size)}
                       className="capitalize"
+                      disabled={isUpdating}
                     >
                       {size}
                     </Button>
@@ -180,6 +211,7 @@ export const RestaurantSettingsDialog = ({
                       size="sm"
                       onClick={() => updateSetting("menu_font_size", size)}
                       className="capitalize"
+                      disabled={isUpdating}
                     >
                       {size}
                     </Button>
@@ -214,6 +246,7 @@ export const RestaurantSettingsDialog = ({
                       value={badgeColors[key as keyof typeof badgeColors]}
                       onChange={(e) => updateBadgeColor(key, e.target.value)}
                       className="text-sm"
+                      disabled={isUpdating}
                     />
                   </div>
                 </div>
