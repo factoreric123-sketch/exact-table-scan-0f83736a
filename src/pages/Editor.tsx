@@ -36,7 +36,7 @@ const Editor = () => {
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
   const subcategoryRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  const { data: restaurant, isLoading: restaurantLoading } = useRestaurantById(restaurantId || "");
+  const { data: restaurant, isLoading: restaurantLoading, refetch: refetchRestaurant } = useRestaurantById(restaurantId || "");
   const { data: categories = [], isLoading: categoriesLoading } = useCategories(restaurantId || "");
   const { data: subcategories = [], isLoading: subcategoriesLoading } = useSubcategories(activeCategory);
   const { data: dishes = [], isLoading: dishesLoading } = useDishes(activeSubcategory);
@@ -390,6 +390,7 @@ const Editor = () => {
           canRedo={canRedo}
           onThemeChange={handleThemeChange}
           onFilterToggle={handleFilterToggle}
+          onRefresh={refetchRestaurant}
         />
 
       <RestaurantHeader

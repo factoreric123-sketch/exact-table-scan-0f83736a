@@ -373,7 +373,17 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
                 }}
                 style={{ contentVisibility: 'auto' }}
               >
-                <MenuGrid dishes={transformedDishes} sectionTitle={subcategory.name} />
+                <MenuGrid 
+                  dishes={transformedDishes} 
+                  sectionTitle={subcategory.name}
+                  gridColumns={restaurant.grid_columns || 2}
+                  layoutDensity={restaurant.layout_density || 'compact'}
+                  fontSize={restaurant.menu_font_size || 'medium'}
+                  showPrice={restaurant.show_prices !== false}
+                  showImage={restaurant.show_images !== false}
+                  imageSize={restaurant.image_size || 'compact'}
+                  badgeColors={restaurant.badge_colors}
+                />
               </div>
             );
           }
@@ -385,7 +395,17 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
                 subcategoryRefs.current[subcategory.name] = el;
               }}
             >
-              <MenuGrid dishes={transformedDishes} sectionTitle={subcategory.name} />
+              <MenuGrid 
+                dishes={transformedDishes} 
+                sectionTitle={subcategory.name}
+                gridColumns={restaurant.grid_columns || 2}
+                layoutDensity={restaurant.layout_density || 'compact'}
+                fontSize={restaurant.menu_font_size || 'medium'}
+                showPrice={restaurant.show_prices !== false}
+                showImage={restaurant.show_images !== false}
+                imageSize={restaurant.image_size || 'compact'}
+                badgeColors={restaurant.badge_colors}
+              />
             </div>
           );
         })}

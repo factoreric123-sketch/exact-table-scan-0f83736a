@@ -228,16 +228,23 @@ export type Database = {
       restaurants: {
         Row: {
           allergen_filter_order: Json | null
+          badge_colors: Json | null
           badge_display_order: Json | null
           created_at: string | null
           dietary_filter_order: Json | null
           editor_view_mode: string | null
+          grid_columns: number | null
           hero_image_url: string | null
           id: string
+          image_size: string | null
+          layout_density: string | null
+          menu_font_size: string | null
           name: string
           owner_id: string
           published: boolean | null
           show_allergen_filter: boolean | null
+          show_images: boolean | null
+          show_prices: boolean | null
           slug: string
           tagline: string | null
           theme: Json | null
@@ -245,16 +252,23 @@ export type Database = {
         }
         Insert: {
           allergen_filter_order?: Json | null
+          badge_colors?: Json | null
           badge_display_order?: Json | null
           created_at?: string | null
           dietary_filter_order?: Json | null
           editor_view_mode?: string | null
+          grid_columns?: number | null
           hero_image_url?: string | null
           id?: string
+          image_size?: string | null
+          layout_density?: string | null
+          menu_font_size?: string | null
           name: string
           owner_id: string
           published?: boolean | null
           show_allergen_filter?: boolean | null
+          show_images?: boolean | null
+          show_prices?: boolean | null
           slug: string
           tagline?: string | null
           theme?: Json | null
@@ -262,16 +276,23 @@ export type Database = {
         }
         Update: {
           allergen_filter_order?: Json | null
+          badge_colors?: Json | null
           badge_display_order?: Json | null
           created_at?: string | null
           dietary_filter_order?: Json | null
           editor_view_mode?: string | null
+          grid_columns?: number | null
           hero_image_url?: string | null
           id?: string
+          image_size?: string | null
+          layout_density?: string | null
+          menu_font_size?: string | null
           name?: string
           owner_id?: string
           published?: boolean | null
           show_allergen_filter?: boolean | null
+          show_images?: boolean | null
+          show_prices?: boolean | null
           slug?: string
           tagline?: string | null
           theme?: Json | null
