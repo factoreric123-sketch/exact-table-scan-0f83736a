@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Eye, EyeOff, QrCode, Palette, Upload, Undo2, Redo2, LayoutGrid, Table2, Settings, Share2 } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, QrCode, Palette, Upload, Undo2, Redo2, LayoutGrid, Table2, Settings, Share2, RefreshCw, Check } from "lucide-react";
 import { QRCodeModal } from "@/components/editor/QRCodeModal";
 import { ShareDialog } from "@/components/editor/ShareDialog";
 import { ThemeGalleryModal } from "@/components/editor/ThemeGalleryModal";
@@ -26,6 +26,7 @@ interface EditorTopBarProps {
   onThemeChange?: (theme: Theme) => void;
   onFilterToggle?: () => void;
   onRefresh?: () => void;
+  onUpdate?: () => Promise<void>;
 }
 
 export const EditorTopBar = ({
@@ -42,6 +43,7 @@ export const EditorTopBar = ({
   onThemeChange,
   onFilterToggle,
   onRefresh,
+  onUpdate,
 }: EditorTopBarProps) => {
   const navigate = useNavigate();
   const [showQRModal, setShowQRModal] = useState(false);
@@ -50,7 +52,39 @@ export const EditorTopBar = ({
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallFeature, setPaywallFeature] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isUpdated, setIsUpdated] = useState(true);
   const { hasPremium } = useSubscription();
+
+  // Track changes to detect when update is needed
+  useEffect(() => {
+    const lastSync = localStorage.getItem(`lastSync:${restaurant.id}`);
+    const currentVersion = restaurant.updated_at;
+    
+    if (lastSync !== currentVersion) {
+      setIsUpdated(false);
+    }
+  }, [restaurant.updated_at, restaurant.id]);
+
+  const handleUpdateClick = async () => {
+    if (!onUpdate) return;
+    
+    setIsUpdating(true);
+    try {
+      await onUpdate();
+      localStorage.setItem(`lastSync:${restaurant.id}`, restaurant.updated_at || '');
+      setIsUpdated(true);
+      
+      // Show "Updated" state briefly
+      setTimeout(() => {
+        setIsUpdated(true);
+      }, 1000);
+    } catch (error) {
+      console.error('Update failed:', error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const handleQRCodeClick = () => {
     if (hasPremium) {
@@ -220,6 +254,34 @@ export const EditorTopBar = ({
                   Share
                 </Button>
               </>
+            )}
+
+            {!previewMode && (
+              <Button
+                variant={isUpdated ? "secondary" : "default"}
+                size="sm"
+                onClick={handleUpdateClick}
+                disabled={isUpdating || isUpdated}
+                className="gap-2"
+                title={isUpdated ? "All changes synced" : "Sync changes to live menu"}
+              >
+                {isUpdating ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : isUpdated ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Updated
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4" />
+                    Update
+                  </>
+                )}
+              </Button>
             )}
 
             <Button

@@ -19,12 +19,13 @@ import { toast } from "sonner";
 import { useThemeHistory } from "@/hooks/useThemeHistory";
 import { getDefaultTheme } from "@/lib/presetThemes";
 import { Theme } from "@/lib/types/theme";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const Editor = () => {
   const { restaurantId } = useParams<{ restaurantId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [activeSubcategory, setActiveSubcategory] = useState<string>("");
@@ -41,6 +42,23 @@ const Editor = () => {
   const { data: subcategories = [], isLoading: subcategoriesLoading } = useSubcategories(activeCategory);
   const { data: dishes = [], isLoading: dishesLoading } = useDishes(activeSubcategory);
   const updateRestaurant = useUpdateRestaurant();
+
+  // Handle Update button - force sync all caches
+  const handleUpdate = async () => {
+    if (!restaurantId) return;
+
+    // Invalidate all React Query caches
+    await queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
+    await queryClient.invalidateQueries({ queryKey: ["restaurant", restaurantId] });
+    await queryClient.invalidateQueries({ queryKey: ["categories", restaurantId] });
+    await queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
+    
+    // Clear localStorage cache
+    localStorage.removeItem(`fullMenu:${restaurantId}`);
+    
+    // Force refetch
+    await refetchRestaurant();
+  };
 
   // No more polling needed - React Query cache invalidation handles updates instantly
 
@@ -393,6 +411,7 @@ const Editor = () => {
           onThemeChange={handleThemeChange}
           onFilterToggle={handleFilterToggle}
           onRefresh={refetchRestaurant}
+          onUpdate={handleUpdate}
         />
 
       <RestaurantHeader
