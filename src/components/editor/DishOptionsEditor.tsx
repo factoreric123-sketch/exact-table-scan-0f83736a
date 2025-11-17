@@ -175,7 +175,7 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
   }, [updateOption, updateModifier]);
 
   const handleAddOption = () => {
-    const newOrderIndex = localOptions.length;
+    const newOrderIndex = options.length;
     createOption.mutate({
       dish_id: dishId,
       name: "Size",
@@ -185,10 +185,6 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
   };
 
   const handleUpdateOption = (id: string, field: "name" | "price", value: string) => {
-    setLocalOptions(localOptions.map(opt => 
-      opt.id === id ? { ...opt, [field]: value } : opt
-    ));
-    
     debouncedUpdate(id, field, value, "option");
   };
 
@@ -200,20 +196,20 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = localOptions.findIndex((opt) => opt.id === active.id);
-    const newIndex = localOptions.findIndex((opt) => opt.id === over.id);
+    const oldIndex = options.findIndex((opt) => opt.id === active.id);
+    const newIndex = options.findIndex((opt) => opt.id === over.id);
 
-    const reordered = arrayMove(localOptions, oldIndex, newIndex).map((opt, idx) => ({
+    const reordered = arrayMove(options, oldIndex, newIndex).map((opt, idx) => ({
       ...opt,
       order_index: idx,
     }));
 
-    setLocalOptions(reordered);
+    queryClient.setQueryData<DishOption[]>(["dish-options", dishId], reordered);
     updateOptionsOrder.mutate({ options: reordered, dishId });
   };
 
   const handleAddModifier = () => {
-    const newOrderIndex = localModifiers.length;
+    const newOrderIndex = modifiers.length;
     createModifier.mutate({
       dish_id: dishId,
       name: "Add-on",
@@ -223,10 +219,6 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
   };
 
   const handleUpdateModifier = (id: string, field: "name" | "price", value: string) => {
-    setLocalModifiers(localModifiers.map(mod => 
-      mod.id === id ? { ...mod, [field]: value } : mod
-    ));
-    
     debouncedUpdate(id, field, value, "modifier");
   };
 
@@ -238,15 +230,15 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = localModifiers.findIndex((mod) => mod.id === active.id);
-    const newIndex = localModifiers.findIndex((mod) => mod.id === over.id);
+    const oldIndex = modifiers.findIndex((mod) => mod.id === active.id);
+    const newIndex = modifiers.findIndex((mod) => mod.id === over.id);
 
-    const reordered = arrayMove(localModifiers, oldIndex, newIndex).map((mod, idx) => ({
+    const reordered = arrayMove(modifiers, oldIndex, newIndex).map((mod, idx) => ({
       ...mod,
       order_index: idx,
     }));
 
-    setLocalModifiers(reordered);
+    queryClient.setQueryData<DishModifier[]>(["dish-modifiers", dishId], reordered);
     updateModifiersOrder.mutate({ modifiers: reordered, dishId });
   };
 
@@ -282,11 +274,11 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
                 </div>
                 <p className="text-sm text-muted-foreground">Different sizes or variants (e.g., Small, Medium, Large)</p>
                 
-                {localOptions.length > 0 ? (
+                {options.length > 0 ? (
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleOptionDragEnd}>
-                    <SortableContext items={localOptions.map(o => o.id)} strategy={verticalListSortingStrategy}>
+                    <SortableContext items={options.map(o => o.id)} strategy={verticalListSortingStrategy}>
                       <div className="space-y-2">
-                        {localOptions.map((option) => (
+                        {options.map((option) => (
                           <SortableItem
                             key={option.id}
                             id={option.id}
@@ -315,11 +307,11 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
                 </div>
                 <p className="text-sm text-muted-foreground">Optional extras (e.g., Cheese, Egg, Avocado)</p>
                 
-                {localModifiers.length > 0 ? (
+                {modifiers.length > 0 ? (
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleModifierDragEnd}>
-                    <SortableContext items={localModifiers.map(m => m.id)} strategy={verticalListSortingStrategy}>
+                    <SortableContext items={modifiers.map(m => m.id)} strategy={verticalListSortingStrategy}>
                       <div className="space-y-2">
-                        {localModifiers.map((modifier) => (
+                        {modifiers.map((modifier) => (
                           <SortableItem
                             key={modifier.id}
                             id={modifier.id}
