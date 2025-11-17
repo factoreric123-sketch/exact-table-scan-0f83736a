@@ -91,13 +91,22 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
   const updateTimers = useRef<{ [key: string]: any }>({});
   
-  // Sync when dialog opens or data changes
+  // Sync when dialog opens or server data changes
   useEffect(() => {
     if (open) {
       setLocalOptions(options);
       setLocalModifiers(modifiers);
     }
   }, [open, options, modifiers]);
+  
+  // Also sync whenever query data updates (after mutations)
+  useEffect(() => {
+    setLocalOptions(options);
+  }, [options]);
+  
+  useEffect(() => {
+    setLocalModifiers(modifiers);
+  }, [modifiers]);
   
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -180,16 +189,6 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
 
   const handleAddOption = () => {
     const newOrderIndex = localOptions.length;
-    const tempId = generateTempId();
-    const tempOption: DishOption = {
-      id: tempId,
-      dish_id: dishId,
-      name: "Size",
-      price: "0.00",
-      order_index: newOrderIndex,
-      created_at: new Date().toISOString(),
-    };
-    setLocalOptions([...localOptions, tempOption]);
     createOption.mutate({
       dish_id: dishId,
       name: "Size",
@@ -203,16 +202,11 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
       opt.id === id ? { ...opt, [field]: value } : opt
     ));
     
-    if (!id.startsWith("temp-")) {
-      debouncedUpdate(id, field, value, "option");
-    }
+    debouncedUpdate(id, field, value, "option");
   };
 
   const handleDeleteOption = (id: string) => {
-    setLocalOptions(localOptions.filter(opt => opt.id !== id));
-    if (!id.startsWith("temp-")) {
-      deleteOption.mutate({ id, dishId });
-    }
+    deleteOption.mutate({ id, dishId });
   };
 
   const handleOptionDragEnd = (event: DragEndEvent) => {
@@ -228,25 +222,11 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
     }));
 
     setLocalOptions(reordered);
-    
-    const realOptions = reordered.filter(opt => !opt.id.startsWith("temp-"));
-    if (realOptions.length > 0) {
-      updateOptionsOrder.mutate({ options: realOptions, dishId });
-    }
+    updateOptionsOrder.mutate({ options: reordered, dishId });
   };
 
   const handleAddModifier = () => {
     const newOrderIndex = localModifiers.length;
-    const tempId = generateTempId();
-    const tempModifier: DishModifier = {
-      id: tempId,
-      dish_id: dishId,
-      name: "Add-on",
-      price: "0.00",
-      order_index: newOrderIndex,
-      created_at: new Date().toISOString(),
-    };
-    setLocalModifiers([...localModifiers, tempModifier]);
     createModifier.mutate({
       dish_id: dishId,
       name: "Add-on",
@@ -260,16 +240,11 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
       mod.id === id ? { ...mod, [field]: value } : mod
     ));
     
-    if (!id.startsWith("temp-")) {
-      debouncedUpdate(id, field, value, "modifier");
-    }
+    debouncedUpdate(id, field, value, "modifier");
   };
 
   const handleDeleteModifier = (id: string) => {
-    setLocalModifiers(localModifiers.filter(mod => mod.id !== id));
-    if (!id.startsWith("temp-")) {
-      deleteModifier.mutate({ id, dishId });
-    }
+    deleteModifier.mutate({ id, dishId });
   };
 
   const handleModifierDragEnd = (event: DragEndEvent) => {
@@ -285,11 +260,7 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
     }));
 
     setLocalModifiers(reordered);
-    
-    const realModifiers = reordered.filter(mod => !mod.id.startsWith("temp-"));
-    if (realModifiers.length > 0) {
-      updateModifiersOrder.mutate({ modifiers: realModifiers, dishId });
-    }
+    updateModifiersOrder.mutate({ modifiers: reordered, dishId });
   };
 
   return (
