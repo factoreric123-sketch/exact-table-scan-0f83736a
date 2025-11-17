@@ -23,6 +23,8 @@ export interface DishDetail {
   isVegan?: boolean;
   isSpicy?: boolean;
   hasOptions?: boolean;
+  options?: Array<{ id: string; name: string; price: string; order_index: number }>;
+  modifiers?: Array<{ id: string; name: string; price: string; order_index: number }>;
 }
 
 interface DishDetailDialogProps {
@@ -47,8 +49,12 @@ const allergenIconMap: Record<string, any> = {
 export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogProps) => {
   if (!dish) return null;
 
-  const { data: options = [] } = useDishOptions(dish.id);
-  const { data: modifiers = [] } = useDishModifiers(dish.id);
+  const { data: fetchedOptions = [] } = useDishOptions(dish.id);
+  const { data: fetchedModifiers = [] } = useDishModifiers(dish.id);
+  
+  // Use passed-in options/modifiers as fallback for instant display
+  const options = dish.options && dish.options.length > 0 ? dish.options : fetchedOptions;
+  const modifiers = dish.modifiers && dish.modifiers.length > 0 ? dish.modifiers : fetchedModifiers;
   const [selectedOption, setSelectedOption] = useState("");
   const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
   const [showOptions, setShowOptions] = useState(false);

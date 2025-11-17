@@ -11,6 +11,27 @@ export interface DishOption {
   created_at: string;
 }
 
+// Helper to invalidate full menu cache when options change
+const invalidateFullMenuCache = async (dishId: string, queryClient: any) => {
+  const { data: dish } = await supabase
+    .from("dishes")
+    .select(`
+      subcategory_id,
+      subcategories!inner(
+        category_id,
+        categories!inner(restaurant_id)
+      )
+    `)
+    .eq("id", dishId)
+    .single();
+
+  if (dish?.subcategories?.categories?.restaurant_id) {
+    const restaurantId = dish.subcategories.categories.restaurant_id;
+    queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
+    localStorage.removeItem(`fullMenu:${restaurantId}`);
+  }
+};
+
 export const useDishOptions = (dishId: string) => {
   return useQuery({
     queryKey: ["dish-options", dishId],
@@ -25,8 +46,8 @@ export const useDishOptions = (dishId: string) => {
       return data as DishOption[];
     },
     enabled: !!dishId,
-    staleTime: 1000 * 60, // 1 minute
-    gcTime: 1000 * 60 * 10, // 10 minutes cache
+    staleTime: 1000 * 60,
+    gcTime: 1000 * 60 * 10,
     placeholderData: (prev) => prev,
   });
 };
@@ -36,7 +57,6 @@ export const useCreateDishOption = () => {
 
   return useMutation({
     mutationFn: async (option: Omit<DishOption, "id" | "created_at">) => {
-      // Normalize price - accept various formats
       let normalizedPrice = option.price.replace(/[^0-9.]/g, "");
       if (normalizedPrice && !normalizedPrice.includes(".")) {
         normalizedPrice += ".00";
@@ -68,8 +88,10 @@ export const useCreateDishOption = () => {
       
       return { previous, dishId: option.dish_id };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["dish-options", variables.dish_id] });
+      queryClient.invalidateQueries({ queryKey: ["dishes"] });
+      await invalidateFullMenuCache(variables.dish_id, queryClient);
       toast.success("Option added");
     },
     onError: (_error, _variables, context) => {
@@ -113,9 +135,10 @@ export const useUpdateDishOption = () => {
         return { previous, dishId: option.dish_id };
       }
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["dish-options", data.dish_id] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
+      await invalidateFullMenuCache(data.dish_id, queryClient);
     },
     onError: (_error, _variables, context) => {
       if (context?.previous && context.dishId) {
@@ -151,9 +174,10 @@ export const useDeleteDishOption = () => {
       
       return { previous, dishId };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["dish-options", variables.dishId] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
+      await invalidateFullMenuCache(variables.dishId, queryClient);
       toast.success("Option deleted");
     },
     onError: (_error, _variables, context) => {
@@ -196,8 +220,9 @@ export const useUpdateDishOptionsOrder = () => {
         queryClient.setQueryData(["dish-options", context.dishId], context.previousOptions);
       }
     },
-    onSettled: (_, __, variables) => {
+    onSettled: async (_, __, variables) => {
       queryClient.invalidateQueries({ queryKey: ["dish-options", variables.dishId] });
+      await invalidateFullMenuCache(variables.dishId, queryClient);
     },
   });
 };
