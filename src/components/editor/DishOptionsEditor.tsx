@@ -88,27 +88,12 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
   
   const updateDish = useUpdateDish();
   
-  const [localOptions, setLocalOptions] = useState<DishOption[]>([]);
-  const [localModifiers, setLocalModifiers] = useState<DishModifier[]>([]);
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
   const updateTimers = useRef<{ [key: string]: any }>({});
   
-  // Sync when dialog opens or server data changes
-  useEffect(() => {
-    if (open) {
-      setLocalOptions(options);
-      setLocalModifiers(modifiers);
-    }
-  }, [open, options, modifiers]);
   
   // Also sync whenever query data updates (after mutations)
-  useEffect(() => {
-    setLocalOptions(options);
-  }, [options]);
   
-  useEffect(() => {
-    setLocalModifiers(modifiers);
-  }, [modifiers]);
   
   const sensors = useSensors(
     useSensor(PointerSensor),
