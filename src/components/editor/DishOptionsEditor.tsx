@@ -336,6 +336,7 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
                             price={option.price}
                             onUpdate={handleUpdateOption}
                             onDelete={handleDeleteOption}
+                            isSaving={savingIds.has(option.id)}
                           />
                         ))}
                       </div>
@@ -368,6 +369,7 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
                             price={modifier.price}
                             onUpdate={handleUpdateModifier}
                             onDelete={handleDeleteModifier}
+                            isSaving={savingIds.has(modifier.id)}
                           />
                         ))}
                       </div>

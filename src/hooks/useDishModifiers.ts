@@ -108,9 +108,21 @@ export const useUpdateDishModifier = () => {
 
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<DishModifier> }) => {
+      // Normalize price if provided to prevent resets/glitches
+      const payload: Partial<DishModifier> = { ...updates };
+      if (typeof updates.price === "string") {
+        let normalizedPrice = updates.price.replace(/[^0-9.]/g, "");
+        if (normalizedPrice && !normalizedPrice.includes(".")) {
+          normalizedPrice += ".00";
+        } else if (normalizedPrice.split(".")[1]?.length === 1) {
+          normalizedPrice += "0";
+        }
+        payload.price = normalizedPrice || "0.00";
+      }
+
       const { data, error } = await supabase
         .from("dish_modifiers")
-        .update(updates)
+        .update(payload)
         .eq("id", id)
         .select()
         .single();

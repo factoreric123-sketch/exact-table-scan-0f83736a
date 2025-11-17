@@ -76,16 +76,7 @@ export const useCreateDishOption = () => {
     onMutate: async (option) => {
       await queryClient.cancelQueries({ queryKey: ["dish-options", option.dish_id] });
       const previous = queryClient.getQueryData<DishOption[]>(["dish-options", option.dish_id]);
-      
-      if (previous) {
-        const tempOption: DishOption = {
-          id: `temp-${Date.now()}`,
-          ...option,
-          created_at: new Date().toISOString(),
-        };
-        queryClient.setQueryData<DishOption[]>(["dish-options", option.dish_id], [...previous, tempOption]);
-      }
-      
+      // Do not add optimistic temp rows to avoid duplicates/glitches across views
       return { previous, dishId: option.dish_id };
     },
     onSuccess: async (_, variables) => {
@@ -107,9 +98,21 @@ export const useUpdateDishOption = () => {
 
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<DishOption> }) => {
+      // Normalize price if provided to prevent resets/glitches
+      const payload: Partial<DishOption> = { ...updates };
+      if (typeof updates.price === "string") {
+        let normalizedPrice = updates.price.replace(/[^0-9.]/g, "");
+        if (normalizedPrice && !normalizedPrice.includes(".")) {
+          normalizedPrice += ".00";
+        } else if (normalizedPrice.split(".")[1]?.length === 1) {
+          normalizedPrice += "0";
+        }
+        payload.price = normalizedPrice || "0.00";
+      }
+
       const { data, error } = await supabase
         .from("dish_options")
-        .update(updates)
+        .update(payload)
         .eq("id", id)
         .select()
         .single();

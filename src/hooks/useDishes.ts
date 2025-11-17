@@ -180,9 +180,21 @@ export const useUpdateDish = () => {
 
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Dish> }) => {
+      // Normalize price if present to a safe currency string
+      const payload: Partial<Dish> = { ...updates };
+      if (typeof updates.price === "string") {
+        let normalizedPrice = updates.price.replace(/[^0-9.]/g, "");
+        if (normalizedPrice && !normalizedPrice.includes(".")) {
+          normalizedPrice += ".00";
+        } else if (normalizedPrice.split(".")[1]?.length === 1) {
+          normalizedPrice += "0";
+        }
+        payload.price = normalizedPrice || "0.00";
+      }
+
       const { data, error } = await supabase
         .from("dishes")
-        .update(updates)
+        .update(payload)
         .eq("id", id)
         .select()
         .single();
