@@ -42,15 +42,7 @@ const Editor = () => {
   const { data: dishes = [], isLoading: dishesLoading } = useDishes(activeSubcategory);
   const updateRestaurant = useUpdateRestaurant();
 
-  // Force refetch restaurant when settings change (for instant preview updates)
-  useEffect(() => {
-    if (previewMode && restaurantId) {
-      const interval = setInterval(() => {
-        refetchRestaurant();
-      }, 200); // Check for updates every 200ms in preview mode for instant feel
-      return () => clearInterval(interval);
-    }
-  }, [previewMode, restaurantId, refetchRestaurant]);
+  // No more polling needed - React Query cache invalidation handles updates instantly
 
   // Get current category's subcategories for preview mode
   const currentSubcategories = useMemo(() => 

@@ -4,6 +4,29 @@ import { toast } from "sonner";
 import { generateTempId } from "@/lib/utils/uuid";
 import { getErrorMessage } from "@/lib/errorUtils";
 
+// Helper to get restaurant ID from subcategory ID
+const getRestaurantIdFromSubcategory = async (subcategoryId: string): Promise<string | null> => {
+  const { data, error } = await supabase
+    .from("subcategories")
+    .select("category_id, categories!inner(restaurant_id)")
+    .eq("id", subcategoryId)
+    .single();
+  
+  if (error || !data) return null;
+  return (data.categories as any)?.restaurant_id || null;
+};
+
+// Helper to invalidate full menu cache
+const invalidateFullMenuCache = async (queryClient: any, subcategoryId: string) => {
+  const restaurantId = await getRestaurantIdFromSubcategory(subcategoryId);
+  if (restaurantId) {
+    // Invalidate React Query cache
+    queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
+    // Clear localStorage cache
+    localStorage.removeItem(`fullMenu:${restaurantId}`);
+  }
+};
+
 export interface Dish {
   id: string;
   subcategory_id: string;
@@ -132,7 +155,11 @@ export const useCreateDish = () => {
       
       return { previous, subcategoryId: dish.subcategory_id };
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      // Invalidate full menu cache for live menu sync
+      await invalidateFullMenuCache(queryClient, data.subcategory_id);
+      
+      // Invalidate editor caches
       queryClient.invalidateQueries({ queryKey: ["dishes", data.subcategory_id] });
       queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
       queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
@@ -185,7 +212,11 @@ export const useUpdateDish = () => {
         return { previous, subcategoryId: dish.subcategory_id };
       }
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      // Invalidate full menu cache for live menu sync
+      await invalidateFullMenuCache(queryClient, data.subcategory_id);
+      
+      // Invalidate editor caches
       queryClient.invalidateQueries({ queryKey: ["dishes", data.subcategory_id] });
       queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
       queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
@@ -225,7 +256,11 @@ export const useDeleteDish = () => {
       
       return { previous, subcategoryId };
     },
-    onSuccess: (subcategoryId) => {
+    onSuccess: async (subcategoryId) => {
+      // Invalidate full menu cache for live menu sync
+      await invalidateFullMenuCache(queryClient, subcategoryId);
+      
+      // Invalidate editor caches
       queryClient.invalidateQueries({ queryKey: ["dishes", subcategoryId] });
       queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
       queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
@@ -287,8 +322,11 @@ export const useUpdateDishesOrder = () => {
       const message = getErrorMessage(error);
       toast.error(`Failed to reorder dishes: ${message}`);
     },
-    onSettled: (_, __, variables) => {
-      // Invalidate after completion
+    onSettled: async (_, __, variables) => {
+      // Invalidate full menu cache for live menu sync
+      await invalidateFullMenuCache(queryClient, variables.subcategoryId);
+      
+      // Invalidate editor caches after completion
       queryClient.invalidateQueries({ queryKey: ["dishes", variables.subcategoryId] });
       queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
       queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });

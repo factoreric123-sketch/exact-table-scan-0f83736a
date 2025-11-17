@@ -45,7 +45,7 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showOptionsEditor, setShowOptionsEditor] = useState(false);
   const [localCalories, setLocalCalories] = useState(dish.calories?.toString() || "");
-  const [debouncedCalories] = useDebounce(localCalories, 500);
+  const [debouncedCalories] = useDebounce(localCalories, 200); // Reduced from 500ms to 200ms for instant feel
   
   // Optimistic local state for instant feedback
   const [localAllergens, setLocalAllergens] = useState<string[]>(dish.allergens || []);
@@ -95,7 +95,7 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
     }
     
     updateTimer.current = setTimeout(() => {
-      const toUpdate = { ...pendingUpdates.current };
+      const toUpdate = pendingUpdates.current;
       pendingUpdates.current = {};
       updateTimer.current = null;
       
@@ -103,7 +103,7 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
         id: dish.id,
         updates: toUpdate,
       });
-    }, 150);
+    }, 50); // Reduced from 150ms to 50ms for 3x faster response
   }, [dish.id, updateDish]);
 
   const handleUpdate = (field: keyof Dish, value: string | boolean | string[] | number | null) => {
