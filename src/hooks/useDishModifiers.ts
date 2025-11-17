@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { generateTempId } from "@/lib/utils/uuid";
 
 export interface DishModifier {
   id: string;
@@ -78,9 +79,10 @@ export const useCreateDishModifier = () => {
       await queryClient.cancelQueries({ queryKey: ["dish-modifiers", modifier.dish_id] });
       const previous = queryClient.getQueryData<DishModifier[]>(["dish-modifiers", modifier.dish_id]);
       
+      // Add optimistic item with temporary ID
       if (previous) {
         const tempModifier: DishModifier = {
-          id: `temp-${Date.now()}`,
+          id: generateTempId(),
           ...modifier,
           created_at: new Date().toISOString(),
         };

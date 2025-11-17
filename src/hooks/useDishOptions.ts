@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { generateTempId } from "@/lib/utils/uuid";
 
 export interface DishOption {
   id: string;
@@ -76,7 +77,17 @@ export const useCreateDishOption = () => {
     onMutate: async (option) => {
       await queryClient.cancelQueries({ queryKey: ["dish-options", option.dish_id] });
       const previous = queryClient.getQueryData<DishOption[]>(["dish-options", option.dish_id]);
-      // Do not add optimistic temp rows to avoid duplicates/glitches across views
+      
+      // Add optimistic item with temporary ID
+      if (previous) {
+        const tempOption: DishOption = {
+          id: generateTempId(),
+          ...option,
+          created_at: new Date().toISOString(),
+        };
+        queryClient.setQueryData<DishOption[]>(["dish-options", option.dish_id], [...previous, tempOption]);
+      }
+      
       return { previous, dishId: option.dish_id };
     },
     onSuccess: async (_, variables) => {
