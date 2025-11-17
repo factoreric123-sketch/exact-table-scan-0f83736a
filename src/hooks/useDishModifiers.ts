@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { generateTempId } from "@/lib/utils/uuid";
 
 export interface DishModifier {
@@ -28,7 +27,13 @@ const invalidateFullMenuCache = async (dishId: string, queryClient: any) => {
 
   if (dish?.subcategories?.categories?.restaurant_id) {
     const restaurantId = dish.subcategories.categories.restaurant_id;
-    queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
+    
+    // Only invalidate full-menu, don't refetch immediately
+    queryClient.invalidateQueries({ 
+      queryKey: ["full-menu", restaurantId],
+      refetchType: 'none'
+    });
+    
     localStorage.removeItem(`fullMenu:${restaurantId}`);
   }
 };

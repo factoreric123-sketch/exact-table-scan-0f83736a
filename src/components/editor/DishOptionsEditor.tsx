@@ -27,9 +27,11 @@ interface SortableItemProps {
   id: string;
   name: string;
   price: string;
+  draftValue?: string;
   onUpdate: (id: string, field: "name" | "price", value: string) => void;
   onDelete: (id: string) => void;
   isSaving?: boolean;
+  isDeleting?: boolean;
 }
 
 const SortableItem = ({ id, name, price, onUpdate, onDelete, isSaving }: SortableItemProps) => {
