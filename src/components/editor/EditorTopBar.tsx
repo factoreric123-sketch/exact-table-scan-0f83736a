@@ -27,6 +27,7 @@ interface EditorTopBarProps {
   onFilterToggle?: () => void;
   onRefresh?: () => void;
   onUpdate?: () => Promise<void>;
+  hasPendingChanges?: boolean;
 }
 
 export const EditorTopBar = ({
@@ -44,6 +45,7 @@ export const EditorTopBar = ({
   onFilterToggle,
   onRefresh,
   onUpdate,
+  hasPendingChanges = false,
 }: EditorTopBarProps) => {
   const navigate = useNavigate();
   const [showQRModal, setShowQRModal] = useState(false);
@@ -53,18 +55,7 @@ export const EditorTopBar = ({
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallFeature, setPaywallFeature] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isUpdated, setIsUpdated] = useState(true);
   const { hasPremium } = useSubscription();
-
-  // Track changes to detect when update is needed
-  useEffect(() => {
-    const lastSync = localStorage.getItem(`lastSync:${restaurant.id}`);
-    const currentVersion = restaurant.updated_at;
-    
-    if (lastSync !== currentVersion) {
-      setIsUpdated(false);
-    }
-  }, [restaurant.updated_at, restaurant.id]);
 
   const handleUpdateClick = async () => {
     if (!onUpdate) return;
@@ -72,13 +63,6 @@ export const EditorTopBar = ({
     setIsUpdating(true);
     try {
       await onUpdate();
-      localStorage.setItem(`lastSync:${restaurant.id}`, restaurant.updated_at || '');
-      setIsUpdated(true);
-      
-      // Show "Updated" state briefly
-      setTimeout(() => {
-        setIsUpdated(true);
-      }, 1000);
     } catch (error) {
       console.error('Update failed:', error);
     } finally {
@@ -258,22 +242,22 @@ export const EditorTopBar = ({
 
             {!previewMode && (
               <Button
-                variant={isUpdated ? "secondary" : "default"}
+                variant={hasPendingChanges ? "default" : "secondary"}
                 size="sm"
                 onClick={handleUpdateClick}
-                disabled={isUpdating || isUpdated}
+                disabled={isUpdating || !hasPendingChanges}
                 className="gap-2"
-                title={isUpdated ? "All changes synced" : "Sync changes to live menu"}
+                title={hasPendingChanges ? "Sync changes to live menu" : "All changes synced"}
               >
                 {isUpdating ? (
                   <>
                     <RefreshCw className="h-4 w-4 animate-spin" />
                     Updating...
                   </>
-                ) : isUpdated ? (
+                ) : hasPendingChanges ? (
                   <>
-                    <Check className="h-4 w-4" />
-                    Updated
+                    <RefreshCw className="h-4 w-4" />
+                    Update
                   </>
                 ) : (
                   <>

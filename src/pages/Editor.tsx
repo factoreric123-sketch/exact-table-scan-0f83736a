@@ -35,6 +35,7 @@ const Editor = () => {
   const [selectedDietary, setSelectedDietary] = useState<string[]>([]);
   const [selectedSpicy, setSelectedSpicy] = useState<boolean | null>(null);
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
   const subcategoryRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   const { data: restaurant, isLoading: restaurantLoading, refetch: refetchRestaurant } = useRestaurantById(restaurantId || "");
@@ -42,6 +43,26 @@ const Editor = () => {
   const { data: subcategories = [], isLoading: subcategoriesLoading } = useSubcategories(activeCategory);
   const { data: dishes = [], isLoading: dishesLoading } = useDishes(activeSubcategory);
   const updateRestaurant = useUpdateRestaurant();
+
+  // Listen to all dish mutations to detect changes
+  useEffect(() => {
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      // Listen for successful mutations on dishes, categories, subcategories, or restaurant
+      if (event?.type === 'updated') {
+        const queryKey = event?.query?.queryKey;
+        if (queryKey && (
+          queryKey[0] === 'dishes' || 
+          queryKey[0] === 'categories' || 
+          queryKey[0] === 'subcategories' ||
+          queryKey[0] === 'restaurant'
+        )) {
+          setHasPendingChanges(true);
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [queryClient]);
 
   // Handle Update button - force sync all caches
   const handleUpdate = async () => {
@@ -58,6 +79,13 @@ const Editor = () => {
     
     // Force refetch
     await refetchRestaurant();
+    
+    // Clear pending changes flag
+    setHasPendingChanges(false);
+    
+    toast("Menu Updated", {
+      description: "All changes are now live!",
+    });
   };
 
   // No more polling needed - React Query cache invalidation handles updates instantly
