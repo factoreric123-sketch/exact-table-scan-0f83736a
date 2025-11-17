@@ -36,6 +36,9 @@ export interface Dish {
   isVegetarian?: boolean;
   isVegan?: boolean;
   isSpicy?: boolean;
+  hasOptions?: boolean;
+  options?: Array<{ id: string; name: string; price: string; order_index: number }>;
+  modifiers?: Array<{ id: string; name: string; price: string; order_index: number }>;
 }
 
 interface DishCardProps {

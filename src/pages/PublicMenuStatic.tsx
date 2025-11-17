@@ -35,6 +35,9 @@ interface Dish {
   is_spicy: boolean;
   subcategory_id: string;
   order_index: number;
+  has_options?: boolean;
+  options?: Array<{ id: string; name: string; price: string; order_index: number }>;
+  modifiers?: Array<{ id: string; name: string; price: string; order_index: number }>;
 }
 
 /**
