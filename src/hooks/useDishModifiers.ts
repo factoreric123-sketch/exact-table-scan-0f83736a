@@ -11,6 +11,11 @@ export interface DishModifier {
   created_at: string;
 }
 
+// Helper to check if a string is a valid UUID
+const isUuid = (id: string): boolean => {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+};
+
 // Helper to invalidate full menu cache when modifiers change
 const invalidateFullMenuCache = async (dishId: string, queryClient: any) => {
   const { data: dish } = await supabase
@@ -45,7 +50,7 @@ export const useDishModifiers = (dishId: string) => {
       if (error) throw error;
       return data as DishModifier[];
     },
-    enabled: !!dishId,
+    enabled: !!dishId && isUuid(dishId),
     staleTime: 1000 * 60, // 1 minute
     gcTime: 1000 * 60 * 10, // 10 minutes cache
     placeholderData: (prev) => prev,
@@ -77,16 +82,7 @@ export const useCreateDishModifier = () => {
     onMutate: async (modifier) => {
       await queryClient.cancelQueries({ queryKey: ["dish-modifiers", modifier.dish_id] });
       const previous = queryClient.getQueryData<DishModifier[]>(["dish-modifiers", modifier.dish_id]);
-      
-      if (previous) {
-        const tempModifier: DishModifier = {
-          id: `temp-${Date.now()}`,
-          ...modifier,
-          created_at: new Date().toISOString(),
-        };
-        queryClient.setQueryData<DishModifier[]>(["dish-modifiers", modifier.dish_id], [...previous, tempModifier]);
-      }
-      
+      // Do not add optimistic temp rows to avoid duplicates/glitches across views
       return { previous, dishId: modifier.dish_id };
     },
     onSuccess: async (_, variables) => {

@@ -11,6 +11,11 @@ export interface DishOption {
   created_at: string;
 }
 
+// Helper to check if a string is a valid UUID
+const isUuid = (id: string): boolean => {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+};
+
 // Helper to invalidate full menu cache when options change
 const invalidateFullMenuCache = async (dishId: string, queryClient: any) => {
   const { data: dish } = await supabase
@@ -45,7 +50,7 @@ export const useDishOptions = (dishId: string) => {
       if (error) throw error;
       return data as DishOption[];
     },
-    enabled: !!dishId,
+    enabled: !!dishId && isUuid(dishId),
     staleTime: 1000 * 60,
     gcTime: 1000 * 60 * 10,
     placeholderData: (prev) => prev,
