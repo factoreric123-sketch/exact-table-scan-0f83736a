@@ -174,7 +174,36 @@ const DishCard = memo(({
         <p className={`${descFontSizeClasses[fontSize]} text-muted-foreground mb-1.5 line-clamp-2`}>{dish.description}</p>
         <div className="flex items-center justify-between">
           {showPrice && (
-            <p className={`${priceFontSizeClasses[fontSize]} font-semibold text-foreground`}>{dish.price}</p>
+            <p className={`${priceFontSizeClasses[fontSize]} font-semibold text-foreground`}>
+              {(() => {
+                // If dish has options, show price range
+                if (dish.hasOptions && dish.options && dish.options.length > 0) {
+                  const prices = dish.options
+                    .map(opt => {
+                      const num = parseFloat(opt.price.replace(/[^0-9.]/g, ""));
+                      return isNaN(num) ? 0 : num;
+                    })
+                    .filter(p => p > 0)
+                    .sort((a, b) => a - b);
+                  
+                  if (prices.length > 0) {
+                    // Get unique prices
+                    const uniquePrices = Array.from(new Set(prices));
+                    const priceRange = uniquePrices.map(p => `$${p.toFixed(0)}`).join(' / ');
+                    const addOns = dish.modifiers && dish.modifiers.length > 0 ? ' + Add-ons' : '';
+                    return priceRange + addOns;
+                  }
+                }
+                
+                // If no options but has modifiers, show base price + Add-ons
+                if (dish.modifiers && dish.modifiers.length > 0) {
+                  return `${dish.price} + Add-ons`;
+                }
+                
+                // Default: just show the base price
+                return dish.price;
+              })()}
+            </p>
           )}
           {dish.calories && (
             <p className="text-xs text-muted-foreground">{dish.calories} cal</p>

@@ -190,15 +190,19 @@ export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogP
                         const priceNum = parseFloat(option.price.replace(/[^0-9.]/g, ""));
                         const formattedPrice = isNaN(priceNum) ? option.price : `$${priceNum.toFixed(2)}`;
                         return (
-                          <div key={option.id} className="flex items-center justify-between p-3 rounded-lg border-2 border-border hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer">
+                          <Label 
+                            key={option.id} 
+                            htmlFor={option.id}
+                            className="flex items-center justify-between p-3 rounded-lg border-2 border-border hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer"
+                          >
                             <div className="flex items-center space-x-3">
                               <RadioGroupItem value={option.id} id={option.id} className="border-2" />
-                              <Label htmlFor={option.id} className="cursor-pointer font-medium text-foreground">
+                              <span className="font-medium text-foreground">
                                 {option.name}
-                              </Label>
+                              </span>
                             </div>
                             <span className="text-base font-semibold text-foreground">{formattedPrice}</span>
-                          </div>
+                          </Label>
                         );
                       })}
                     </RadioGroup>
@@ -213,7 +217,11 @@ export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogP
                         const priceNum = parseFloat(modifier.price.replace(/[^0-9.]/g, ""));
                         const formattedPrice = isNaN(priceNum) ? modifier.price : `+$${priceNum.toFixed(2)}`;
                         return (
-                          <div key={modifier.id} className="flex items-center justify-between p-3 rounded-lg border-2 border-border hover:border-primary/50 hover:bg-accent/50 transition-all">
+                          <Label 
+                            key={modifier.id} 
+                            htmlFor={modifier.id}
+                            className="flex items-center justify-between p-3 rounded-lg border-2 border-border hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer"
+                          >
                             <div className="flex items-center space-x-3">
                               <Checkbox
                                 id={modifier.id}
@@ -221,12 +229,12 @@ export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogP
                                 onCheckedChange={() => handleModifierToggle(modifier.id)}
                                 className="border-2"
                               />
-                              <Label htmlFor={modifier.id} className="cursor-pointer font-medium text-foreground">
+                              <span className="font-medium text-foreground">
                                 {modifier.name}
-                              </Label>
+                              </span>
                             </div>
                             <span className="text-base font-semibold text-muted-foreground">{formattedPrice}</span>
-                          </div>
+                          </Label>
                         );
                       })}
                     </div>
