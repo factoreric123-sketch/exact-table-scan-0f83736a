@@ -175,6 +175,17 @@ export const menuData: Dish[] = [
     calories: 580,
     isPopular: true,
     isSpicy: true,
+    hasOptions: true,
+    options: [
+      { id: "mambo-small", name: "Small", price: "12.00", order_index: 0 },
+      { id: "mambo-medium", name: "Medium", price: "16.00", order_index: 1 },
+      { id: "mambo-large", name: "Large", price: "20.00", order_index: 2 },
+    ],
+    modifiers: [
+      { id: "mambo-mod-1", name: "Extra Mambo Sauce", price: "1.50", order_index: 0 },
+      { id: "mambo-mod-2", name: "Blue Cheese Dip", price: "2.00", order_index: 1 },
+      { id: "mambo-mod-3", name: "Extra Celery & Carrots", price: "1.00", order_index: 2 },
+    ],
   },
   {
     id: "10",
