@@ -91,11 +91,16 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
   const updateTimers = useRef<{ [key: string]: any }>({});
   
-  // Sync when dialog opens or data changes
+  // Sync only when dialog opens, not on every refetch
+  const dialogOpenedRef = useRef(false);
+  
   useEffect(() => {
-    if (open) {
+    if (open && !dialogOpenedRef.current) {
       setLocalOptions(options);
       setLocalModifiers(modifiers);
+      dialogOpenedRef.current = true;
+    } else if (!open) {
+      dialogOpenedRef.current = false;
     }
   }, [open, options, modifiers]);
   
