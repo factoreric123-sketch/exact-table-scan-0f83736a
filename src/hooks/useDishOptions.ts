@@ -87,6 +87,7 @@ export const useCreateDishOption = () => {
     onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["dish-options", variables.dish_id] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
+      queryClient.invalidateQueries({ queryKey: ["subcategory-dishes-with-options"] });
       await invalidateFullMenuCache(variables.dish_id, queryClient);
       toast.success("Option added");
     },
@@ -146,6 +147,7 @@ export const useUpdateDishOption = () => {
     onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["dish-options", data.dish_id] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
+      queryClient.invalidateQueries({ queryKey: ["subcategory-dishes-with-options"] });
       await invalidateFullMenuCache(data.dish_id, queryClient);
     },
     onError: (_error, _variables, context) => {
@@ -185,6 +187,7 @@ export const useDeleteDishOption = () => {
     onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["dish-options", variables.dishId] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
+      queryClient.invalidateQueries({ queryKey: ["subcategory-dishes-with-options"] });
       await invalidateFullMenuCache(variables.dishId, queryClient);
       toast.success("Option deleted");
     },

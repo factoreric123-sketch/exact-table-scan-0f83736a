@@ -88,6 +88,7 @@ export const useCreateDishModifier = () => {
     onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["dish-modifiers", variables.dish_id] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
+      queryClient.invalidateQueries({ queryKey: ["subcategory-dishes-with-options"] });
       await invalidateFullMenuCache(variables.dish_id, queryClient);
       toast.success("Modifier added");
     },
@@ -147,6 +148,7 @@ export const useUpdateDishModifier = () => {
     onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["dish-modifiers", data.dish_id] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
+      queryClient.invalidateQueries({ queryKey: ["subcategory-dishes-with-options"] });
       await invalidateFullMenuCache(data.dish_id, queryClient);
     },
     onError: (_error, _variables, context) => {
@@ -186,6 +188,7 @@ export const useDeleteDishModifier = () => {
     onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["dish-modifiers", variables.dishId] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
+      queryClient.invalidateQueries({ queryKey: ["subcategory-dishes-with-options"] });
       await invalidateFullMenuCache(variables.dishId, queryClient);
       toast.success("Modifier deleted");
     },
