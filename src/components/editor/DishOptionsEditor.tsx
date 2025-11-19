@@ -383,8 +383,11 @@ export function DishOptionsEditor({
     });
   }, [dishId, updateDish, queryClient]);
 
+  const [isSaving, setIsSaving] = useState(false);
+
   // ULTRA-FAST commit engine: All mutations in parallel + optimistic cache updates + single invalidation
   const handleSaveAndClose = useCallback(async () => {
+    setIsSaving(true);
     const { toCreate: newOptions, toUpdate: updatedOptions, toDelete: deletedOptions } = diffOptions(
       initialOptionsRef.current,
       localOptions
@@ -473,10 +476,15 @@ export function DishOptionsEditor({
       // Single success toast (no spam)
       toast.success("Pricing options saved");
 
-      onOpenChange(false);
+      // Brief delay to show saved state
+      setTimeout(() => {
+        setIsSaving(false);
+        onOpenChange(false);
+      }, 400);
     } catch (error) {
       console.error("Failed to save pricing options:", error);
       toast.error("Failed to save changes");
+      setIsSaving(false);
       // Revert optimistic update on error
       queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
       queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
@@ -628,8 +636,12 @@ export function DishOptionsEditor({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveAndClose}>
-              Save & Close
+            <Button 
+              onClick={handleSaveAndClose}
+              disabled={isSaving}
+              className={isSaving ? "scale-95 opacity-90" : ""}
+            >
+              {isSaving ? "Saved!" : "Save"}
             </Button>
           </div>
         </div>
