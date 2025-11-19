@@ -207,18 +207,31 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
       {
         onSuccess: (created) => {
           // Replace temp row with real DB row, preserving any user edits
-          setLocalOptions(prev =>
-            prev.map(opt =>
-              opt.id === tempId
-                ? {
-                    ...created,
-                    name: opt.name,
-                    price: opt.price,
-                    order_index: opt.order_index,
-                  }
-                : opt
-            )
-          );
+          setLocalOptions(prev => {
+            const updatedOptions = prev.map(opt => {
+              if (opt.id === tempId) {
+                const merged = {
+                  ...created,
+                  name: opt.name,
+                  price: opt.price,
+                  order_index: opt.order_index,
+                };
+                
+                // If user edited name or price while temp, save those changes immediately
+                if (opt.name !== "Size" || opt.price !== "0.00") {
+                  const updates: any = {};
+                  if (opt.name !== "Size") updates.name = opt.name;
+                  if (opt.price !== "0.00") updates.price = opt.price;
+                  
+                  updateOption.mutate({ id: created.id, updates });
+                }
+                
+                return merged;
+              }
+              return opt;
+            });
+            return updatedOptions;
+          });
         },
         onError: () => {
           // Remove temp entry on error
@@ -229,7 +242,7 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
   };
 
   const handleUpdateOption = (id: string, field: "name" | "price", value: string) => {
-    setLocalOptions(localOptions.map(opt => 
+    setLocalOptions(prev => prev.map(opt => 
       opt.id === id ? { ...opt, [field]: value } : opt
     ));
     
@@ -288,18 +301,31 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
       {
         onSuccess: (created) => {
           // Replace temp row with real DB row, preserving any user edits
-          setLocalModifiers(prev =>
-            prev.map(mod =>
-              mod.id === tempId
-                ? {
-                    ...created,
-                    name: mod.name,
-                    price: mod.price,
-                    order_index: mod.order_index,
-                  }
-                : mod
-            )
-          );
+          setLocalModifiers(prev => {
+            const updatedModifiers = prev.map(mod => {
+              if (mod.id === tempId) {
+                const merged = {
+                  ...created,
+                  name: mod.name,
+                  price: mod.price,
+                  order_index: mod.order_index,
+                };
+                
+                // If user edited name or price while temp, save those changes immediately
+                if (mod.name !== "Add-on" || mod.price !== "0.00") {
+                  const updates: any = {};
+                  if (mod.name !== "Add-on") updates.name = mod.name;
+                  if (mod.price !== "0.00") updates.price = mod.price;
+                  
+                  updateModifier.mutate({ id: created.id, updates });
+                }
+                
+                return merged;
+              }
+              return mod;
+            });
+            return updatedModifiers;
+          });
         },
         onError: () => {
           // Remove temp entry on error
@@ -310,7 +336,7 @@ export const DishOptionsEditor = ({ dishId, dishName, hasOptions, open, onOpenCh
   };
 
   const handleUpdateModifier = (id: string, field: "name" | "price", value: string) => {
-    setLocalModifiers(localModifiers.map(mod => 
+    setLocalModifiers(prev => prev.map(mod => 
       mod.id === id ? { ...mod, [field]: value } : mod
     ));
     
