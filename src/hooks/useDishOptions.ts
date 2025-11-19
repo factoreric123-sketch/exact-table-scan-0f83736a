@@ -51,8 +51,10 @@ export const useDishOptions = (dishId: string) => {
       return data as DishOption[];
     },
     enabled: !!dishId && isUuid(dishId),
-    staleTime: 1000 * 60,
-    gcTime: 1000 * 60 * 10,
+    staleTime: 5 * 60 * 1000, // 5 minutes for better performance
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnMount: false, // Don't refetch on mount if data exists
     placeholderData: (prev) => prev,
   });
 };

@@ -51,8 +51,10 @@ export const useDishModifiers = (dishId: string) => {
       return data as DishModifier[];
     },
     enabled: !!dishId && isUuid(dishId),
-    staleTime: 1000 * 60, // 1 minute
-    gcTime: 1000 * 60 * 10, // 10 minutes cache
+    staleTime: 5 * 60 * 1000, // 5 minutes for better performance
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnMount: false, // Don't refetch on mount if data exists
     placeholderData: (prev) => prev,
   });
 };
