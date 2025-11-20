@@ -23,6 +23,7 @@ import {
 } from "@/hooks/useDishOptionsMutations";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import type { DishOption } from "@/hooks/useDishOptions";
 import type { DishModifier } from "@/hooks/useDishModifiers";
 
@@ -30,6 +31,7 @@ interface DishOptionsEditorProps {
   dishId: string;
   dishName: string;
   hasOptions: boolean;
+  subcategoryId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -116,6 +118,9 @@ const SortableItem = memo(({
 
 SortableItem.displayName = "SortableItem";
 
+// UUID validation utility
+const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
 // Generate temp ID for new local items
 const generateTempId = () => `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -174,6 +179,7 @@ export function DishOptionsEditor({
   dishId,
   dishName,
   hasOptions: initialHasOptions = false,
+  subcategoryId,
   open,
   onOpenChange,
 }: DishOptionsEditorProps) {
@@ -196,6 +202,7 @@ export function DishOptionsEditor({
   const [localOptions, setLocalOptions] = useState<EditableDishOption[]>([]);
   const [localModifiers, setLocalModifiers] = useState<EditableDishModifier[]>([]);
   const [localHasOptions, setLocalHasOptions] = useState(initialHasOptions);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Store initial state for diffing on save
   const initialOptionsRef = useRef<EditableDishOption[]>([]);
@@ -365,126 +372,264 @@ export function DishOptionsEditor({
     });
   }, []);
 
-  // Instant toggle has_options on the dish (optimistic update)
+  // Resolve dish ID helper - ensures we never save with temp IDs
+  const resolveDishId = useCallback(async (): Promise<string | null> => {
+    if (isUuid(dishId)) return dishId;
+
+    // Fallback: look up the real dish row in the DB
+    const { data, error } = await supabase
+      .from("dishes")
+      .select("id, name, subcategory_id")
+      .eq("subcategory_id", subcategoryId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) {
+      console.warn("❌ Could not resolve dish ID:", { dishId, subcategoryId, error });
+      return null;
+    }
+    
+    console.log("✅ Resolved dish ID:", data.id);
+    return data.id;
+  }, [dishId, subcategoryId]);
+
+  // Retry helper for transient errors
+  const runWithRetry = async <T,>(fn: () => Promise<T>, operationName: string): Promise<T> => {
+    let lastError: any;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        return await fn();
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`⚠️ ${operationName} attempt ${attempt + 1} failed:`, err);
+        
+        // If error is clearly non-retryable (e.g., permission denied), break early
+        if (err?.code === "42501" || err?.code === "PGRST301") {
+          console.error(`❌ Non-retryable error for ${operationName}:`, err);
+          break;
+        }
+        
+        // Exponential backoff
+        await new Promise(r => setTimeout(r, 100 * (attempt + 1)));
+      }
+    }
+    throw lastError;
+  };
+
+  // Instant toggle has_options on the dish (optimistic update with fail-proof ID resolution)
   const handleToggleHasOptions = useCallback(async (enabled: boolean) => {
+    const originalValue = localHasOptions;
     setLocalHasOptions(enabled);
     
-    // Optimistic cache update
-    queryClient.setQueryData(["dishes"], (oldData: any) => {
-      if (!oldData) return oldData;
-      return oldData.map((dish: any) => 
-        dish.id === dishId ? { ...dish, has_options: enabled } : dish
-      );
-    });
-    
-    await updateDish.mutateAsync({
-      id: dishId,
-      updates: { has_options: enabled },
-    });
-  }, [dishId, updateDish, queryClient]);
+    try {
+      // Resolve dish ID first
+      const resolvedDishId = await resolveDishId();
+      
+      if (!resolvedDishId) {
+        console.warn("❌ Cannot toggle has_options: dish is still saving");
+        toast.info("This dish is still saving. Please wait a moment and try again.");
+        setLocalHasOptions(originalValue);
+        return;
+      }
+      
+      // Optimistic cache update
+      queryClient.setQueryData(["dishes"], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.map((dish: any) => 
+          dish.id === resolvedDishId ? { ...dish, has_options: enabled } : dish
+        );
+      });
+      
+      await updateDish.mutateAsync({
+        id: resolvedDishId,
+        updates: { has_options: enabled },
+      });
+    } catch (error) {
+      console.error("❌ Failed to toggle has_options:", error);
+      setLocalHasOptions(originalValue);
+      toast.error("Failed to update pricing options setting");
+    }
+  }, [dishId, subcategoryId, localHasOptions, updateDish, queryClient, resolveDishId]);
 
-  // ULTRA-FAST commit engine: All mutations in parallel + optimistic cache updates + single invalidation
+  // FAIL-PROOF commit engine with ID resolution, retries, and error handling
   const handleSaveAndClose = useCallback(async () => {
-    const { toCreate: newOptions, toUpdate: updatedOptions, toDelete: deletedOptions } = diffOptions(
-      initialOptionsRef.current,
-      localOptions
-    );
-
-    const { toCreate: newModifiers, toUpdate: updatedModifiers, toDelete: deletedModifiers } = diffModifiers(
-      initialModifiersRef.current,
-      localModifiers
-    );
-
-    // Normalize all prices client-side for instant feedback
-    const normalizedNewOptions = newOptions.map(opt => ({
-      ...opt,
-      price: normalizePrice(opt.price),
-    }));
-    const normalizedUpdatedOptions = updatedOptions.map(opt => ({
-      ...opt,
-      price: normalizePrice(opt.price),
-    }));
-    const normalizedNewModifiers = newModifiers.map(mod => ({
-      ...mod,
-      price: normalizePrice(mod.price),
-    }));
-    const normalizedUpdatedModifiers = updatedModifiers.map(mod => ({
-      ...mod,
-      price: normalizePrice(mod.price),
-    }));
-
-    // INSTANT optimistic cache update (preview & live update immediately)
-    queryClient.setQueryData(["dish-options", dishId], localOptions.filter(o => o._status !== "deleted"));
-    queryClient.setQueryData(["dish-modifiers", dishId], localModifiers.filter(m => m._status !== "deleted"));
+    if (isSaving) return; // Prevent double-saves
+    
+    console.log("🚀 Starting save process...", { dishId, subcategoryId });
+    setIsSaving(true);
 
     try {
-      // TRUE PARALLEL EXECUTION: All mutations happen simultaneously (3x faster)
-      await Promise.all([
+      // STEP 1: Resolve dish ID (CRITICAL - prevents UUID errors)
+      const resolvedDishId = await resolveDishId();
+      
+      if (!resolvedDishId) {
+        console.warn("❌ Save blocked: dish is still being created");
+        toast.info("This dish is still saving. Please wait a couple seconds and try again.");
+        setIsSaving(false);
+        return;
+      }
+
+      console.log("✅ Using resolved dish ID:", resolvedDishId);
+
+      // STEP 2: Calculate diffs
+      const { toCreate: newOptions, toUpdate: updatedOptions, toDelete: deletedOptions } = diffOptions(
+        initialOptionsRef.current,
+        localOptions
+      );
+
+      const { toCreate: newModifiers, toUpdate: updatedModifiers, toDelete: deletedModifiers } = diffModifiers(
+        initialModifiersRef.current,
+        localModifiers
+      );
+
+      console.log("📊 Changes detected:", {
+        newOptions: newOptions.length,
+        updatedOptions: updatedOptions.length,
+        deletedOptions: deletedOptions.length,
+        newModifiers: newModifiers.length,
+        updatedModifiers: updatedModifiers.length,
+        deletedModifiers: deletedModifiers.length,
+      });
+
+      // STEP 3: Normalize all prices client-side for instant feedback
+      const normalizedNewOptions = newOptions.map(opt => ({
+        ...opt,
+        price: normalizePrice(opt.price),
+      }));
+      const normalizedUpdatedOptions = updatedOptions.map(opt => ({
+        ...opt,
+        price: normalizePrice(opt.price),
+      }));
+      const normalizedNewModifiers = newModifiers.map(mod => ({
+        ...mod,
+        price: normalizePrice(mod.price),
+      }));
+      const normalizedUpdatedModifiers = updatedModifiers.map(mod => ({
+        ...mod,
+        price: normalizePrice(mod.price),
+      }));
+
+      // STEP 4: INSTANT optimistic cache update (preview & live update immediately)
+      queryClient.setQueryData(["dish-options", resolvedDishId], localOptions.filter(o => o._status !== "deleted"));
+      queryClient.setQueryData(["dish-modifiers", resolvedDishId], localModifiers.filter(m => m._status !== "deleted"));
+
+      // STEP 5: TRUE PARALLEL EXECUTION with retries
+      const tasks = [
         // Create all new items
-        ...normalizedNewOptions.map(opt =>
-          createOption.mutateAsync({
-            dish_id: dishId,
-            name: opt.name,
-            price: opt.price,
-            order_index: opt.order_index,
-          })
-        ),
-        ...normalizedNewModifiers.map(mod =>
-          createModifier.mutateAsync({
-            dish_id: dishId,
-            name: mod.name,
-            price: mod.price,
-            order_index: mod.order_index,
-          })
-        ),
-        // Update all existing items
-        ...normalizedUpdatedOptions.map(opt =>
-          updateOption.mutateAsync({
-            id: opt.id,
-            updates: {
+        ...normalizedNewOptions.map((opt, idx) =>
+          runWithRetry(
+            () => createOption.mutateAsync({
+              dish_id: resolvedDishId,
               name: opt.name,
               price: opt.price,
               order_index: opt.order_index,
-            },
-          })
+            }),
+            `createOption-${idx}`
+          )
         ),
-        ...normalizedUpdatedModifiers.map(mod =>
-          updateModifier.mutateAsync({
-            id: mod.id,
-            updates: {
+        ...normalizedNewModifiers.map((mod, idx) =>
+          runWithRetry(
+            () => createModifier.mutateAsync({
+              dish_id: resolvedDishId,
               name: mod.name,
               price: mod.price,
               order_index: mod.order_index,
-            },
-          })
+            }),
+            `createModifier-${idx}`
+          )
+        ),
+        // Update all existing items
+        ...normalizedUpdatedOptions.map((opt, idx) =>
+          runWithRetry(
+            () => updateOption.mutateAsync({
+              id: opt.id,
+              updates: {
+                name: opt.name,
+                price: opt.price,
+                order_index: opt.order_index,
+              },
+            }),
+            `updateOption-${idx}`
+          )
+        ),
+        ...normalizedUpdatedModifiers.map((mod, idx) =>
+          runWithRetry(
+            () => updateModifier.mutateAsync({
+              id: mod.id,
+              updates: {
+                name: mod.name,
+                price: mod.price,
+                order_index: mod.order_index,
+              },
+            }),
+            `updateModifier-${idx}`
+          )
         ),
         // Delete all removed items
-        ...deletedOptions.map(opt =>
-          deleteOption.mutateAsync({ id: opt.id, dishId })
+        ...deletedOptions.map((opt, idx) =>
+          runWithRetry(
+            () => deleteOption.mutateAsync({ id: opt.id, dishId: resolvedDishId }),
+            `deleteOption-${idx}`
+          )
         ),
-        ...deletedModifiers.map(mod =>
-          deleteModifier.mutateAsync({ id: mod.id, dishId })
+        ...deletedModifiers.map((mod, idx) =>
+          runWithRetry(
+            () => deleteModifier.mutateAsync({ id: mod.id, dishId: resolvedDishId }),
+            `deleteModifier-${idx}`
+          )
         ),
-      ]);
+      ];
 
-      // SINGLE cache invalidation (20x faster than 60+ invalidations)
-      await invalidateAllCaches(dishId, queryClient);
+      // Use Promise.allSettled to inspect failures instead of failing fast
+      const results = await Promise.allSettled(tasks);
+      const failed = results.filter(r => r.status === "rejected") as PromiseRejectedResult[];
+
+      if (failed.length > 0) {
+        console.error("❌ Some operations failed:", failed);
+        throw new Error(`${failed.length} pricing change(s) could not be saved`);
+      }
+
+      console.log("✅ All mutations succeeded");
+
+      // STEP 6: SINGLE cache invalidation (20x faster than 60+ invalidations)
+      await invalidateAllCaches(resolvedDishId, queryClient);
 
       // Single success toast (no spam)
       toast.success("Pricing options saved");
 
       onOpenChange(false);
-    } catch (error) {
-      console.error("Failed to save pricing options:", error);
-      toast.error("Failed to save changes");
-      // Revert optimistic update on error
-      queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
-      queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
+    } catch (error: any) {
+      console.error("❌ Save failed:", error);
+      
+      // Enhanced error messages based on error type
+      if (error?.code === "42501" || error?.code === "PGRST301") {
+        toast.error("You don't have permission to edit pricing for this dish");
+      } else if (error?.message?.includes("Failed to fetch") || error?.name === "TypeError") {
+        toast.error("You're offline or the connection is unstable. Changes couldn't be saved.");
+      } else if (error?.code === "22P02") {
+        toast.error("Invalid data format. Please refresh the page and try again.");
+      } else {
+        toast.error(error?.message || "Failed to save changes");
+      }
+      
+      // Re-fetch data to realign UI with database
+      const resolvedDishId = await resolveDishId();
+      if (resolvedDishId) {
+        await Promise.all([
+          queryClient.refetchQueries({ queryKey: ["dish-options", resolvedDishId] }),
+          queryClient.refetchQueries({ queryKey: ["dish-modifiers", resolvedDishId] }),
+        ]);
+      }
+    } finally {
+      setIsSaving(false);
     }
   }, [
+    isSaving,
     localOptions, 
     localModifiers, 
-    dishId, 
+    dishId,
+    subcategoryId,
     createOption, 
     updateOption, 
     deleteOption,
@@ -492,7 +637,8 @@ export function DishOptionsEditor({
     updateModifier,
     deleteModifier,
     queryClient,
-    onOpenChange
+    onOpenChange,
+    resolveDishId
   ]);
 
   // Filter out deleted items for rendering
@@ -628,8 +774,12 @@ export function DishOptionsEditor({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveAndClose}>
-              Save & Close
+            <Button 
+              onClick={handleSaveAndClose}
+              disabled={isSaving}
+              style={{ opacity: isSaving ? 0.6 : 1 }}
+            >
+              {isSaving ? "Saving..." : "Save & Close"}
             </Button>
           </div>
         </div>
