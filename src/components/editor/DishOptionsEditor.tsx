@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Plus, GripVertical, X } from "lucide-react";
+import { Plus, GripVertical, X, Loader2 } from "lucide-react";
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -196,6 +196,7 @@ export function DishOptionsEditor({
   const [localOptions, setLocalOptions] = useState<EditableDishOption[]>([]);
   const [localModifiers, setLocalModifiers] = useState<EditableDishModifier[]>([]);
   const [localHasOptions, setLocalHasOptions] = useState(initialHasOptions);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Store initial state for diffing on save
   const initialOptionsRef = useRef<EditableDishOption[]>([]);
@@ -385,6 +386,8 @@ export function DishOptionsEditor({
 
   // ULTRA-FAST commit engine: All mutations in parallel + optimistic cache updates + single invalidation
   const handleSaveAndClose = useCallback(async () => {
+    setIsSaving(true);
+    
     const { toCreate: newOptions, toUpdate: updatedOptions, toDelete: deletedOptions } = diffOptions(
       initialOptionsRef.current,
       localOptions
@@ -480,6 +483,8 @@ export function DishOptionsEditor({
       // Revert optimistic update on error
       queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
       queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
+    } finally {
+      setIsSaving(false);
     }
   }, [
     localOptions, 
@@ -625,11 +630,12 @@ export function DishOptionsEditor({
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
               Cancel
             </Button>
-            <Button onClick={handleSaveAndClose}>
-              Save & Close
+            <Button onClick={handleSaveAndClose} disabled={isSaving}>
+              {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+              Save
             </Button>
           </div>
         </div>
