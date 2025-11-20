@@ -418,6 +418,7 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
         dishId={dish.id}
         dishName={dish.name}
         hasOptions={dish.has_options}
+        subcategoryId={subcategoryId}
         open={showOptionsEditor}
         onOpenChange={setShowOptionsEditor}
       />
