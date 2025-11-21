@@ -756,6 +756,9 @@ interface Dish {
   is_spicy: boolean;
   subcategory_id: string;
   order_index: number;
+  has_options?: boolean;
+  options?: Array<{ id: string; name: string; price: string; order_index: number }>;
+  modifiers?: Array<{ id: string; name: string; price: string; order_index: number }>;
 }
 
 const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
@@ -1130,6 +1133,9 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
               isVegetarian: dish.is_vegetarian,
               isVegan: dish.is_vegan,
               isSpicy: dish.is_spicy,
+              hasOptions: dish.has_options || (dish.options?.length ?? 0) > 0,
+              options: dish.options || [],
+              modifiers: dish.modifiers || [],
             }));
 
             return (

@@ -2,14 +2,13 @@ import { useState, useEffect } from "react";
 import React from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { X, Flame, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Salad, ChevronDown } from "lucide-react";
+import { X, Flame, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Salad } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useDishOptions } from "@/hooks/useDishOptions";
 import { useDishModifiers } from "@/hooks/useDishModifiers";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export interface DishDetail {
   id: string;
@@ -23,6 +22,8 @@ export interface DishDetail {
   isVegan?: boolean;
   isSpicy?: boolean;
   hasOptions?: boolean;
+  options?: Array<{ id: string; name: string; price: string; order_index: number }>;
+  modifiers?: Array<{ id: string; name: string; price: string; order_index: number }>;
 }
 
 interface DishDetailDialogProps {
@@ -47,11 +48,16 @@ const allergenIconMap: Record<string, any> = {
 export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogProps) => {
   if (!dish) return null;
 
-  const { data: options = [] } = useDishOptions(dish.id);
-  const { data: modifiers = [] } = useDishModifiers(dish.id);
+  const { data: fetchedOptions = [] } = useDishOptions(dish.id);
+  const { data: fetchedModifiers = [] } = useDishModifiers(dish.id);
+  
+  // Use passed-in options/modifiers as fallback for instant display
+  const options = dish.options && dish.options.length > 0 ? dish.options : fetchedOptions;
+  const modifiers = dish.modifiers && dish.modifiers.length > 0 ? dish.modifiers : fetchedModifiers;
   const [selectedOption, setSelectedOption] = useState("");
   const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
-  const [showOptions, setShowOptions] = useState(false);
+  const hasAnyOptions = options.length > 0 || modifiers.length > 0;
+  const [showOptions, setShowOptions] = useState(true); // Auto-expand options
 
   // Sync selectedOption when options load
   React.useEffect(() => {
@@ -174,54 +180,67 @@ export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogP
               )}
             </div>
 
-            {dish.hasOptions && (options.length > 0 || modifiers.length > 0) && (
-              <Collapsible open={showOptions} onOpenChange={setShowOptions}>
-                <CollapsibleTrigger asChild>
-                  <Button variant="default" className="w-full" size="lg">
-                    <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${showOptions ? 'rotate-180' : ''}`} />
-                    Options
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-4 pt-4">
-                  {options.length > 0 && (
-                    <div className="space-y-3">
-                      <Label className="text-base font-semibold">Size / Type</Label>
-                      <RadioGroup value={selectedOption} onValueChange={setSelectedOption} className="space-y-2">
-                        {options.map((option) => (
-                          <div key={option.id} className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors">
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value={option.id} id={option.id} />
-                              <Label htmlFor={option.id} className="cursor-pointer">{option.name}</Label>
+            {dish.hasOptions && hasAnyOptions && (
+              <div className="space-y-4 pt-2">
+                {options.length > 0 && (
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold text-foreground">Choose Size</Label>
+                    <RadioGroup value={selectedOption} onValueChange={setSelectedOption} className="space-y-2">
+                      {options.map((option) => {
+                        const priceNum = parseFloat(option.price.replace(/[^0-9.]/g, ""));
+                        const formattedPrice = isNaN(priceNum) ? option.price : `$${priceNum.toFixed(2)}`;
+                        return (
+                          <Label 
+                            key={option.id} 
+                            htmlFor={option.id}
+                            className="flex items-center justify-between p-3 rounded-lg border-2 border-border hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <RadioGroupItem value={option.id} id={option.id} className="border-2" />
+                              <span className="font-medium text-foreground">
+                                {option.name}
+                              </span>
                             </div>
-                            <span className="text-sm font-semibold">{option.price}</span>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </div>
-                  )}
+                            <span className="text-base font-semibold text-foreground">{formattedPrice}</span>
+                          </Label>
+                        );
+                      })}
+                    </RadioGroup>
+                  </div>
+                )}
 
-                  {modifiers.length > 0 && (
-                    <div className="space-y-3">
-                      <Label className="text-base font-semibold">Add-ons (Optional)</Label>
-                      <div className="space-y-2">
-                        {modifiers.map((modifier) => (
-                          <div key={modifier.id} className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors">
-                            <div className="flex items-center space-x-2">
+                {modifiers.length > 0 && (
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold text-foreground">Add Extras</Label>
+                    <div className="space-y-2">
+                      {modifiers.map((modifier) => {
+                        const priceNum = parseFloat(modifier.price.replace(/[^0-9.]/g, ""));
+                        const formattedPrice = isNaN(priceNum) ? modifier.price : `+$${priceNum.toFixed(2)}`;
+                        return (
+                          <Label 
+                            key={modifier.id} 
+                            htmlFor={modifier.id}
+                            className="flex items-center justify-between p-3 rounded-lg border-2 border-border hover:border-primary/50 hover:bg-accent/50 transition-all cursor-pointer"
+                          >
+                            <div className="flex items-center space-x-3">
                               <Checkbox
                                 id={modifier.id}
                                 checked={selectedModifiers.includes(modifier.id)}
                                 onCheckedChange={() => handleModifierToggle(modifier.id)}
+                                className="border-2"
                               />
-                              <Label htmlFor={modifier.id} className="cursor-pointer">{modifier.name}</Label>
+                              <span className="font-medium text-foreground">
+                                {modifier.name}
+                              </span>
                             </div>
-                            <span className="text-sm font-semibold">{modifier.price}</span>
-                          </div>
-                        ))}
-                      </div>
+                            <span className="text-base font-semibold text-muted-foreground">{formattedPrice}</span>
+                          </Label>
+                        );
+                      })}
                     </div>
-                  )}
-                </CollapsibleContent>
-              </Collapsible>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>

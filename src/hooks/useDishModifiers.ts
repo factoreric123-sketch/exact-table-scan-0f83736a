@@ -11,6 +11,32 @@ export interface DishModifier {
   created_at: string;
 }
 
+// Helper to check if a string is a valid UUID
+const isUuid = (id: string): boolean => {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+};
+
+// Helper to invalidate full menu cache when modifiers change
+const invalidateFullMenuCache = async (dishId: string, queryClient: any) => {
+  const { data: dish } = await supabase
+    .from("dishes")
+    .select(`
+      subcategory_id,
+      subcategories!inner(
+        category_id,
+        categories!inner(restaurant_id)
+      )
+    `)
+    .eq("id", dishId)
+    .single();
+
+  if (dish?.subcategories?.categories?.restaurant_id) {
+    const restaurantId = dish.subcategories.categories.restaurant_id;
+    queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
+    localStorage.removeItem(`fullMenu:${restaurantId}`);
+  }
+};
+
 export const useDishModifiers = (dishId: string) => {
   return useQuery({
     queryKey: ["dish-modifiers", dishId],
@@ -24,9 +50,11 @@ export const useDishModifiers = (dishId: string) => {
       if (error) throw error;
       return data as DishModifier[];
     },
-    enabled: !!dishId,
-    staleTime: 1000 * 60, // 1 minute
-    gcTime: 1000 * 60 * 10, // 10 minutes cache
+    enabled: !!dishId && isUuid(dishId),
+    staleTime: 5 * 60 * 1000, // 5 minutes for better performance
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnMount: false, // Don't refetch on mount if data exists
     placeholderData: (prev) => prev,
   });
 };
@@ -56,20 +84,13 @@ export const useCreateDishModifier = () => {
     onMutate: async (modifier) => {
       await queryClient.cancelQueries({ queryKey: ["dish-modifiers", modifier.dish_id] });
       const previous = queryClient.getQueryData<DishModifier[]>(["dish-modifiers", modifier.dish_id]);
-      
-      if (previous) {
-        const tempModifier: DishModifier = {
-          id: `temp-${Date.now()}`,
-          ...modifier,
-          created_at: new Date().toISOString(),
-        };
-        queryClient.setQueryData<DishModifier[]>(["dish-modifiers", modifier.dish_id], [...previous, tempModifier]);
-      }
-      
+      // Do not add optimistic temp rows to avoid duplicates/glitches across views
       return { previous, dishId: modifier.dish_id };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["dish-modifiers", variables.dish_id] });
+      queryClient.invalidateQueries({ queryKey: ["dishes"] });
+      await invalidateFullMenuCache(variables.dish_id, queryClient);
       toast.success("Modifier added");
     },
     onError: (_error, _variables, context) => {
@@ -85,9 +106,21 @@ export const useUpdateDishModifier = () => {
 
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<DishModifier> }) => {
+      // Normalize price if provided to prevent resets/glitches
+      const payload: Partial<DishModifier> = { ...updates };
+      if (typeof updates.price === "string") {
+        let normalizedPrice = updates.price.replace(/[^0-9.]/g, "");
+        if (normalizedPrice && !normalizedPrice.includes(".")) {
+          normalizedPrice += ".00";
+        } else if (normalizedPrice.split(".")[1]?.length === 1) {
+          normalizedPrice += "0";
+        }
+        payload.price = normalizedPrice || "0.00";
+      }
+
       const { data, error } = await supabase
         .from("dish_modifiers")
-        .update(updates)
+        .update(payload)
         .eq("id", id)
         .select()
         .single();
@@ -113,9 +146,10 @@ export const useUpdateDishModifier = () => {
         return { previous, dishId: modifier.dish_id };
       }
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["dish-modifiers", data.dish_id] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
+      await invalidateFullMenuCache(data.dish_id, queryClient);
     },
     onError: (_error, _variables, context) => {
       if (context?.previous && context.dishId) {
@@ -151,9 +185,10 @@ export const useDeleteDishModifier = () => {
       
       return { previous, dishId };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["dish-modifiers", variables.dishId] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
+      await invalidateFullMenuCache(variables.dishId, queryClient);
       toast.success("Modifier deleted");
     },
     onError: (_error, _variables, context) => {
@@ -196,8 +231,9 @@ export const useUpdateDishModifiersOrder = () => {
         queryClient.setQueryData(["dish-modifiers", context.dishId], context.previousModifiers);
       }
     },
-    onSettled: (_, __, variables) => {
+    onSettled: async (_, __, variables) => {
       queryClient.invalidateQueries({ queryKey: ["dish-modifiers", variables.dishId] });
+      await invalidateFullMenuCache(variables.dishId, queryClient);
     },
   });
 };

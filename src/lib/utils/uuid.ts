@@ -18,8 +18,9 @@ export function generateUUID(): string {
 }
 
 /**
- * Generates a short unique ID for temporary optimistic updates
+ * Generates a robust unique ID for temporary optimistic updates
+ * Uses crypto.randomUUID() for guaranteed uniqueness
  */
 export function generateTempId(): string {
-  return `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return `temp_${generateUUID()}`;
 }
