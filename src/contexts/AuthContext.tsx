@@ -21,16 +21,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
-    let retryCount = 0;
-    const maxRetries = 3;
-    
-    // Safety timeout: ensure loading state resolves within 10 seconds
-    const timeoutId = setTimeout(() => {
-      if (mounted && loading) {
-        console.warn("Auth initialization timeout - forcing loading to false");
-        setLoading(false);
-      }
-    }, 10000);
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -43,41 +33,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // Check for existing session with retry logic
-    const getSessionWithRetry = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("Session fetch error:", error);
-          
-          // Retry on network errors
-          if (retryCount < maxRetries && error.message.includes("fetch")) {
-            retryCount++;
-            console.log(`Retrying session fetch (${retryCount}/${maxRetries})...`);
-            setTimeout(getSessionWithRetry, 1000 * retryCount);
-            return;
-          }
-        }
-        
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-        if (mounted) {
-          setLoading(false); // Always set loading to false even on error
-        }
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (mounted) {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
       }
-    };
-
-    getSessionWithRetry();
+    });
 
     return () => {
       mounted = false;
-      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);
