@@ -45,16 +45,15 @@ const Auth = () => {
         } else {
           toast.error(error.message);
         }
-        setLoading(false);
       } else {
         toast.success("Welcome back!");
-        // Don't setLoading(false) - let the redirect happen
-        // The AuthContext will handle the redirect via useEffect
+        navigate(from, { replace: true });
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       }
+    } finally {
       setLoading(false);
     }
   };
@@ -75,23 +74,21 @@ const Auth = () => {
         } else {
           toast.error(error.message);
         }
-        setLoading(false);
       } else {
         // Check if user was immediately signed in (auto-confirm enabled)
         if (data?.session) {
           toast.success("Account created! Redirecting...");
-          // Don't setLoading(false) - let the redirect happen
-          // The AuthContext will handle the redirect via useEffect
+          navigate(from, { replace: true });
         } else {
           toast.success("Account created! Please check your email to confirm.");
           setIsLogin(true);
-          setLoading(false);
         }
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       }
+    } finally {
       setLoading(false);
     }
   };
