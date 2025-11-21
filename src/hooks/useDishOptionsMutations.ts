@@ -69,12 +69,11 @@ export const invalidateAllCaches = async (dishId: string, queryClient: any) => {
   const restaurantId = await getRestaurantIdFromDish(dishId);
   
   if (restaurantId) {
-    // Batch all invalidations together - invalidate ALL queries that might show this dish
+    // Batch all invalidations together
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] }),
       queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] }),
       queryClient.invalidateQueries({ queryKey: ["dishes"] }),
-      queryClient.invalidateQueries({ queryKey: ["subcategory-dishes-with-options"] }), // Preview uses this!
       queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] }),
     ]);
     
