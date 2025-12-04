@@ -75,14 +75,9 @@ const Auth = () => {
           toast.error(error.message);
         }
       } else {
-        // Check if user was immediately signed in (auto-confirm enabled)
-        if (data?.session) {
-          toast.success("Account created! Redirecting...");
-          navigate(from, { replace: true });
-        } else {
-          toast.success("Account created! Please check your email to confirm.");
-          setIsLogin(true);
-        }
+        // Auto-confirm is enabled, user should be signed in immediately
+        toast.success("Account created!");
+        navigate(from, { replace: true });
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
