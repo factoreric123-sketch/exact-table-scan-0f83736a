@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
+    PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
@@ -41,8 +41,115 @@ export type Database = {
             foreignKeyName: "categories_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "hot_menu_data"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "categories_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_invitations: {
+        Row: {
+          course_id: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          instructor_id: string
+          status: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          instructor_id: string
+          status?: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          instructor_id?: string
+          status?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_invitations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courses: {
+        Row: {
+          category: string | null
+          created_at: string
+          currency: string | null
+          description: string | null
+          difficulty_level: string | null
+          estimated_duration_hours: number | null
+          id: string
+          instructor_id: string
+          price: number | null
+          status: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          difficulty_level?: string | null
+          estimated_duration_hours?: number | null
+          id?: string
+          instructor_id: string
+          price?: number | null
+          status?: string
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          difficulty_level?: string | null
+          estimated_duration_hours?: number | null
+          id?: string
+          instructor_id?: string
+          price?: number | null
+          status?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courses_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -187,6 +294,138 @@ export type Database = {
           },
         ]
       }
+      enrollments: {
+        Row: {
+          completed_at: string | null
+          course_id: string
+          enrolled_at: string
+          id: string
+          progress_percentage: number | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          course_id: string
+          enrolled_at?: string
+          id?: string
+          progress_percentage?: number | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          course_id?: string
+          enrolled_at?: string
+          id?: string
+          progress_percentage?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_progress: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          lesson_id: string
+          updated_at: string
+          user_id: string
+          watch_time_seconds: number | null
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          lesson_id: string
+          updated_at?: string
+          user_id: string
+          watch_time_seconds?: number | null
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          updated_at?: string
+          user_id?: string
+          watch_time_seconds?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lessons: {
+        Row: {
+          content: string | null
+          content_type: string | null
+          content_url: string | null
+          course_id: string
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          is_free: boolean | null
+          order_index: number
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          content?: string | null
+          content_type?: string | null
+          content_url?: string | null
+          course_id: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_free?: boolean | null
+          order_index?: number
+          title: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          content?: string | null
+          content_type?: string | null
+          content_url?: string | null
+          course_id?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_free?: boolean | null
+          order_index?: number
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lessons_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_links: {
         Row: {
           active: boolean
@@ -220,10 +459,56 @@ export type Database = {
             foreignKeyName: "menu_links_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: true
+            referencedRelation: "hot_menu_data"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "menu_links_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          organization: string | null
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          organization?: string | null
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          organization?: string | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       restaurants: {
         Row: {
@@ -299,6 +584,83 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      sales_pages: {
+        Row: {
+          course_id: string
+          created_at: string
+          custom_css: string | null
+          description: string | null
+          faq: Json | null
+          hero_headline: string | null
+          hero_subheadline: string | null
+          id: string
+          instructor_id: string
+          is_published: boolean | null
+          pricing_strategy: string | null
+          show_curriculum: boolean | null
+          show_instructor_bio: boolean | null
+          slug: string
+          subtitle: string | null
+          testimonials: Json | null
+          theme_colors: Json | null
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          custom_css?: string | null
+          description?: string | null
+          faq?: Json | null
+          hero_headline?: string | null
+          hero_subheadline?: string | null
+          id?: string
+          instructor_id: string
+          is_published?: boolean | null
+          pricing_strategy?: string | null
+          show_curriculum?: boolean | null
+          show_instructor_bio?: boolean | null
+          slug: string
+          subtitle?: string | null
+          testimonials?: Json | null
+          theme_colors?: Json | null
+          title: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          custom_css?: string | null
+          description?: string | null
+          faq?: Json | null
+          hero_headline?: string | null
+          hero_subheadline?: string | null
+          id?: string
+          instructor_id?: string
+          is_published?: boolean | null
+          pricing_strategy?: string | null
+          show_curriculum?: boolean | null
+          show_instructor_bio?: boolean | null
+          slug?: string
+          subtitle?: string | null
+          testimonials?: Json | null
+          theme_colors?: Json | null
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_pages_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subcategories: {
         Row: {
@@ -421,7 +783,17 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      hot_menu_data: {
+        Row: {
+          categories: Json | null
+          hero_image_url: string | null
+          restaurant_id: string | null
+          restaurant_name: string | null
+          slug: string | null
+          theme: Json | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       batch_update_order_indexes: {
@@ -432,10 +804,20 @@ export type Database = {
         Args: { table_name: string; updates: Json }
         Returns: undefined
       }
+      ensure_menu_link_for_restaurant: {
+        Args: { p_restaurant_id: string }
+        Returns: {
+          is_accessible: boolean
+          menu_id: string
+          restaurant_hash: string
+          url: string
+        }[]
+      }
       get_restaurant_full_menu: {
         Args: { p_restaurant_id: string }
         Returns: Json
       }
+      get_restaurant_menu_optimized: { Args: { p_slug: string }; Returns: Json }
       get_subscription_status: {
         Args: never
         Returns: {
@@ -455,6 +837,11 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      refresh_hot_menu_data: { Args: never; Returns: undefined }
+      verify_menu_link_accessible: {
+        Args: { p_menu_id: string; p_restaurant_hash: string }
         Returns: boolean
       }
     }
