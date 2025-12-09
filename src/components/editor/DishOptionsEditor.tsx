@@ -457,14 +457,14 @@ export function DishOptionsEditor({
     // Validate all options
     const invalidOptions = localOptions
       .filter(o => o._status !== "deleted")
-      .filter(o => !o.name.trim() || o.name.trim().length < 2);
+      .filter(o => !o.name.trim() || o.name.trim().length < 1);
     
     const invalidModifiers = localModifiers
       .filter(m => m._status !== "deleted")
-      .filter(m => !m.name.trim() || m.name.trim().length < 2);
+      .filter(m => !m.name.trim() || m.name.trim().length < 1);
     
     if (invalidOptions.length > 0 || invalidModifiers.length > 0) {
-      toast.error("Please fill in all names (minimum 2 characters)");
+      toast.error("Please fill in all names (minimum 1 character)");
       return;
     }
     
