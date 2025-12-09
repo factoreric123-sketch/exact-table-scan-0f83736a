@@ -29,6 +29,7 @@ export const normalizePrice = (price: string): string => {
 
 // ============= OPTIMISTIC CACHE UPDATE - INSTANT =============
 // This is the key to Apple-quality speed: update cache BEFORE network
+// NO invalidateQueries here - that causes heavy refetches that block UI
 
 export const applyOptimisticOptionsUpdate = (
   queryClient: any,
@@ -37,29 +38,21 @@ export const applyOptimisticOptionsUpdate = (
   newOptions: DishOption[],
   newModifiers: DishModifier[]
 ) => {
-  // 1. Instantly update dish-options cache
+  // 1. Instantly update dish-options cache (synchronous, ~0ms)
   queryClient.setQueryData(["dish-options", dishId], newOptions);
   
-  // 2. Instantly update dish-modifiers cache
+  // 2. Instantly update dish-modifiers cache (synchronous, ~0ms)
   queryClient.setQueryData(["dish-modifiers", dishId], newModifiers);
   
-  // 3. Invalidate broader queries in background (non-blocking)
-  queueMicrotask(() => {
-    queryClient.invalidateQueries({ queryKey: ["dishes"] });
-    queryClient.invalidateQueries({ queryKey: ["subcategory-dishes-with-options"] });
-    queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
-    
-    // Clear localStorage cache asynchronously
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(() => {
-        localStorage.removeItem(`fullMenu:${restaurantId}`);
-      });
-    } else {
-      setTimeout(() => {
-        localStorage.removeItem(`fullMenu:${restaurantId}`);
-      }, 0);
-    }
-  });
+  // 3. Clear localStorage cache - ultra low priority, truly non-blocking
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(() => {
+      try { localStorage.removeItem(`fullMenu:${restaurantId}`); } catch {}
+    }, { timeout: 5000 });
+  }
+  
+  // NOTE: We do NOT invalidate queries here - that causes heavy refetches
+  // The mutations will handle cache updates after they complete
 };
 
 // ============= BACKGROUND MUTATION EXECUTOR =============
@@ -71,7 +64,7 @@ export interface MutationTask {
   execute: () => Promise<any>;
 }
 
-export const executeBackgroundMutations = async (
+export const executeBackgroundMutations = (
   tasks: MutationTask[],
   dishId: string,
   restaurantId: string,
@@ -79,51 +72,41 @@ export const executeBackgroundMutations = async (
 ) => {
   if (tasks.length === 0) return;
 
-  // Execute ALL mutations in parallel - maximum speed
-  const results = await Promise.allSettled(
-    tasks.map(task => 
-      task.execute().catch(async (error) => {
-        // Single retry on failure
-        await new Promise(r => setTimeout(r, 300));
-        return task.execute();
-      })
-    )
-  );
-
-  const failed = results.filter(r => r.status === 'rejected');
-  
-  if (failed.length > 0) {
-    // Find which tasks failed
-    const failedNames = tasks
-      .filter((_, i) => results[i].status === 'rejected')
-      .map(t => t.name)
-      .slice(0, 3);
-    
-    const message = failedNames.length < failed.length
-      ? `Failed: ${failedNames.join(", ")} and ${failed.length - failedNames.length} more`
-      : `Failed: ${failedNames.join(", ")}`;
-    
-    toast.error(message, {
-      action: {
-        label: "Retry",
-        onClick: () => {
-          // Invalidate to refetch fresh data
-          queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
-          queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
-        }
+  // FIRE AND FORGET - Execute in background, don't await
+  // This function returns immediately, mutations happen async
+  setTimeout(() => {
+    Promise.allSettled(
+      tasks.map(task => task.execute())
+    ).then(results => {
+      const failed = results.filter(r => r.status === 'rejected');
+      
+      if (failed.length > 0) {
+        // Retry failed ones once
+        const failedTasks = tasks.filter((_, i) => results[i].status === 'rejected');
+        
+        Promise.allSettled(failedTasks.map(t => t.execute())).then(retryResults => {
+          const stillFailed = retryResults.filter(r => r.status === 'rejected');
+          
+          if (stillFailed.length > 0) {
+            const failedNames = failedTasks
+              .filter((_, i) => retryResults[i].status === 'rejected')
+              .map(t => t.name)
+              .slice(0, 2);
+            
+            toast.error(`Failed to save: ${failedNames.join(", ")}`, {
+              action: {
+                label: "Refresh",
+                onClick: () => {
+                  queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
+                  queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
+                }
+              }
+            });
+          }
+        });
       }
     });
-    
-    // Invalidate caches to sync with server state
-    queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
-    queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
-    queryClient.invalidateQueries({ queryKey: ["dishes"] });
-    
-    if (restaurantId) {
-      queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
-      localStorage.removeItem(`fullMenu:${restaurantId}`);
-    }
-  }
+  }, 0);
 };
 
 // ============= SILENT MUTATIONS (No toasts, for background execution) =============

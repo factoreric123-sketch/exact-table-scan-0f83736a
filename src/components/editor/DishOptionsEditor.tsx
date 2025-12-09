@@ -509,10 +509,8 @@ export function DishOptionsEditor({
       });
     }
 
-    executeBackgroundMutations(tasks, dishId, restaurantId || '', queryClient)
-      .finally(() => {
-        saveInProgressRef.current = false;
-      });
+    executeBackgroundMutations(tasks, dishId, restaurantId || '', queryClient);
+    saveInProgressRef.current = false;
 
   }, [
     visibleOptions, visibleModifiers, localOptions, localModifiers, dishId, restaurantId,
