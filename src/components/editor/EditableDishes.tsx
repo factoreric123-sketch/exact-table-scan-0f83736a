@@ -59,6 +59,9 @@ export const EditableDishes = ({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
+    // Don't allow new drags while previous mutation is pending
+    if (updateDishesOrder.isPending) return;
+
     const oldIndex = dishes.findIndex((d) => d.id === active.id);
     const newIndex = dishes.findIndex((d) => d.id === over.id);
 
@@ -160,7 +163,7 @@ export const EditableDishes = ({
   return (
     <div className="px-4 py-6">
       <DndContext 
-        sensors={sensors} 
+        sensors={updateDishesOrder.isPending ? [] : sensors}
         collisionDetection={closestCorners} 
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
