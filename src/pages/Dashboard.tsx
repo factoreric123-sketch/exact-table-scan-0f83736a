@@ -19,7 +19,7 @@ const Dashboard = () => {
   
   // Defensive filter: only show restaurants owned by current user
   const restaurants = allRestaurants.filter(r => r.owner_id === user?.id);
-  const { hasPremium, subscription, refetch } = useSubscription();
+  const { hasPremium, subscription, refetch, isLoading: subscriptionLoading } = useSubscription();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
 
@@ -58,16 +58,22 @@ const Dashboard = () => {
           <div>
             <h1 className="text-2xl font-bold">My Restaurants</h1>
             <div className="flex items-center gap-2 mt-1">
-              <PremiumBadge isPremium={hasPremium} />
-              {!hasPremium && (
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="h-auto p-0 text-primary"
-                  onClick={() => setShowPaywall(true)}
-                >
-                  Upgrade to Premium
-                </Button>
+              {subscriptionLoading ? (
+                <div className="h-5 w-20 bg-muted animate-pulse rounded" />
+              ) : (
+                <>
+                  <PremiumBadge isPremium={hasPremium} />
+                  {!hasPremium && (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-primary"
+                      onClick={() => setShowPaywall(true)}
+                    >
+                      Upgrade to Premium
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           </div>
