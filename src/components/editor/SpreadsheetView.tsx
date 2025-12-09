@@ -116,20 +116,45 @@ export const SpreadsheetView = ({
   };
 
   const handleBulkDelete = async () => {
-    if (!window.confirm(`Delete ${selectedRows.size} dishes?`)) return;
-    
     const dishesToDelete = Array.from(selectedRows);
+    const deletedDishes = dishes.filter(d => dishesToDelete.includes(d.id));
+    
+    // Optimistically clear selection
+    setSelectedRows(new Set());
+    
+    // Show undo toast
+    const toastId = toast.loading(`Deleting ${dishesToDelete.length} dishes...`, {
+      duration: 5000,
+      action: {
+        label: "Undo",
+        onClick: () => {
+          toast.dismiss(toastId);
+          toast.success("Deletion cancelled");
+          // Restore selection if user clicks undo before deletion completes
+          setSelectedRows(new Set(dishesToDelete));
+        },
+      },
+    });
+    
+    // Wait 5 seconds before actually deleting
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    
+    // Check if toast was dismissed (undo clicked)
+    // If the selection was restored, cancel the deletion
+    if (selectedRows.size > 0) return;
+    
     const deletionPromises = dishesToDelete.map(dishId => {
-      const dish = dishes.find(d => d.id === dishId);
+      const dish = deletedDishes.find(d => d.id === dishId);
       if (!dish) return Promise.resolve();
       return deleteDish.mutateAsync({ id: dishId, subcategoryId: dish.subcategory_id });
     });
     
     try {
       await Promise.all(deletionPromises);
+      toast.dismiss(toastId);
       toast.success(`Deleted ${dishesToDelete.length} dishes`);
-      setSelectedRows(new Set());
     } catch (error) {
+      toast.dismiss(toastId);
       toast.error("Failed to delete some dishes");
     }
   };
