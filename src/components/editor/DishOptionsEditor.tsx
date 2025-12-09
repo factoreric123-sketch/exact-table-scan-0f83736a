@@ -583,7 +583,59 @@ export function DishOptionsEditor({
       
       if (failed.length > 0) {
         console.error("Some mutations failed:", failed);
-        toast.error(`Saved ${results.length - failed.length}/${results.length} changes`);
+        
+        // Build detailed failure message
+        const failedItems: string[] = [];
+        let mutationIndex = 0;
+        
+        // Track which mutations failed
+        newOptions.forEach((opt) => {
+          if (results[mutationIndex]?.status === 'rejected') {
+            failedItems.push(`Option "${opt.name || 'unnamed'}"`);
+          }
+          mutationIndex++;
+        });
+        
+        newModifiers.forEach((mod) => {
+          if (results[mutationIndex]?.status === 'rejected') {
+            failedItems.push(`Modifier "${mod.name || 'unnamed'}"`);
+          }
+          mutationIndex++;
+        });
+        
+        updatedOptions.forEach((opt) => {
+          if (results[mutationIndex]?.status === 'rejected') {
+            failedItems.push(`Option "${opt.name}"`);
+          }
+          mutationIndex++;
+        });
+        
+        updatedModifiers.forEach((mod) => {
+          if (results[mutationIndex]?.status === 'rejected') {
+            failedItems.push(`Modifier "${mod.name}"`);
+          }
+          mutationIndex++;
+        });
+        
+        deletedOptions.forEach((opt) => {
+          if (results[mutationIndex]?.status === 'rejected') {
+            failedItems.push(`Delete option "${opt.name}"`);
+          }
+          mutationIndex++;
+        });
+        
+        deletedModifiers.forEach((mod) => {
+          if (results[mutationIndex]?.status === 'rejected') {
+            failedItems.push(`Delete modifier "${mod.name}"`);
+          }
+          mutationIndex++;
+        });
+        
+        const failedMessage = failedItems.length <= 3 
+          ? `Failed: ${failedItems.join(", ")}`
+          : `Failed: ${failedItems.slice(0, 2).join(", ")} and ${failedItems.length - 2} more`;
+        
+        toast.error(failedMessage);
       } else {
         toast.success("Pricing options saved");
       }
