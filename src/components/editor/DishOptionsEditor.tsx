@@ -1,10 +1,10 @@
-import { memo, useState, useCallback, useRef, useEffect, useMemo, startTransition } from "react";
+import { memo, useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Plus, GripVertical, X, Loader2 } from "lucide-react";
+import { Plus, GripVertical, X, Check } from "lucide-react";
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -18,8 +18,10 @@ import {
   useCreateDishModifierSilent,
   useUpdateDishModifierSilent,
   useDeleteDishModifierSilent,
-  invalidateAllCaches,
-  normalizePrice
+  applyOptimisticOptionsUpdate,
+  executeBackgroundMutations,
+  normalizePrice,
+  type MutationTask
 } from "@/hooks/useDishOptionsMutations";
 import { useQueryClient } from "@tanstack/react-query";
 import { generateTempId } from "@/lib/utils/uuid";
@@ -31,6 +33,7 @@ interface DishOptionsEditorProps {
   dishId: string;
   dishName: string;
   hasOptions: boolean;
+  restaurantId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -38,13 +41,13 @@ interface DishOptionsEditorProps {
 interface EditableDishOption extends DishOption {
   _status?: "new" | "updated" | "deleted" | "unchanged";
   _temp?: boolean;
-  _originalOrderIndex?: number; // Track original order for smart diff
+  _originalOrderIndex?: number;
 }
 
 interface EditableDishModifier extends DishModifier {
   _status?: "new" | "updated" | "deleted" | "unchanged";
   _temp?: boolean;
-  _originalOrderIndex?: number; // Track original order for smart diff
+  _originalOrderIndex?: number;
 }
 
 interface SortableItemProps {
@@ -56,7 +59,7 @@ interface SortableItemProps {
   type: "option" | "modifier";
 }
 
-// Memoized sortable item component with enhanced UX
+// Memoized sortable item - ultra-lightweight
 const SortableItem = memo(({ id, name, price, onUpdate, onDelete, type }: SortableItemProps) => {
   const {
     attributes,
@@ -71,22 +74,16 @@ const SortableItem = memo(({ id, name, price, onUpdate, onDelete, type }: Sortab
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    scale: isDragging ? 1.05 : 1,
-    boxShadow: isDragging ? '0 8px 16px rgba(0,0,0,0.15)' : 'none',
   };
 
   return (
     <div 
       ref={setNodeRef} 
       style={style} 
-      className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg group transition-all duration-200 hover:bg-muted/70 hover:shadow-md"
+      className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg group hover:bg-muted/70"
     >
-      <div 
-        {...attributes} 
-        {...listeners} 
-        className="cursor-grab active:cursor-grabbing p-2 -ml-2 touch-none"
-      >
-        <GripVertical className="h-6 w-6 text-muted-foreground" />
+      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-2 -ml-2 touch-none">
+        <GripVertical className="h-5 w-5 text-muted-foreground" />
       </div>
       
       <Input
@@ -98,7 +95,7 @@ const SortableItem = memo(({ id, name, price, onUpdate, onDelete, type }: Sortab
         autoFocus={id.startsWith("temp_")}
       />
       
-      <div className="flex items-center gap-2 w-32">
+      <div className="flex items-center gap-2 w-28">
         <span className="text-sm text-muted-foreground">$</span>
         <Input
           type="text"
@@ -124,42 +121,30 @@ const SortableItem = memo(({ id, name, price, onUpdate, onDelete, type }: Sortab
         variant="ghost"
         size="sm"
         onClick={() => onDelete(id)}
-        className="opacity-0 group-hover:opacity-100 transition-opacity"
+        className="opacity-0 group-hover:opacity-100"
       >
         <X className="h-4 w-4" />
       </Button>
     </div>
   );
-}, (prev, next) => {
-  return (
-    prev.id === next.id &&
-    prev.name === next.name &&
-    prev.price === next.price &&
-    prev.type === next.type
-  );
-});
+}, (prev, next) => 
+  prev.id === next.id && prev.name === next.name && prev.price === next.price && prev.type === next.type
+);
 
 SortableItem.displayName = "SortableItem";
 
-// ULTRA-OPTIMIZED diff with Map lookups for MAXIMUM SPEED
+// Fast diff with Map lookups
 const diffOptions = (initial: EditableDishOption[], current: EditableDishOption[]) => {
-  const initialMap = new Map(initial.map(o => [o.id, o]));
   const currentMap = new Map(current.map(o => [o.id, o]));
-  
   const toCreate: EditableDishOption[] = [];
   const toUpdate: EditableDishOption[] = [];
   const toDelete: EditableDishOption[] = [];
 
-  // Process current items
   for (const opt of current) {
-    if (opt._status === "new") {
-      toCreate.push(opt);
-    } else if (opt._status === "updated") {
-      toUpdate.push(opt);
-    }
+    if (opt._status === "new") toCreate.push(opt);
+    else if (opt._status === "updated") toUpdate.push(opt);
   }
 
-  // Find deletions
   for (const orig of initial) {
     if (!currentMap.has(orig.id) || currentMap.get(orig.id)?._status === "deleted") {
       toDelete.push(orig);
@@ -170,19 +155,14 @@ const diffOptions = (initial: EditableDishOption[], current: EditableDishOption[
 };
 
 const diffModifiers = (initial: EditableDishModifier[], current: EditableDishModifier[]) => {
-  const initialMap = new Map(initial.map(m => [m.id, m]));
   const currentMap = new Map(current.map(m => [m.id, m]));
-  
   const toCreate: EditableDishModifier[] = [];
   const toUpdate: EditableDishModifier[] = [];
   const toDelete: EditableDishModifier[] = [];
 
   for (const mod of current) {
-    if (mod._status === "new") {
-      toCreate.push(mod);
-    } else if (mod._status === "updated") {
-      toUpdate.push(mod);
-    }
+    if (mod._status === "new") toCreate.push(mod);
+    else if (mod._status === "updated") toUpdate.push(mod);
   }
 
   for (const orig of initial) {
@@ -194,7 +174,6 @@ const diffModifiers = (initial: EditableDishModifier[], current: EditableDishMod
   return { toCreate, toUpdate, toDelete };
 };
 
-// Normalize order indexes to 0, 1, 2, 3...
 const normalizeOrderIndexes = <T extends { order_index: number }>(items: T[]): T[] => 
   items.map((item, idx) => ({ ...item, order_index: idx }));
 
@@ -202,6 +181,7 @@ export function DishOptionsEditor({
   dishId,
   dishName,
   hasOptions: initialHasOptions = false,
+  restaurantId,
   open,
   onOpenChange,
 }: DishOptionsEditorProps) {
@@ -220,33 +200,19 @@ export function DishOptionsEditor({
   const [localOptions, setLocalOptions] = useState<EditableDishOption[]>([]);
   const [localModifiers, setLocalModifiers] = useState<EditableDishModifier[]>([]);
   const [localHasOptions, setLocalHasOptions] = useState(initialHasOptions);
-  const [isSaving, setIsSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(false);
-  const [hasPartialFailure, setHasPartialFailure] = useState(false);
   
-  // Track if save button was just clicked to prevent double-clicks
-  const saveClickedRef = useRef(false);
-
-  // Store initial state for diffing on save
   const initialOptionsRef = useRef<EditableDishOption[]>([]);
   const initialModifiersRef = useRef<EditableDishModifier[]>([]);
+  const saveInProgressRef = useRef(false);
 
-  // Constants
   const MAX_OPTIONS = 50;
   const MAX_MODIFIERS = 50;
 
-  // Optimized drag sensors for instant response with touch support
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-        tolerance: 5,
-      },
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  // Memoize visible items for performance
   const visibleOptions = useMemo(
     () => localOptions.filter(o => o._status !== "deleted"),
     [localOptions]
@@ -257,12 +223,9 @@ export function DishOptionsEditor({
     [localModifiers]
   );
 
-  // Initialize local state when dialog opens with loading state
+  // INSTANT initialization - no delays
   useEffect(() => {
     if (open) {
-      setIsInitializing(true);
-      
-      // Track original order_index for smart diff during drag operations
       const editableOptions: EditableDishOption[] = options.map(opt => ({
         ...opt,
         _status: "unchanged" as const,
@@ -278,43 +241,30 @@ export function DishOptionsEditor({
       setLocalOptions(editableOptions);
       setLocalModifiers(editableModifiers);
       setLocalHasOptions(initialHasOptions);
-      setHasPartialFailure(false);
-
-      // Use structuredClone for faster deep cloning - ALWAYS update refs when dialog opens
-      initialOptionsRef.current = structuredClone(editableOptions);
-      initialModifiersRef.current = structuredClone(editableModifiers);
-      
-      // Small delay to ensure smooth rendering
-      setTimeout(() => setIsInitializing(false), 50);
-    } else {
       setIsDirty(false);
+
+      initialOptionsRef.current = editableOptions.map(o => ({ ...o }));
+      initialModifiersRef.current = editableModifiers.map(m => ({ ...m }));
     }
   }, [open, options, modifiers, initialHasOptions]);
 
-  // ============= INSTANT LOCAL HANDLERS (NO AWAIT, NO DEBOUNCE) =============
-  
   const handleAddOption = useCallback(() => {
     if (localOptions.length >= MAX_OPTIONS) {
       toast.error(`Maximum ${MAX_OPTIONS} options allowed`);
       return;
     }
     
-    const tempId = generateTempId();
-    const tempOption: EditableDishOption = {
-      id: tempId,
+    setLocalOptions(prev => [...prev, {
+      id: generateTempId(),
       dish_id: dishId,
       name: "",
       price: "0.00",
-      order_index: localOptions.length,
+      order_index: prev.length,
       created_at: new Date().toISOString(),
       _status: "new",
       _temp: true,
-    };
-    
-    setLocalOptions(prev => [...prev, tempOption]);
-    startTransition(() => {
-      setIsDirty(true);
-    });
+    }]);
+    setIsDirty(true);
   }, [localOptions.length, dishId]);
 
   const handleAddModifier = useCallback(() => {
@@ -323,88 +273,55 @@ export function DishOptionsEditor({
       return;
     }
     
-    const tempId = generateTempId();
-    const tempModifier: EditableDishModifier = {
-      id: tempId,
+    setLocalModifiers(prev => [...prev, {
+      id: generateTempId(),
       dish_id: dishId,
       name: "",
       price: "0.00",
-      order_index: localModifiers.length,
+      order_index: prev.length,
       created_at: new Date().toISOString(),
       _status: "new",
       _temp: true,
-    };
-    
-    setLocalModifiers(prev => [...prev, tempModifier]);
-    startTransition(() => {
-      setIsDirty(true);
-    });
+    }]);
+    setIsDirty(true);
   }, [localModifiers.length, dishId]);
 
   const handleUpdateOption = useCallback((id: string, field: "name" | "price", value: string) => {
-    let finalValue = value;
-    
-    // Prevent negative prices
-    if (field === "price") {
-      const numValue = parseFloat(value);
-      if (!isNaN(numValue) && numValue < 0) {
-        finalValue = "0";
-      }
-    }
-    
     setLocalOptions(prev => prev.map(opt => {
       if (opt.id !== id) return opt;
-      const updated = { ...opt, [field]: finalValue };
-      if (opt._status !== "new") {
-        updated._status = "updated";
-      }
-      return updated;
+      return { 
+        ...opt, 
+        [field]: field === "price" && parseFloat(value) < 0 ? "0" : value,
+        _status: opt._status === "new" ? "new" : "updated"
+      };
     }));
-    startTransition(() => {
-      setIsDirty(true);
-    });
+    setIsDirty(true);
   }, []);
 
   const handleUpdateModifier = useCallback((id: string, field: "name" | "price", value: string) => {
-    let finalValue = value;
-    
-    // Prevent negative prices
-    if (field === "price") {
-      const numValue = parseFloat(value);
-      if (!isNaN(numValue) && numValue < 0) {
-        finalValue = "0";
-      }
-    }
-    
     setLocalModifiers(prev => prev.map(mod => {
       if (mod.id !== id) return mod;
-      const updated = { ...mod, [field]: finalValue };
-      if (mod._status !== "new") {
-        updated._status = "updated";
-      }
-      return updated;
+      return { 
+        ...mod, 
+        [field]: field === "price" && parseFloat(value) < 0 ? "0" : value,
+        _status: mod._status === "new" ? "new" : "updated"
+      };
     }));
-    startTransition(() => {
-      setIsDirty(true);
-    });
+    setIsDirty(true);
   }, []);
 
   const handleDeleteOption = useCallback((id: string) => {
     setLocalOptions(prev => prev.map(opt => 
       opt.id === id ? { ...opt, _status: "deleted" as const } : opt
     ));
-    startTransition(() => {
-      setIsDirty(true);
-    });
+    setIsDirty(true);
   }, []);
 
   const handleDeleteModifier = useCallback((id: string) => {
     setLocalModifiers(prev => prev.map(mod => 
       mod.id === id ? { ...mod, _status: "deleted" as const } : mod
     ));
-    startTransition(() => {
-      setIsDirty(true);
-    });
+    setIsDirty(true);
   }, []);
 
   const handleDragEndOptions = useCallback((event: DragEndEvent) => {
@@ -415,21 +332,13 @@ export function DishOptionsEditor({
         const overIndex = prev.findIndex(opt => opt.id === over.id);
         const reordered = arrayMove(prev, activeIndex, overIndex);
         
-        // Normalize order indexes and ONLY mark as updated if order actually changed
-        return normalizeOrderIndexes(reordered).map(opt => {
-          // New items stay new
-          if (opt._status === "new") return opt;
-          // Only mark as updated if order_index differs from original
-          const orderChanged = opt.order_index !== opt._originalOrderIndex;
-          return {
-            ...opt,
-            _status: orderChanged ? "updated" : opt._status,
-          };
-        });
+        return normalizeOrderIndexes(reordered).map(opt => ({
+          ...opt,
+          _status: opt._status === "new" ? "new" : 
+            (opt.order_index !== opt._originalOrderIndex ? "updated" : opt._status)
+        }));
       });
-      startTransition(() => {
-        setIsDirty(true);
-      });
+      setIsDirty(true);
     }
   }, []);
 
@@ -441,278 +350,174 @@ export function DishOptionsEditor({
         const overIndex = prev.findIndex(mod => mod.id === over.id);
         const reordered = arrayMove(prev, activeIndex, overIndex);
         
-        // Normalize order indexes and ONLY mark as updated if order actually changed
-        return normalizeOrderIndexes(reordered).map(mod => {
-          // New items stay new
-          if (mod._status === "new") return mod;
-          // Only mark as updated if order_index differs from original
-          const orderChanged = mod.order_index !== mod._originalOrderIndex;
-          return {
-            ...mod,
-            _status: orderChanged ? "updated" : mod._status,
-          };
-        });
+        return normalizeOrderIndexes(reordered).map(mod => ({
+          ...mod,
+          _status: mod._status === "new" ? "new" : 
+            (mod.order_index !== mod._originalOrderIndex ? "updated" : mod._status)
+        }));
       });
-      startTransition(() => {
-        setIsDirty(true);
-      });
+      setIsDirty(true);
     }
   }, []);
 
   const handleToggleHasOptions = useCallback((checked: boolean) => {
     setLocalHasOptions(checked);
-    startTransition(() => {
-      setIsDirty(true);
-    });
+    setIsDirty(true);
   }, []);
 
-  // Handle cancel with dirty check
   const handleCancel = useCallback(() => {
-    if (isDirty) {
-      const confirmed = window.confirm("You have unsaved changes. Are you sure you want to cancel?");
-      if (!confirmed) return;
+    if (isDirty && !window.confirm("You have unsaved changes. Are you sure you want to cancel?")) {
+      return;
     }
     onOpenChange(false);
   }, [isDirty, onOpenChange]);
 
-  // ULTRA-FAST commit engine: All mutations in parallel + validation + robust error handling
-  const handleSaveAndClose = useCallback(async () => {
-    // Prevent double-click - check and set immediately
-    if (saveClickedRef.current || isSaving) return;
-    saveClickedRef.current = true;
-    
-    // Validate all options
-    const invalidOptions = localOptions
-      .filter(o => o._status !== "deleted")
-      .filter(o => !o.name.trim() || o.name.trim().length < 1);
-    
-    const invalidModifiers = localModifiers
-      .filter(m => m._status !== "deleted")
-      .filter(m => !m.name.trim() || m.name.trim().length < 1);
+  // ============= ULTRA-FAST OPTIMISTIC SAVE =============
+  const handleSaveAndClose = useCallback(() => {
+    if (saveInProgressRef.current) return;
+    saveInProgressRef.current = true;
+
+    // INSTANT validation
+    const invalidOptions = visibleOptions.filter(o => !o.name.trim());
+    const invalidModifiers = visibleModifiers.filter(m => !m.name.trim());
     
     if (invalidOptions.length > 0 || invalidModifiers.length > 0) {
-      toast.error("Please fill in all names (minimum 1 character)");
-      saveClickedRef.current = false;
+      toast.error("Please fill in all names");
+      saveInProgressRef.current = false;
       return;
     }
+
+    // Compute diff
+    const { toCreate: newOptions, toUpdate: updatedOptions, toDelete: deletedOptions } = 
+      diffOptions(initialOptionsRef.current, localOptions);
+    const { toCreate: newModifiers, toUpdate: updatedModifiers, toDelete: deletedModifiers } = 
+      diffModifiers(initialModifiersRef.current, localModifiers);
     
-    setIsSaving(true);
-    
-    const { toCreate: newOptions, toUpdate: updatedOptions, toDelete: deletedOptions } = diffOptions(
-      initialOptionsRef.current,
-      localOptions
-    );
-    
-    const { toCreate: newModifiers, toUpdate: updatedModifiers, toDelete: deletedModifiers } = diffModifiers(
-      initialModifiersRef.current,
-      localModifiers
-    );
+    const hasChanges = newOptions.length > 0 || updatedOptions.length > 0 || deletedOptions.length > 0 ||
+                       newModifiers.length > 0 || updatedModifiers.length > 0 || deletedModifiers.length > 0 ||
+                       localHasOptions !== initialHasOptions;
 
-    // ============= PARALLEL MUTATION EXECUTION WITH RETRY =============
-    
-    const retryMutation = async <T,>(
-      fn: () => Promise<T>, 
-      retries = 2,
-      delay = 500
-    ): Promise<T> => {
-      try {
-        return await fn();
-      } catch (error) {
-        if (retries > 0) {
-          await new Promise(resolve => setTimeout(resolve, delay));
-          return retryMutation(fn, retries - 1, delay * 1.5);
-        }
-        throw error;
-      }
-    };
-    
-    try {
-      // BUILD mutation array with retry logic
-      const allMutations: Promise<any>[] = [];
-
-      // CREATE operations
-      newOptions.forEach((opt) => {
-        const normalizedPrice = normalizePrice(opt.price);
-        allMutations.push(
-          retryMutation(() => createOption.mutateAsync({
-            dish_id: dishId,
-            name: opt.name,
-            price: normalizedPrice,
-            order_index: opt.order_index,
-          }))
-        );
-      });
-
-      newModifiers.forEach((mod) => {
-        const normalizedPrice = normalizePrice(mod.price);
-        allMutations.push(
-          retryMutation(() => createModifier.mutateAsync({
-            dish_id: dishId,
-            name: mod.name,
-            price: normalizedPrice,
-            order_index: mod.order_index,
-          }))
-        );
-      });
-
-      // UPDATE operations
-      updatedOptions.forEach((opt) => {
-        allMutations.push(
-          retryMutation(() => updateOption.mutateAsync({
-            id: opt.id,
-            updates: {
-              name: opt.name,
-              price: opt.price,
-              order_index: opt.order_index,
-            },
-          }))
-        );
-      });
-
-      updatedModifiers.forEach((mod) => {
-        allMutations.push(
-          retryMutation(() => updateModifier.mutateAsync({
-            id: mod.id,
-            updates: {
-              name: mod.name,
-              price: mod.price,
-              order_index: mod.order_index,
-            },
-          }))
-        );
-      });
-
-      // DELETE operations
-      deletedOptions.forEach((opt) => {
-        allMutations.push(
-          retryMutation(() => deleteOption.mutateAsync({ id: opt.id, dishId }))
-        );
-      });
-
-      deletedModifiers.forEach((mod) => {
-        allMutations.push(
-          retryMutation(() => deleteModifier.mutateAsync({ id: mod.id, dishId }))
-        );
-      });
-
-      // Update has_options flag if changed
-      if (localHasOptions !== initialHasOptions) {
-        allMutations.push(
-          retryMutation(() => updateDish.mutateAsync({
-            id: dishId,
-            updates: { has_options: localHasOptions },
-          }))
-        );
-      }
-
-      // EXECUTE all mutations with partial save support
-      const results = await Promise.allSettled(allMutations);
-      const failed = results.filter(r => r.status === 'rejected');
-      
-      if (failed.length > 0) {
-        console.error("Some mutations failed:", failed);
-        
-        // Build detailed failure message
-        const failedItems: string[] = [];
-        let mutationIndex = 0;
-        
-        // Track which mutations failed
-        newOptions.forEach((opt) => {
-          if (results[mutationIndex]?.status === 'rejected') {
-            failedItems.push(`New option "${opt.name || 'unnamed'}"`);
-          }
-          mutationIndex++;
-        });
-        
-        newModifiers.forEach((mod) => {
-          if (results[mutationIndex]?.status === 'rejected') {
-            failedItems.push(`New modifier "${mod.name || 'unnamed'}"`);
-          }
-          mutationIndex++;
-        });
-        
-        updatedOptions.forEach((opt) => {
-          if (results[mutationIndex]?.status === 'rejected') {
-            failedItems.push(`Update option "${opt.name}"`);
-          }
-          mutationIndex++;
-        });
-        
-        updatedModifiers.forEach((mod) => {
-          if (results[mutationIndex]?.status === 'rejected') {
-            failedItems.push(`Update modifier "${mod.name}"`);
-          }
-          mutationIndex++;
-        });
-        
-        deletedOptions.forEach((opt) => {
-          if (results[mutationIndex]?.status === 'rejected') {
-            failedItems.push(`Delete option "${opt.name}"`);
-          }
-          mutationIndex++;
-        });
-        
-        deletedModifiers.forEach((mod) => {
-          if (results[mutationIndex]?.status === 'rejected') {
-            failedItems.push(`Delete modifier "${mod.name}"`);
-          }
-          mutationIndex++;
-        });
-        
-        const failedMessage = failedItems.length <= 3 
-          ? `Failed: ${failedItems.join(", ")}`
-          : `Failed: ${failedItems.slice(0, 2).join(", ")} and ${failedItems.length - 2} more`;
-        
-        toast.error(failedMessage);
-        
-        // DON'T close dialog on partial failure - let user retry
-        setHasPartialFailure(true);
-        setIsDirty(true); // Keep dirty so user can retry
-        
-        // Invalidate caches so successful items are reflected
-        await invalidateAllCaches(dishId, queryClient);
-        return; // Early return - don't close dialog
-      }
-      
-      toast.success("Pricing options saved");
-
-      // Single cache invalidation AFTER all mutations complete
-      await invalidateAllCaches(dishId, queryClient);
-
-      // Brief success animation before close
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
+    // NO CHANGES = INSTANT CLOSE
+    if (!hasChanges) {
       onOpenChange(false);
-    } catch (error) {
-      console.error("Failed to save pricing options:", error);
-      toast.error("Failed to save changes. Please try again.");
-      
-      // Reset isDirty so user can retry
-      setIsDirty(true);
-      
-      // Complete rollback on error
-      queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
-      queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
-    } finally {
-      setIsSaving(false);
-      saveClickedRef.current = false; // Reset double-click protection
+      saveInProgressRef.current = false;
+      return;
     }
+
+    // Build optimistic data
+    const finalOptions: DishOption[] = visibleOptions.map((opt, idx) => ({
+      id: opt._temp ? `pending_${idx}` : opt.id,
+      dish_id: dishId,
+      name: opt.name,
+      price: normalizePrice(opt.price),
+      order_index: idx,
+      created_at: opt.created_at,
+    }));
+
+    const finalModifiers: DishModifier[] = visibleModifiers.map((mod, idx) => ({
+      id: mod._temp ? `pending_${idx}` : mod.id,
+      dish_id: dishId,
+      name: mod.name,
+      price: normalizePrice(mod.price),
+      order_index: idx,
+      created_at: mod.created_at,
+    }));
+
+    // ⚡ INSTANT: Apply optimistic update + close dialog + show toast
+    if (restaurantId) {
+      applyOptimisticOptionsUpdate(queryClient, dishId, restaurantId, finalOptions, finalModifiers);
+    } else {
+      queryClient.setQueryData(["dish-options", dishId], finalOptions);
+      queryClient.setQueryData(["dish-modifiers", dishId], finalModifiers);
+    }
+    
+    toast.success("Saved", { icon: <Check className="h-4 w-4" /> });
+    onOpenChange(false);
+
+    // ⚡ BACKGROUND: Execute mutations
+    const tasks: MutationTask[] = [];
+
+    newOptions.forEach(opt => {
+      tasks.push({
+        type: 'create-option',
+        name: opt.name || 'Option',
+        execute: () => createOption.mutateAsync({
+          dish_id: dishId,
+          name: opt.name,
+          price: normalizePrice(opt.price),
+          order_index: opt.order_index,
+        })
+      });
+    });
+
+    newModifiers.forEach(mod => {
+      tasks.push({
+        type: 'create-modifier',
+        name: mod.name || 'Modifier',
+        execute: () => createModifier.mutateAsync({
+          dish_id: dishId,
+          name: mod.name,
+          price: normalizePrice(mod.price),
+          order_index: mod.order_index,
+        })
+      });
+    });
+
+    updatedOptions.forEach(opt => {
+      tasks.push({
+        type: 'update-option',
+        name: opt.name,
+        execute: () => updateOption.mutateAsync({
+          id: opt.id,
+          updates: { name: opt.name, price: opt.price, order_index: opt.order_index }
+        })
+      });
+    });
+
+    updatedModifiers.forEach(mod => {
+      tasks.push({
+        type: 'update-modifier',
+        name: mod.name,
+        execute: () => updateModifier.mutateAsync({
+          id: mod.id,
+          updates: { name: mod.name, price: mod.price, order_index: mod.order_index }
+        })
+      });
+    });
+
+    deletedOptions.forEach(opt => {
+      tasks.push({
+        type: 'delete-option',
+        name: opt.name,
+        execute: () => deleteOption.mutateAsync({ id: opt.id, dishId })
+      });
+    });
+
+    deletedModifiers.forEach(mod => {
+      tasks.push({
+        type: 'delete-modifier',
+        name: mod.name,
+        execute: () => deleteModifier.mutateAsync({ id: mod.id, dishId })
+      });
+    });
+
+    if (localHasOptions !== initialHasOptions) {
+      tasks.push({
+        type: 'update-dish',
+        name: 'has_options',
+        execute: () => updateDish.mutateAsync({ id: dishId, updates: { has_options: localHasOptions } })
+      });
+    }
+
+    executeBackgroundMutations(tasks, dishId, restaurantId || '', queryClient)
+      .finally(() => {
+        saveInProgressRef.current = false;
+      });
+
   }, [
-    localOptions, 
-    localModifiers, 
-    dishId, 
-    createOption, 
-    createModifier, 
-    updateOption, 
-    updateModifier, 
-    deleteOption, 
-    deleteModifier,
-    updateDish,
-    queryClient,
-    onOpenChange,
-    localHasOptions,
-    initialHasOptions,
-    isSaving,
+    visibleOptions, visibleModifiers, localOptions, localModifiers, dishId, restaurantId,
+    localHasOptions, initialHasOptions, queryClient, onOpenChange,
+    createOption, updateOption, deleteOption, createModifier, updateModifier, deleteModifier, updateDish
   ]);
 
   // Keyboard shortcuts
@@ -720,13 +525,10 @@ export function DishOptionsEditor({
     if (!open) return;
     
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd/Ctrl + Enter = Save
       if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
         e.preventDefault();
         handleSaveAndClose();
       }
-      
-      // Escape = Cancel
       if (e.key === 'Escape') {
         e.preventDefault();
         handleCancel();
@@ -737,169 +539,99 @@ export function DishOptionsEditor({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open, handleSaveAndClose, handleCancel]);
 
-  // Show loading skeleton during initialization
-  if (isInitializing) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto transition-all duration-300">
-          <DialogHeader>
-            <DialogTitle>Loading...</DialogTitle>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto transition-all duration-300">
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            Pricing Options for "{dishName}"
-          </DialogTitle>
+          <DialogTitle>Pricing Options for "{dishName}"</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Toggle: Enable/Disable Pricing Options */}
-          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg transition-all duration-200">
+          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
             <div>
               <Label className="text-base font-medium">Enable Pricing Options</Label>
               <p className="text-sm text-muted-foreground mt-1">
-                Allow customers to choose different sizes or variations for this dish
+                Allow customers to choose different sizes or variations
               </p>
             </div>
-            <Switch
-              checked={localHasOptions}
-              onCheckedChange={handleToggleHasOptions}
-            />
+            <Switch checked={localHasOptions} onCheckedChange={handleToggleHasOptions} />
           </div>
 
-          {/* Size Options Section */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-base font-medium">Size Options</Label>
-                <p className="text-sm text-muted-foreground">Different sizes or types (e.g., Small, Medium, Large)</p>
-              </div>
+            <div>
+              <Label className="text-base font-medium">Size Options</Label>
+              <p className="text-sm text-muted-foreground">Different sizes (e.g., Small, Medium, Large)</p>
             </div>
 
-            <div className="space-y-3">
-              <Button 
-                onClick={handleAddOption} 
-                variant="outline" 
-                size="sm"
-                className="w-full transition-all duration-200 hover:scale-[1.02]"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Size
-              </Button>
-              
-              {/* Sortable Options List or Empty State */}
-              {visibleOptions.length === 0 ? (
-                <div className="flex flex-col items-center justify-center p-8 text-center border-2 border-dashed rounded-lg">
-                  <p className="text-muted-foreground mb-2">No size options yet</p>
-                  <p className="text-sm text-muted-foreground">
-                    Click "Add Size" to create your first option
-                  </p>
-                </div>
-              ) : (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEndOptions}
-                >
-                  <SortableContext items={visibleOptions.map(o => o.id)} strategy={verticalListSortingStrategy}>
-                    <div className="space-y-2">
-                      {visibleOptions.map((opt) => (
-                        <SortableItem
-                          key={opt.id}
-                          id={opt.id}
-                          name={opt.name}
-                          price={opt.price}
-                          onUpdate={handleUpdateOption}
-                          onDelete={handleDeleteOption}
-                          type="option"
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-                </DndContext>
-              )}
-            </div>
+            <Button onClick={handleAddOption} variant="outline" size="sm" className="w-full">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Size
+            </Button>
+            
+            {visibleOptions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-6 text-center border-2 border-dashed rounded-lg">
+                <p className="text-muted-foreground text-sm">No size options yet</p>
+              </div>
+            ) : (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndOptions}>
+                <SortableContext items={visibleOptions.map(o => o.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-2">
+                    {visibleOptions.map(opt => (
+                      <SortableItem
+                        key={opt.id}
+                        id={opt.id}
+                        name={opt.name}
+                        price={opt.price}
+                        onUpdate={handleUpdateOption}
+                        onDelete={handleDeleteOption}
+                        type="option"
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
           </div>
 
-          {/* Modifiers Section */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-base font-medium">Add-ons & Modifiers</Label>
-                <p className="text-sm text-muted-foreground">Extra toppings or upgrades (e.g., Extra Cheese, Bacon)</p>
-              </div>
+            <div>
+              <Label className="text-base font-medium">Add-ons & Modifiers</Label>
+              <p className="text-sm text-muted-foreground">Extra toppings or upgrades</p>
             </div>
 
-            <div className="space-y-3">
-              <Button 
-                onClick={handleAddModifier} 
-                variant="outline" 
-                size="sm"
-                className="w-full transition-all duration-200 hover:scale-[1.02]"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Modifier
-              </Button>
-              
-              {/* Sortable Modifiers List or Empty State */}
-              {visibleModifiers.length === 0 ? (
-                <div className="flex flex-col items-center justify-center p-8 text-center border-2 border-dashed rounded-lg">
-                  <p className="text-muted-foreground mb-2">No modifiers yet</p>
-                  <p className="text-sm text-muted-foreground">
-                    Click "Add Modifier" to create your first modifier
-                  </p>
-                </div>
-              ) : (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEndModifiers}
-                >
-                  <SortableContext items={visibleModifiers.map(m => m.id)} strategy={verticalListSortingStrategy}>
-                    <div className="space-y-2">
-                      {visibleModifiers.map((mod) => (
-                        <SortableItem
-                          key={mod.id}
-                          id={mod.id}
-                          name={mod.name}
-                          price={mod.price}
-                          onUpdate={handleUpdateModifier}
-                          onDelete={handleDeleteModifier}
-                          type="modifier"
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-                </DndContext>
-              )}
-            </div>
+            <Button onClick={handleAddModifier} variant="outline" size="sm" className="w-full">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Modifier
+            </Button>
+            
+            {visibleModifiers.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-6 text-center border-2 border-dashed rounded-lg">
+                <p className="text-muted-foreground text-sm">No modifiers yet</p>
+              </div>
+            ) : (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndModifiers}>
+                <SortableContext items={visibleModifiers.map(m => m.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-2">
+                    {visibleModifiers.map(mod => (
+                      <SortableItem
+                        key={mod.id}
+                        id={mod.id}
+                        name={mod.name}
+                        price={mod.price}
+                        onUpdate={handleUpdateModifier}
+                        onDelete={handleDeleteModifier}
+                        type="modifier"
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
           </div>
 
-          {/* Action Buttons */}
           <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button 
-              variant="outline" 
-              onClick={handleCancel} 
-              disabled={isSaving}
-              className="transition-all duration-200"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSaveAndClose} 
-              disabled={isSaving}
-              className="transition-all duration-200"
-            >
-              {isSaving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Save
-            </Button>
+            <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+            <Button onClick={handleSaveAndClose}>Save</Button>
           </div>
         </div>
       </DialogContent>
