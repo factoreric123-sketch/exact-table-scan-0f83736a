@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Plus, GripVertical, X, Check } from "lucide-react";
+import { Plus, GripVertical, X, Check, Loader2 } from "lucide-react";
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -186,9 +186,23 @@ export function DishOptionsEditor({
   onOpenChange,
 }: DishOptionsEditorProps) {
   const queryClient = useQueryClient();
-  const { data: options = [] } = useDishOptions(dishId);
-  const { data: modifiers = [] } = useDishModifiers(dishId);
+  const { data: options = [], isLoading: optionsLoading, isError: optionsError } = useDishOptions(dishId);
+  const { data: modifiers = [], isLoading: modifiersLoading, isError: modifiersError } = useDishModifiers(dishId);
   const updateDish = useUpdateDish();
+
+  // Loading timeout protection - never show loading for more than 2 seconds
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+  const isLoading = (optionsLoading || modifiersLoading) && !loadingTimedOut;
+  const hasError = optionsError || modifiersError || loadingTimedOut;
+
+  useEffect(() => {
+    if (open && (optionsLoading || modifiersLoading)) {
+      setLoadingTimedOut(false);
+      const timer = setTimeout(() => setLoadingTimedOut(true), 2000);
+      return () => clearTimeout(timer);
+    }
+    if (!open) setLoadingTimedOut(false);
+  }, [open, optionsLoading, modifiersLoading]);
 
   const createOption = useCreateDishOptionSilent();
   const updateOption = useUpdateDishOptionSilent();
@@ -537,12 +551,40 @@ export function DishOptionsEditor({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open, handleSaveAndClose, handleCancel]);
 
+  // Show loading state briefly (max 2 seconds)
+  if (isLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Pricing Options for "{dishName}"</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-muted-foreground">Loading options...</span>
+          </div>
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Pricing Options for "{dishName}"</DialogTitle>
         </DialogHeader>
+
+        {hasError && (
+          <div className="text-center py-4 px-4 mb-4 bg-muted/30 rounded-lg">
+            <p className="text-sm text-muted-foreground">
+              {loadingTimedOut ? "Loading took too long. You can still add new options below." : "Could not load existing options. You can still add new ones."}
+            </p>
+          </div>
+        )}
 
         <div className="space-y-6">
           <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
