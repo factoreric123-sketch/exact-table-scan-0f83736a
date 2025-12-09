@@ -38,11 +38,13 @@ interface DishOptionsEditorProps {
 interface EditableDishOption extends DishOption {
   _status?: "new" | "updated" | "deleted" | "unchanged";
   _temp?: boolean;
+  _originalOrderIndex?: number; // Track original order for smart diff
 }
 
 interface EditableDishModifier extends DishModifier {
   _status?: "new" | "updated" | "deleted" | "unchanged";
   _temp?: boolean;
+  _originalOrderIndex?: number; // Track original order for smart diff
 }
 
 interface SortableItemProps {
@@ -221,6 +223,10 @@ export function DishOptionsEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [hasPartialFailure, setHasPartialFailure] = useState(false);
+  
+  // Track if save button was just clicked to prevent double-clicks
+  const saveClickedRef = useRef(false);
 
   // Store initial state for diffing on save
   const initialOptionsRef = useRef<EditableDishOption[]>([]);
@@ -256,19 +262,23 @@ export function DishOptionsEditor({
     if (open) {
       setIsInitializing(true);
       
+      // Track original order_index for smart diff during drag operations
       const editableOptions: EditableDishOption[] = options.map(opt => ({
         ...opt,
         _status: "unchanged" as const,
+        _originalOrderIndex: opt.order_index,
       }));
 
       const editableModifiers: EditableDishModifier[] = modifiers.map(mod => ({
         ...mod,
         _status: "unchanged" as const,
+        _originalOrderIndex: mod.order_index,
       }));
 
       setLocalOptions(editableOptions);
       setLocalModifiers(editableModifiers);
       setLocalHasOptions(initialHasOptions);
+      setHasPartialFailure(false);
 
       // Use structuredClone for faster deep cloning - ALWAYS update refs when dialog opens
       initialOptionsRef.current = structuredClone(editableOptions);
@@ -405,11 +415,17 @@ export function DishOptionsEditor({
         const overIndex = prev.findIndex(opt => opt.id === over.id);
         const reordered = arrayMove(prev, activeIndex, overIndex);
         
-        // Normalize order indexes and mark as updated
-        return normalizeOrderIndexes(reordered).map(opt => ({
-          ...opt,
-          _status: opt._status === "new" ? "new" : "updated",
-        }));
+        // Normalize order indexes and ONLY mark as updated if order actually changed
+        return normalizeOrderIndexes(reordered).map(opt => {
+          // New items stay new
+          if (opt._status === "new") return opt;
+          // Only mark as updated if order_index differs from original
+          const orderChanged = opt.order_index !== opt._originalOrderIndex;
+          return {
+            ...opt,
+            _status: orderChanged ? "updated" : opt._status,
+          };
+        });
       });
       startTransition(() => {
         setIsDirty(true);
@@ -425,10 +441,17 @@ export function DishOptionsEditor({
         const overIndex = prev.findIndex(mod => mod.id === over.id);
         const reordered = arrayMove(prev, activeIndex, overIndex);
         
-        return normalizeOrderIndexes(reordered).map(mod => ({
-          ...mod,
-          _status: mod._status === "new" ? "new" : "updated",
-        }));
+        // Normalize order indexes and ONLY mark as updated if order actually changed
+        return normalizeOrderIndexes(reordered).map(mod => {
+          // New items stay new
+          if (mod._status === "new") return mod;
+          // Only mark as updated if order_index differs from original
+          const orderChanged = mod.order_index !== mod._originalOrderIndex;
+          return {
+            ...mod,
+            _status: orderChanged ? "updated" : mod._status,
+          };
+        });
       });
       startTransition(() => {
         setIsDirty(true);
@@ -454,6 +477,10 @@ export function DishOptionsEditor({
 
   // ULTRA-FAST commit engine: All mutations in parallel + validation + robust error handling
   const handleSaveAndClose = useCallback(async () => {
+    // Prevent double-click - check and set immediately
+    if (saveClickedRef.current || isSaving) return;
+    saveClickedRef.current = true;
+    
     // Validate all options
     const invalidOptions = localOptions
       .filter(o => o._status !== "deleted")
@@ -465,6 +492,7 @@ export function DishOptionsEditor({
     
     if (invalidOptions.length > 0 || invalidModifiers.length > 0) {
       toast.error("Please fill in all names (minimum 1 character)");
+      saveClickedRef.current = false;
       return;
     }
     
@@ -591,28 +619,28 @@ export function DishOptionsEditor({
         // Track which mutations failed
         newOptions.forEach((opt) => {
           if (results[mutationIndex]?.status === 'rejected') {
-            failedItems.push(`Option "${opt.name || 'unnamed'}"`);
+            failedItems.push(`New option "${opt.name || 'unnamed'}"`);
           }
           mutationIndex++;
         });
         
         newModifiers.forEach((mod) => {
           if (results[mutationIndex]?.status === 'rejected') {
-            failedItems.push(`Modifier "${mod.name || 'unnamed'}"`);
+            failedItems.push(`New modifier "${mod.name || 'unnamed'}"`);
           }
           mutationIndex++;
         });
         
         updatedOptions.forEach((opt) => {
           if (results[mutationIndex]?.status === 'rejected') {
-            failedItems.push(`Option "${opt.name}"`);
+            failedItems.push(`Update option "${opt.name}"`);
           }
           mutationIndex++;
         });
         
         updatedModifiers.forEach((mod) => {
           if (results[mutationIndex]?.status === 'rejected') {
-            failedItems.push(`Modifier "${mod.name}"`);
+            failedItems.push(`Update modifier "${mod.name}"`);
           }
           mutationIndex++;
         });
@@ -636,28 +664,38 @@ export function DishOptionsEditor({
           : `Failed: ${failedItems.slice(0, 2).join(", ")} and ${failedItems.length - 2} more`;
         
         toast.error(failedMessage);
-      } else {
-        toast.success("Pricing options saved");
+        
+        // DON'T close dialog on partial failure - let user retry
+        setHasPartialFailure(true);
+        setIsDirty(true); // Keep dirty so user can retry
+        
+        // Invalidate caches so successful items are reflected
+        await invalidateAllCaches(dishId, queryClient);
+        return; // Early return - don't close dialog
       }
+      
+      toast.success("Pricing options saved");
 
       // Single cache invalidation AFTER all mutations complete
       await invalidateAllCaches(dishId, queryClient);
 
       // Brief success animation before close
-      if (failed.length === 0) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-      }
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to save pricing options:", error);
       toast.error("Failed to save changes. Please try again.");
       
+      // Reset isDirty so user can retry
+      setIsDirty(true);
+      
       // Complete rollback on error
       queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
       queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
     } finally {
       setIsSaving(false);
+      saveClickedRef.current = false; // Reset double-click protection
     }
   }, [
     localOptions, 
@@ -674,6 +712,7 @@ export function DishOptionsEditor({
     onOpenChange,
     localHasOptions,
     initialHasOptions,
+    isSaving,
   ]);
 
   // Keyboard shortcuts
