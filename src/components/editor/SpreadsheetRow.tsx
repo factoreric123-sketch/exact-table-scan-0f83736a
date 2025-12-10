@@ -1,11 +1,11 @@
 import { useState, useRef, useCallback, CSSProperties } from "react";
 import { Button } from "@/components/ui/button";
-import { Trash2, Upload, DollarSign } from "lucide-react";
+import { Trash2, Upload, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EditableCell } from "./EditableCell";
 import { useUpdateDish, useDeleteDish, type Dish } from "@/hooks/useDishes";
 import { useImageUpload } from "@/hooks/useImageUpload";
-import { DishOptionsEditor } from "./DishOptionsEditor";
+import { UnifiedDishEditor } from "./UnifiedDishEditor";
 import { toast } from "sonner";
 
 interface SpreadsheetRowProps {
@@ -234,12 +234,8 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
           onClick={() => setShowOptionsEditor(true)}
           className="h-8"
         >
-          <DollarSign className="h-4 w-4 mr-1" />
-          {dish.has_options && (
-            <Badge variant="secondary" className="ml-1 text-xs px-1">
-              ✓
-            </Badge>
-          )}
+          <Pencil className="h-4 w-4 mr-1" />
+          Edit
         </Button>
       </td>
       <td className="p-4 align-middle w-[80px]">
@@ -250,10 +246,8 @@ export const SpreadsheetRow = ({ dish, isSelected, onSelect, style }: Spreadshee
         </div>
       </td>
 
-      <DishOptionsEditor
-        dishId={dish.id}
-        dishName={dish.name}
-        hasOptions={dish.has_options}
+      <UnifiedDishEditor
+        dish={dish}
         open={showOptionsEditor}
         onOpenChange={setShowOptionsEditor}
       />

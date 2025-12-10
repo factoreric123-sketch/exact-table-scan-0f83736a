@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { useDebounce } from "use-debounce";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, Image as ImageIcon, ChevronDown, Flame, Sparkles, Star, TrendingUp, ChefHat, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Leaf, Salad, DollarSign } from "lucide-react";
+import { GripVertical, Trash2, Image as ImageIcon, Pencil, ChevronDown, Flame, Sparkles, Star, TrendingUp, ChefHat, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Leaf, Salad, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -14,7 +14,7 @@ import { useUpdateDish, useDeleteDish, type Dish } from "@/hooks/useDishes";
 import { ImageCropModal } from "@/components/ImageCropModal";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { ALLERGEN_OPTIONS } from "@/components/AllergenFilter";
-import { DishOptionsEditor } from "./DishOptionsEditor";
+import { UnifiedDishEditor } from "./UnifiedDishEditor";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -414,10 +414,8 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
         />
       )}
 
-      <DishOptionsEditor
-        dishId={dish.id}
-        dishName={dish.name}
-        hasOptions={dish.has_options}
+      <UnifiedDishEditor
+        dish={dish}
         open={showOptionsEditor}
         onOpenChange={setShowOptionsEditor}
       />
