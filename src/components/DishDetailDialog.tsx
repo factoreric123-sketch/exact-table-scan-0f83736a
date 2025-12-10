@@ -48,20 +48,12 @@ const allergenIconMap: Record<string, any> = {
 export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogProps) => {
   if (!dish) return null;
 
-  // Only fetch from server if options/modifiers weren't already passed in
-  const hasPassedOptions = dish.options && dish.options.length > 0;
-  const hasPassedModifiers = dish.modifiers && dish.modifiers.length > 0;
+  const { data: fetchedOptions = [] } = useDishOptions(dish.id);
+  const { data: fetchedModifiers = [] } = useDishModifiers(dish.id);
   
-  const { data: fetchedOptions = [] } = useDishOptions(
-    hasPassedOptions ? undefined : dish.id  // Skip fetch if already have options
-  );
-  const { data: fetchedModifiers = [] } = useDishModifiers(
-    hasPassedModifiers ? undefined : dish.id  // Skip fetch if already have modifiers
-  );
-  
-  // Use passed-in options/modifiers as primary, fetched as fallback
-  const options = hasPassedOptions ? dish.options! : fetchedOptions;
-  const modifiers = hasPassedModifiers ? dish.modifiers! : fetchedModifiers;
+  // Use passed-in options/modifiers as fallback for instant display
+  const options = dish.options && dish.options.length > 0 ? dish.options : fetchedOptions;
+  const modifiers = dish.modifiers && dish.modifiers.length > 0 ? dish.modifiers : fetchedModifiers;
   const [selectedOption, setSelectedOption] = useState("");
   const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
   const hasAnyOptions = options.length > 0 || modifiers.length > 0;
@@ -188,8 +180,7 @@ export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogP
               )}
             </div>
 
-            {/* Show options if they exist, regardless of hasOptions flag */}
-            {hasAnyOptions && (
+            {dish.hasOptions && hasAnyOptions && (
               <div className="space-y-4 pt-2">
                 {options.length > 0 && (
                   <div className="space-y-3">

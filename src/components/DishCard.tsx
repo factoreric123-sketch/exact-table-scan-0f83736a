@@ -175,9 +175,9 @@ const DishCard = memo(({
         <div className="flex items-center justify-between">
           {showPrice && (
             <p className={`${priceFontSizeClasses[fontSize]} font-semibold text-foreground`}>
-            {(() => {
-                // If dish has options, show price range (check actual options, not just hasOptions flag)
-                if ((dish.hasOptions || (dish.options && dish.options.length > 0)) && dish.options && dish.options.length > 0) {
+              {(() => {
+                // If dish has options, show price range
+                if (dish.hasOptions && dish.options && dish.options.length > 0) {
                   const prices = dish.options
                     .map(opt => {
                       const num = parseFloat(opt.price.replace(/[^0-9.]/g, ""));

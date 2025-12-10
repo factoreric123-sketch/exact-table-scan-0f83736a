@@ -13,7 +13,7 @@ interface UseFullMenuReturn {
 }
 
 const CACHE_KEY_PREFIX = 'fullMenu:';
-const CACHE_TTL = 1000 * 30; // 30 seconds - short TTL for live sync
+const CACHE_TTL = 1000 * 60 * 5; // 5 minutes - reduced for faster settings updates
 
 interface CacheEntry {
   data: FullMenuData;

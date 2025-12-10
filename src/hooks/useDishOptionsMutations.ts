@@ -1,9 +1,8 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { DishOption } from "./useDishOptions";
 import type { DishModifier } from "./useDishModifiers";
 import { toast } from "sonner";
-import { broadcastMenuChange } from "./useMenuSync";
 
 // Client-side price normalization - INSTANT, no async
 export const normalizePrice = (price: string): string => {
@@ -29,6 +28,9 @@ export const normalizePrice = (price: string): string => {
 };
 
 // ============= OPTIMISTIC CACHE UPDATE - INSTANT =============
+// This is the key to Apple-quality speed: update cache BEFORE network
+// NO invalidateQueries here - that causes heavy refetches that block UI
+
 export const applyOptimisticOptionsUpdate = (
   queryClient: any,
   dishId: string,
@@ -42,19 +44,20 @@ export const applyOptimisticOptionsUpdate = (
   // 2. Instantly update dish-modifiers cache (synchronous, ~0ms)
   queryClient.setQueryData(["dish-modifiers", dishId], newModifiers);
   
-  // 3. INSTANT: Invalidate all menu-related caches
-  queryClient.invalidateQueries({ queryKey: ["dishes"] });
-  queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
-  queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
-  queryClient.invalidateQueries({ queryKey: ["public-menu-dishes"] });
-  queryClient.invalidateQueries({ queryKey: ["subcategory-dishes-with-options"] });
+  // 3. Clear localStorage cache - ultra low priority, truly non-blocking
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(() => {
+      try { localStorage.removeItem(`fullMenu:${restaurantId}`); } catch {}
+    }, { timeout: 5000 });
+  }
   
-  // IMMEDIATE: Clear localStorage cache and broadcast - no delay for critical sync
-  try { localStorage.removeItem(`fullMenu:${restaurantId}`); } catch {}
-  broadcastMenuChange(restaurantId, 'menu-updated');
+  // NOTE: We do NOT invalidate queries here - that causes heavy refetches
+  // The mutations will handle cache updates after they complete
 };
 
 // ============= BACKGROUND MUTATION EXECUTOR =============
+// Fire-and-forget with error recovery
+
 export interface MutationTask {
   type: 'create-option' | 'update-option' | 'delete-option' | 'create-modifier' | 'update-modifier' | 'delete-modifier' | 'update-dish';
   name: string;
@@ -69,9 +72,8 @@ export const executeBackgroundMutations = (
 ) => {
   if (tasks.length === 0) return;
 
-  // Track failed tasks for persistent error recovery
-  let persistentFailures: MutationTask[] = [];
-
+  // FIRE AND FORGET - Execute in background, don't await
+  // This function returns immediately, mutations happen async
   setTimeout(() => {
     Promise.allSettled(
       tasks.map(task => task.execute())
@@ -79,46 +81,26 @@ export const executeBackgroundMutations = (
       const failed = results.filter(r => r.status === 'rejected');
       
       if (failed.length > 0) {
+        // Retry failed ones once
         const failedTasks = tasks.filter((_, i) => results[i].status === 'rejected');
         
-        // First retry attempt
         Promise.allSettled(failedTasks.map(t => t.execute())).then(retryResults => {
           const stillFailed = retryResults.filter(r => r.status === 'rejected');
           
           if (stillFailed.length > 0) {
-            persistentFailures = failedTasks.filter((_, i) => retryResults[i].status === 'rejected');
-            const failedNames = persistentFailures.map(t => t.name).slice(0, 3);
+            const failedNames = failedTasks
+              .filter((_, i) => retryResults[i].status === 'rejected')
+              .map(t => t.name)
+              .slice(0, 2);
             
-            // Show persistent error toast with retry action
-            toast.error(`Failed to save ${persistentFailures.length} item(s): ${failedNames.join(", ")}`, {
-              duration: 10000, // Keep visible longer
+            toast.error(`Failed to save: ${failedNames.join(", ")}`, {
               action: {
-                label: "Retry",
+                label: "Refresh",
                 onClick: () => {
-                  // Retry all failed mutations
-                  toast.promise(
-                    Promise.allSettled(persistentFailures.map(t => t.execute())).then(finalResults => {
-                      const finalFailed = finalResults.filter(r => r.status === 'rejected');
-                      if (finalFailed.length > 0) {
-                        throw new Error(`${finalFailed.length} items still failed`);
-                      }
-                      // Refresh data on success and broadcast
-                      queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
-                      queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
-                      queryClient.invalidateQueries({ queryKey: ["dishes"] });
-                      queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
-                      queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
-                      broadcastMenuChange(restaurantId, 'menu-updated');
-                    }),
-                    {
-                      loading: "Retrying...",
-                      success: "All items saved successfully!",
-                      error: "Some items still failed. Please try again.",
-                    }
-                  );
+                  queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
+                  queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
                 }
-              },
-              description: "Your changes may not have been saved. Click Retry to try again.",
+              }
             });
           }
         });
@@ -229,4 +211,45 @@ export const useDeleteDishModifierSilent = () => {
       if (error) throw error;
     },
   });
+};
+
+// Legacy function - kept for compatibility but no longer used in optimistic flow
+export const invalidateAllCaches = async (dishId: string, queryClient: any) => {
+  // Get restaurant ID synchronously from existing cache if possible
+  const dishes = queryClient.getQueryData(["dishes"]) as any[];
+  const dish = dishes?.find((d: any) => d.id === dishId);
+  
+  let restaurantId: string | null = null;
+  
+  if (dish?.subcategories?.categories?.restaurant_id) {
+    restaurantId = dish.subcategories.categories.restaurant_id;
+  } else {
+    // Fallback: fetch from DB (slower path)
+    const { data } = await supabase
+      .from("dishes")
+      .select(`
+        subcategory_id,
+        subcategories!inner(
+          category_id,
+          categories!inner(restaurant_id)
+        )
+      `)
+      .eq("id", dishId)
+      .single();
+    
+    restaurantId = data?.subcategories?.categories?.restaurant_id || null;
+  }
+  
+  // Batch invalidations
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] }),
+    queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] }),
+    queryClient.invalidateQueries({ queryKey: ["dishes"] }),
+    queryClient.invalidateQueries({ queryKey: ["subcategory-dishes-with-options"] }),
+    ...(restaurantId ? [queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] })] : []),
+  ]);
+  
+  if (restaurantId) {
+    localStorage.removeItem(`fullMenu:${restaurantId}`);
+  }
 };

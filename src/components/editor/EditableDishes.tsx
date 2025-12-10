@@ -1,30 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { DndContext, closestCorners, DragEndEvent, DragStartEvent, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { SortableDish } from "./SortableDish";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useCreateDish, useUpdateDishesOrder, type Dish } from "@/hooks/useDishes";
+import { useImageUpload } from "@/hooks/useImageUpload";
 import { useSubcategoryDishesWithOptions } from "@/hooks/useSubcategoryDishesWithOptions";
 import MenuGrid from "@/components/MenuGrid";
+import DishCard from "@/components/DishCard";
 import { toast } from "sonner";
 
 interface EditableDishesProps {
   dishes: Dish[];
   subcategoryId: string;
   previewMode: boolean;
-  restaurant?: {
-    id: string;
-    name?: string;
-    show_prices?: boolean;
-    show_images?: boolean;
-    grid_columns?: number;
-    layout_density?: string;
-    menu_font_size?: string;
-    image_size?: string;
-    badge_colors?: Record<string, string>;
-    updated_at?: string;
-  };
+  restaurant?: any;
 }
 
 export const EditableDishes = ({
@@ -35,7 +26,6 @@ export const EditableDishes = ({
 }: EditableDishesProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const [autoOpenDishId, setAutoOpenDishId] = useState<string | null>(null);
   const createDish = useCreateDish();
   const updateDishesOrder = useUpdateDishesOrder();
   
@@ -46,10 +36,10 @@ export const EditableDishes = ({
   );
 
   // Prevent flicker by ensuring content is ready
-  useEffect(() => {
+  useState(() => {
     const timer = setTimeout(() => setIsReady(true), 50);
     return () => clearTimeout(timer);
-  }, []);
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -92,7 +82,7 @@ export const EditableDishes = ({
 
   const handleAddDish = async () => {
     try {
-      const newDish = await createDish.mutateAsync({
+      await createDish.mutateAsync({
         subcategory_id: subcategoryId,
         name: "New Dish",
         description: "Add description",
@@ -101,12 +91,6 @@ export const EditableDishes = ({
         is_new: false,
       });
       toast.success("Dish added");
-      
-      // Auto-open editor for the new dish if we have restaurantId
-      if (newDish && restaurant?.id) {
-        // Set a flag to auto-open editor - handled by SortableDish
-        setAutoOpenDishId(newDish.id);
-      }
     } catch (error) {
       toast.error("Failed to add dish");
     }
@@ -161,22 +145,20 @@ export const EditableDishes = ({
     });
 
     return (
-      <MenuGrid
+      <MenuGrid 
+        key={restaurant?.updated_at} // Force re-render when settings change
         dishes={dishCards} 
         sectionTitle=""
         showPrice={restaurant?.show_prices !== false}
         showImage={restaurant?.show_images !== false}
-        gridColumns={(restaurant?.grid_columns || 2) as 1 | 2 | 3}
-        layoutDensity={(restaurant?.layout_density || 'spacious') as 'compact' | 'spacious'}
-        fontSize={(restaurant?.menu_font_size || 'medium') as 'small' | 'medium' | 'large'}
-        imageSize={(restaurant?.image_size || 'large') as 'compact' | 'large'}
-        badgeColors={restaurant?.badge_colors as { new_addition: string; special: string; popular: string; chef_recommendation: string } | undefined}
+        gridColumns={restaurant?.grid_columns || 2}
+        layoutDensity={restaurant?.layout_density || 'spacious'}
+        fontSize={restaurant?.menu_font_size || 'medium'}
+        imageSize={restaurant?.image_size || 'large'}
+        badgeColors={restaurant?.badge_colors}
       />
     );
   }
-
-  // Get restaurant ID - it's required for the unified editor
-  const restaurantId = restaurant?.id || "";
 
   return (
     <div className="px-4 py-6">
@@ -189,14 +171,7 @@ export const EditableDishes = ({
         <SortableContext items={dishes.map((d) => d.id)} strategy={rectSortingStrategy}>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-6">
             {dishes.map((dish) => (
-              <SortableDish 
-                key={dish.id} 
-                dish={dish} 
-                subcategoryId={subcategoryId}
-                restaurantId={restaurantId}
-                autoOpen={autoOpenDishId === dish.id}
-                onAutoOpenHandled={() => setAutoOpenDishId(null)}
-              />
+              <SortableDish key={dish.id} dish={dish} subcategoryId={subcategoryId} />
             ))}
           </div>
         </SortableContext>

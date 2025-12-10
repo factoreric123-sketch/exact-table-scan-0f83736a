@@ -110,6 +110,8 @@ export const CreateRestaurantModal = ({ open, onOpenChange }: CreateRestaurantMo
         published: false,
       });
 
+      toast.success("Restaurant created!");
+      
       // Clear form on success
       setName("");
       setTagline("");
@@ -118,10 +120,10 @@ export const CreateRestaurantModal = ({ open, onOpenChange }: CreateRestaurantMo
       
       onOpenChange(false);
       
-      toast.success("Restaurant created!");
-      
-      // Navigate immediately - the mutation already awaits category/subcategory creation
-      navigate(`/editor/${newRestaurant.id}`);
+      // Small delay to ensure backend operations complete before navigating
+      setTimeout(() => {
+        navigate(`/editor/${newRestaurant.id}`);
+      }, 300);
     } catch (error) {
       // Handle slug collision
       const errorMessage = error instanceof Error ? error.message : String(error);

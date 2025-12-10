@@ -6,7 +6,6 @@ import CategoryNav from '@/components/CategoryNav';
 import SubcategoryNav from '@/components/SubcategoryNav';
 import MenuGrid from '@/components/MenuGrid';
 import RestaurantHeader from '@/components/RestaurantHeader';
-import { useRealtimeMenuUpdates } from '@/hooks/useMenuSync';
 
 // Lazy load filter - not needed for first paint
 const AllergenFilter = lazy(() => 
@@ -55,9 +54,6 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
   const [filterOpen, setFilterOpen] = useState(false);
   const [filtersReady, setFiltersReady] = useState(false);
   const subcategoryRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-
-  // Enable realtime updates for instant sync with editor
-  useRealtimeMenuUpdates(restaurant?.id);
 
   // Set initial category instantly
   useEffect(() => {
@@ -257,7 +253,7 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
   const activeCategoryName = categories?.find((c) => c.id === activeCategory)?.name || '';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div key={restaurant?.updated_at} className="min-h-screen bg-background">
       {/* Top Action Bar */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">

@@ -9,31 +9,28 @@ import { EditorTopBar } from "@/components/editor/EditorTopBar";
 import { EditableCategories } from "@/components/editor/EditableCategories";
 import { EditableSubcategories } from "@/components/editor/EditableSubcategories";
 import { EditableDishes } from "@/components/editor/EditableDishes";
-
+import { SpreadsheetView } from "@/components/editor/SpreadsheetView";
 import RestaurantHeader from "@/components/RestaurantHeader";
 import { AllergenFilter } from "@/components/AllergenFilter";
-import { Sheet, SheetContent, SheetHeader, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Filter } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useThemeHistory } from "@/hooks/useThemeHistory";
 import { getDefaultTheme } from "@/lib/presetThemes";
 import { Theme } from "@/lib/types/theme";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useMenuSync, broadcastMenuChange } from "@/hooks/useMenuSync";
 
 const Editor = () => {
   const { restaurantId } = useParams<{ restaurantId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  // Enable cross-tab and realtime menu synchronization
-  const { invalidateMenuCache, broadcastMenuUpdate } = useMenuSync(restaurantId);
-  
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [activeSubcategory, setActiveSubcategory] = useState<string>("");
   const [previewMode, setPreviewMode] = useState(false);
-  
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
   const [selectedDietary, setSelectedDietary] = useState<string[]>([]);
   const [selectedSpicy, setSelectedSpicy] = useState<boolean | null>(null);
@@ -67,18 +64,21 @@ const Editor = () => {
     return () => unsubscribe();
   }, [queryClient]);
 
-  // Handle Update button - force sync all caches and broadcast to other tabs
+  // Handle Update button - force sync all caches
   const handleUpdate = async () => {
     if (!restaurantId) return;
 
-    // Invalidate all caches using the sync helper
-    invalidateMenuCache(restaurantId);
+    // Invalidate all React Query caches
+    await queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
+    await queryClient.invalidateQueries({ queryKey: ["restaurant", restaurantId] });
+    await queryClient.invalidateQueries({ queryKey: ["categories", restaurantId] });
+    await queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
+    
+    // Clear localStorage cache
+    localStorage.removeItem(`fullMenu:${restaurantId}`);
     
     // Force refetch
     await refetchRestaurant();
-    
-    // Broadcast to other tabs (live menu, other editor tabs)
-    broadcastMenuUpdate('menu-updated');
     
     // Clear pending changes flag
     setHasPendingChanges(false);
@@ -96,58 +96,20 @@ const Editor = () => {
     [subcategories, activeCategory]
   );
 
-  // Get all dishes for all subcategories in preview mode - including options/modifiers
+  // Get all dishes for all subcategories in preview mode
   const { data: allDishesForCategory } = useQuery({
     queryKey: ['all-dishes-for-category', activeCategory],
     queryFn: async () => {
       if (!activeCategory) return [];
       
-      // Fetch dishes with subcategory info
-      const { data: dishesData, error } = await supabase
+      const { data, error } = await supabase
         .from('dishes')
         .select('*, subcategories!inner(id, name, category_id)')
         .eq('subcategories.category_id', activeCategory)
         .order('order_index');
       
       if (error) throw error;
-      if (!dishesData || dishesData.length === 0) return [];
-      
-      // Fetch options and modifiers in parallel for ALL dishes in this category
-      const dishIds = dishesData.map(d => d.id);
-      
-      const [optionsResult, modifiersResult] = await Promise.all([
-        supabase
-          .from('dish_options')
-          .select('*')
-          .in('dish_id', dishIds)
-          .order('order_index'),
-        supabase
-          .from('dish_modifiers')
-          .select('*')
-          .in('dish_id', dishIds)
-          .order('order_index'),
-      ]);
-      
-      // Group options and modifiers by dish_id
-      const optionsByDish: Record<string, any[]> = {};
-      const modifiersByDish: Record<string, any[]> = {};
-      
-      (optionsResult.data || []).forEach(opt => {
-        if (!optionsByDish[opt.dish_id]) optionsByDish[opt.dish_id] = [];
-        optionsByDish[opt.dish_id].push(opt);
-      });
-      
-      (modifiersResult.data || []).forEach(mod => {
-        if (!modifiersByDish[mod.dish_id]) modifiersByDish[mod.dish_id] = [];
-        modifiersByDish[mod.dish_id].push(mod);
-      });
-      
-      // Merge options/modifiers into dishes
-      return dishesData.map(dish => ({
-        ...dish,
-        options: optionsByDish[dish.id] || [],
-        modifiers: modifiersByDish[dish.id] || [],
-      }));
+      return data || [];
     },
     enabled: !!activeCategory,
   });
@@ -183,8 +145,6 @@ const Editor = () => {
     const prevTheme = undo();
     if (prevTheme && restaurant) {
       updateRestaurant.mutate({ id: restaurant.id, updates: { theme: prevTheme } });
-      // Broadcast theme change to live menu
-      broadcastMenuUpdate('restaurant-updated');
     }
   };
 
@@ -192,8 +152,6 @@ const Editor = () => {
     const nextTheme = redo();
     if (nextTheme && restaurant) {
       updateRestaurant.mutate({ id: restaurant.id, updates: { theme: nextTheme } });
-      // Broadcast theme change to live menu
-      broadcastMenuUpdate('restaurant-updated');
     }
   };
 
@@ -234,18 +192,17 @@ const Editor = () => {
     }
   }, [categories, activeCategory]);
 
-  // Reset active subcategory when category changes
+  // Set initial active subcategory when category changes
   useEffect(() => {
     if (!activeCategory) return;
     
     const subsForActiveCategory = subcategories.filter(s => s.category_id === activeCategory);
-    if (subsForActiveCategory.length > 0) {
-      // Always select first subcategory when category changes
+    if (subsForActiveCategory.length > 0 && !activeSubcategory) {
       setActiveSubcategory(subsForActiveCategory[0].id);
-    } else {
+    } else if (subsForActiveCategory.length === 0) {
       setActiveSubcategory("");
     }
-  }, [activeCategory]); // Only depend on activeCategory, not activeSubcategory
+  }, [subcategories, activeCategory]);
 
   // Scroll to subcategory when clicked with offset for sticky header (preview mode only)
   const handleSubcategoryClick = useCallback((subcategoryId: string) => {
@@ -268,39 +225,27 @@ const Editor = () => {
     }
   }, [previewMode, currentSubcategories]);
 
-  // Update active subcategory based on scroll position (preview mode only) - throttled with RAF
+  // Update active subcategory based on scroll position (preview mode only)
   useEffect(() => {
     if (!previewMode || currentSubcategories.length === 0) return;
 
-    let rafId: number | null = null;
-    let isScrolling = false;
-
     const handleScroll = () => {
-      if (isScrolling) return;
-      isScrolling = true;
+      const scrollPosition = window.scrollY + 250;
       
-      rafId = requestAnimationFrame(() => {
-        const scrollPosition = window.scrollY + 250;
-        
-        for (const subcategory of currentSubcategories) {
-          const element = subcategoryRefs.current[subcategory.name];
-          if (element) {
-            const { offsetTop, offsetHeight } = element;
-            if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-              setActiveSubcategory(subcategory.id);
-              break;
-            }
+      for (const subcategory of currentSubcategories) {
+        const element = subcategoryRefs.current[subcategory.name];
+        if (element) {
+          const { offsetTop, offsetHeight } = element;
+          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+            setActiveSubcategory(subcategory.id);
+            break;
           }
         }
-        isScrolling = false;
-      });
+      }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (rafId) cancelAnimationFrame(rafId);
-    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [previewMode, currentSubcategories]);
 
   const handlePublishToggle = async () => {
@@ -331,6 +276,18 @@ const Editor = () => {
     toast.success(newState ? "Filter enabled" : "Filter disabled");
   };
 
+  const handleViewModeChange = async (mode: 'grid' | 'table') => {
+    // Instant UI update
+    setViewMode(mode);
+    
+    // Save in background
+    if (restaurant) {
+      updateRestaurant.mutate({
+        id: restaurant.id,
+        updates: { editor_view_mode: mode }
+      });
+    }
+  };
 
   // Filter handlers
   const handleAllergenToggle = useCallback((allergen: string) => {
@@ -403,6 +360,12 @@ const Editor = () => {
   // Filtered dishes for edit mode
   const filteredDishes = useMemo(() => getFilteredDishes(dishes), [dishes, getFilteredDishes]);
 
+  // Sync view mode with restaurant preference
+  useEffect(() => {
+    if (restaurant?.editor_view_mode) {
+      setViewMode(restaurant.editor_view_mode);
+    }
+  }, [restaurant?.editor_view_mode]);
 
   // Show skeleton only on initial load, not during refetch
   const isInitialLoading = 
@@ -459,7 +422,15 @@ const Editor = () => {
       <EditorTopBar
           restaurant={restaurant}
           previewMode={previewMode}
-          onPreviewToggle={() => setPreviewMode(!previewMode)}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
+          onPreviewToggle={() => {
+            const newPreviewMode = !previewMode;
+            if (newPreviewMode && viewMode === 'table') {
+              setViewMode('grid');
+            }
+            setPreviewMode(newPreviewMode);
+          }}
           onPublishToggle={handlePublishToggle}
           onUndo={handleUndo}
           onRedo={handleRedo}
@@ -530,7 +501,7 @@ const Editor = () => {
         />
 
         {/* Preview Mode: Show all subcategories in one page */}
-        {previewMode && currentSubcategories.map((subcategory) => {
+        {previewMode && viewMode === 'grid' && currentSubcategories.map((subcategory) => {
           const subcategoryDishes = dishesBySubcategory[subcategory.id] || [];
           const filteredSubcategoryDishes = getFilteredDishes(subcategoryDishes);
           
@@ -550,12 +521,21 @@ const Editor = () => {
         })}
 
         {/* Edit Mode: Show only active subcategory */}
-        {!previewMode && activeSubcategory && (
+        {!previewMode && activeSubcategory && viewMode === 'grid' && (
           <EditableDishes
             dishes={filteredDishes || dishes}
             subcategoryId={activeSubcategory}
             previewMode={previewMode}
-            restaurant={restaurant}
+          />
+        )}
+
+        {activeSubcategory && viewMode === 'table' && !previewMode && (
+          <SpreadsheetView
+            dishes={dishes}
+            categories={categories}
+            subcategories={subcategories}
+            restaurantId={restaurant.id}
+            activeSubcategoryId={activeSubcategory}
           />
         )}
       </div>

@@ -75,9 +75,6 @@ export const useSubcategoryDishesWithOptions = (dishes: Dish[], enabled: boolean
       }));
     },
     enabled: enabled && dishes.length > 0,
-    staleTime: 0, // Always fresh for instant updates
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    placeholderData: (prev) => prev, // Keep previous data while refetching for smooth UX
+    staleTime: 30000, // 30 seconds
   });
 };
