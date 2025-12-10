@@ -44,7 +44,7 @@ const Editor = () => {
   const { data: dishes = [], isLoading: dishesLoading } = useDishes(activeSubcategory);
   const updateRestaurant = useUpdateRestaurant();
 
-  // Listen to all dish mutations to detect changes
+  // Listen to all dish mutations to detect changes and sync preview
   useEffect(() => {
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
       // Listen for successful mutations on dishes, categories, subcategories, or restaurant
@@ -57,12 +57,17 @@ const Editor = () => {
           queryKey[0] === 'restaurant'
         )) {
           setHasPendingChanges(true);
+          
+          // Sync preview with editor changes - invalidate preview query when dishes change
+          if (queryKey[0] === 'dishes' && activeCategory) {
+            queryClient.invalidateQueries({ queryKey: ['all-dishes-for-category', activeCategory] });
+          }
         }
       }
     });
 
     return () => unsubscribe();
-  }, [queryClient]);
+  }, [queryClient, activeCategory]);
 
   // Handle Update button - force sync all caches
   const handleUpdate = async () => {
@@ -97,7 +102,8 @@ const Editor = () => {
   );
 
   // Get all dishes for all subcategories in preview mode
-  const { data: allDishesForCategory } = useQuery({
+  // Use shorter staleTime for instant sync with editor changes
+  const { data: allDishesForCategory, refetch: refetchPreviewDishes } = useQuery({
     queryKey: ['all-dishes-for-category', activeCategory],
     queryFn: async () => {
       if (!activeCategory) return [];
@@ -112,6 +118,8 @@ const Editor = () => {
       return data || [];
     },
     enabled: !!activeCategory,
+    staleTime: 0, // Always refetch when invalidated for instant preview sync
+    refetchOnMount: 'always',
   });
 
   // Group dishes by subcategory for preview mode
