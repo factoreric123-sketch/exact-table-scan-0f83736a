@@ -29,10 +29,15 @@ export const EditableDishes = ({
   const createDish = useCreateDish();
   const updateDishesOrder = useUpdateDishesOrder();
   
-  // Fetch options and modifiers for preview mode
+  // Only fetch options/modifiers if NOT in preview mode AND dishes don't already have them
+  // In preview mode, fullMenuData already includes options/modifiers from the RPC function
+  const dishesAlreadyHaveOptions = dishes.length > 0 && dishes.some((d: any) => 
+    Array.isArray(d.options) || Array.isArray(d.modifiers)
+  );
+  
   const { data: dishesWithOptions } = useSubcategoryDishesWithOptions(
     dishes,
-    previewMode
+    !previewMode && !dishesAlreadyHaveOptions // Only fetch when needed
   );
 
   // Prevent flicker by ensuring content is ready
@@ -113,8 +118,9 @@ export const EditableDishes = ({
   }
 
   if (previewMode) {
-    // Use dishes with options/modifiers if available, otherwise use base dishes
-    const dishesData = dishesWithOptions || dishes;
+    // In preview mode, dishes from fullMenuData already have options/modifiers embedded
+    // Only fall back to dishesWithOptions if base dishes don't have options
+    const dishesData = dishesAlreadyHaveOptions ? dishes : (dishesWithOptions || dishes);
     
     const dishCards = dishesData.map((dish) => {
       const dishWithOptions = dish as any;

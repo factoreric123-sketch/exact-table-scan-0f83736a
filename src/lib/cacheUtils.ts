@@ -16,8 +16,13 @@ export const clearAllMenuCaches = (restaurantId: string) => {
 /**
  * Invalidates React Query caches for a restaurant's menu
  * Call this in onSuccess/onSettled after mutations complete
+ * Uses removeQueries + refetchQueries to force fresh data
  */
 export const invalidateMenuQueries = async (queryClient: any, restaurantId: string) => {
+  // Remove the cached data entirely to force fresh fetch
+  queryClient.removeQueries({ queryKey: ["full-menu", restaurantId] });
+  
+  // Also invalidate to trigger any active observers to refetch
   await queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
 };
 

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -44,11 +44,14 @@ export const useFullMenu = (
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const queryClient = useQueryClient();
+  
+  // Track if we've done initial fetch to prevent background refresh overwriting optimistic updates
+  const hasInitialFetch = useRef(false);
 
   const cacheKey = restaurantId ? `${CACHE_KEY_PREFIX}${restaurantId}` : '';
 
   // Fetch from database
-  const fetchMenu = useCallback(async () => {
+  const fetchMenu = useCallback(async (forceRefresh: boolean = false) => {
     if (!restaurantId) return;
     
     try {
@@ -79,6 +82,7 @@ export const useFullMenu = (
       }
       
       setError(null);
+      hasInitialFetch.current = true;
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch menu'));
     } finally {
@@ -91,7 +95,8 @@ export const useFullMenu = (
     if (restaurantId) {
       // Always clear localStorage on refetch
       localStorage.removeItem(cacheKey);
-      await fetchMenu();
+      hasInitialFetch.current = false;
+      await fetchMenu(true);
     }
   }, [restaurantId, cacheKey, fetchMenu]);
 
@@ -106,8 +111,11 @@ export const useFullMenu = (
     if (rqCached) {
       setData(rqCached);
       setIsLoading(false);
-      // Background refresh to ensure data is fresh
-      fetchMenu();
+      // DON'T do background refresh here - it would overwrite optimistic updates!
+      // Only fetch if we haven't done initial fetch yet
+      if (!hasInitialFetch.current) {
+        fetchMenu();
+      }
       return;
     }
 
@@ -137,8 +145,10 @@ export const useFullMenu = (
       if (cachedData) {
         setData(cachedData);
         setIsLoading(false);
-        // Background refresh
-        fetchMenu();
+        // Update React Query cache so optimistic updates work
+        queryClient.setQueryData(['full-menu', restaurantId], cachedData);
+        hasInitialFetch.current = true;
+        // DON'T do background refresh - wait for explicit invalidation
         return;
       }
     }
@@ -148,20 +158,25 @@ export const useFullMenu = (
   }, [restaurantId, cacheKey, fetchMenu, useLocalStorageCache, queryClient]);
 
   // Subscribe to React Query cache updates (for optimistic updates from mutations)
+  // Listen for BOTH 'added' (setQueryData) and 'updated' events
   useEffect(() => {
     if (!restaurantId) return;
 
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      if (event?.type === 'updated' && event?.query?.queryKey?.[0] === 'full-menu' && event?.query?.queryKey?.[1] === restaurantId) {
+      // Check for any cache change event on our query
+      if (
+        event?.query?.queryKey?.[0] === 'full-menu' && 
+        event?.query?.queryKey?.[1] === restaurantId
+      ) {
         const newData = queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
-        if (newData) {
+        if (newData && newData !== data) {
           setData(newData);
         }
       }
     });
 
     return () => unsubscribe();
-  }, [restaurantId, queryClient]);
+  }, [restaurantId, queryClient, data]);
 
   return { data, isLoading, error, refetch };
 };
