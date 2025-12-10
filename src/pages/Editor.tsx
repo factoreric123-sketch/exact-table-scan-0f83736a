@@ -9,7 +9,7 @@ import { EditorTopBar } from "@/components/editor/EditorTopBar";
 import { EditableCategories } from "@/components/editor/EditableCategories";
 import { EditableSubcategories } from "@/components/editor/EditableSubcategories";
 import { EditableDishes } from "@/components/editor/EditableDishes";
-import { SpreadsheetView } from "@/components/editor/SpreadsheetView";
+
 import RestaurantHeader from "@/components/RestaurantHeader";
 import { AllergenFilter } from "@/components/AllergenFilter";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -30,7 +30,7 @@ const Editor = () => {
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [activeSubcategory, setActiveSubcategory] = useState<string>("");
   const [previewMode, setPreviewMode] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  
   const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
   const [selectedDietary, setSelectedDietary] = useState<string[]>([]);
   const [selectedSpicy, setSelectedSpicy] = useState<boolean | null>(null);
@@ -276,18 +276,6 @@ const Editor = () => {
     toast.success(newState ? "Filter enabled" : "Filter disabled");
   };
 
-  const handleViewModeChange = async (mode: 'grid' | 'table') => {
-    // Instant UI update
-    setViewMode(mode);
-    
-    // Save in background
-    if (restaurant) {
-      updateRestaurant.mutate({
-        id: restaurant.id,
-        updates: { editor_view_mode: mode }
-      });
-    }
-  };
 
   // Filter handlers
   const handleAllergenToggle = useCallback((allergen: string) => {
@@ -360,12 +348,6 @@ const Editor = () => {
   // Filtered dishes for edit mode
   const filteredDishes = useMemo(() => getFilteredDishes(dishes), [dishes, getFilteredDishes]);
 
-  // Sync view mode with restaurant preference
-  useEffect(() => {
-    if (restaurant?.editor_view_mode) {
-      setViewMode(restaurant.editor_view_mode);
-    }
-  }, [restaurant?.editor_view_mode]);
 
   // Show skeleton only on initial load, not during refetch
   const isInitialLoading = 
@@ -422,15 +404,7 @@ const Editor = () => {
       <EditorTopBar
           restaurant={restaurant}
           previewMode={previewMode}
-          viewMode={viewMode}
-          onViewModeChange={handleViewModeChange}
-          onPreviewToggle={() => {
-            const newPreviewMode = !previewMode;
-            if (newPreviewMode && viewMode === 'table') {
-              setViewMode('grid');
-            }
-            setPreviewMode(newPreviewMode);
-          }}
+          onPreviewToggle={() => setPreviewMode(!previewMode)}
           onPublishToggle={handlePublishToggle}
           onUndo={handleUndo}
           onRedo={handleRedo}
@@ -501,7 +475,7 @@ const Editor = () => {
         />
 
         {/* Preview Mode: Show all subcategories in one page */}
-        {previewMode && viewMode === 'grid' && currentSubcategories.map((subcategory) => {
+        {previewMode && currentSubcategories.map((subcategory) => {
           const subcategoryDishes = dishesBySubcategory[subcategory.id] || [];
           const filteredSubcategoryDishes = getFilteredDishes(subcategoryDishes);
           
@@ -521,21 +495,11 @@ const Editor = () => {
         })}
 
         {/* Edit Mode: Show only active subcategory */}
-        {!previewMode && activeSubcategory && viewMode === 'grid' && (
+        {!previewMode && activeSubcategory && (
           <EditableDishes
             dishes={filteredDishes || dishes}
             subcategoryId={activeSubcategory}
             previewMode={previewMode}
-          />
-        )}
-
-        {activeSubcategory && viewMode === 'table' && !previewMode && (
-          <SpreadsheetView
-            dishes={dishes}
-            categories={categories}
-            subcategories={subcategories}
-            restaurantId={restaurant.id}
-            activeSubcategoryId={activeSubcategory}
           />
         )}
       </div>
