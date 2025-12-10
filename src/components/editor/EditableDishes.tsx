@@ -154,8 +154,7 @@ export const EditableDishes = ({
     });
 
     return (
-      <MenuGrid 
-        key={restaurant?.updated_at} // Force re-render when settings change
+      <MenuGrid
         dishes={dishCards} 
         sectionTitle=""
         showPrice={restaurant?.show_prices !== false}
