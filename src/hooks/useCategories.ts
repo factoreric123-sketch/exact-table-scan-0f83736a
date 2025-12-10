@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { generateTempId } from "@/lib/utils/uuid";
 import { getErrorMessage } from "@/lib/errorUtils";
+import { broadcastMenuChange } from "@/hooks/useMenuSync";
 
 export interface Category {
   id: string;
@@ -84,6 +85,9 @@ export const useCreateCategory = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["categories", data.restaurant_id] });
       queryClient.invalidateQueries({ queryKey: ["subcategories"] });
+      queryClient.invalidateQueries({ queryKey: ["full-menu", data.restaurant_id] });
+      localStorage.removeItem(`fullMenu:${data.restaurant_id}`);
+      broadcastMenuChange(data.restaurant_id);
     },
     onError: (error, variables, context) => {
       if (context?.previous && context.restaurantId) {
@@ -117,6 +121,9 @@ export const useUpdateCategory = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["categories", data.restaurant_id] });
+      queryClient.invalidateQueries({ queryKey: ["full-menu", data.restaurant_id] });
+      localStorage.removeItem(`fullMenu:${data.restaurant_id}`);
+      broadcastMenuChange(data.restaurant_id);
     },
   });
 };
@@ -138,6 +145,9 @@ export const useDeleteCategory = () => {
       queryClient.invalidateQueries({ queryKey: ["categories", restaurantId] });
       queryClient.invalidateQueries({ queryKey: ["subcategories"] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
+      queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
+      localStorage.removeItem(`fullMenu:${restaurantId}`);
+      broadcastMenuChange(restaurantId);
       toast.success("Category deleted");
     },
   });

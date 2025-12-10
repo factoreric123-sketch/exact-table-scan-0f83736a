@@ -12,6 +12,7 @@ import { useRestaurant } from "@/hooks/useRestaurants";
 import { useCategories } from "@/hooks/useCategories";
 import { useSubcategories } from "@/hooks/useSubcategories";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeMenuUpdates } from "@/hooks/useMenuSync";
 
 interface PublicMenuProps {
   slugOverride?: string;
@@ -56,6 +57,10 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
 
   // Instant data fetching with aggressive caching
   const { data: restaurant, isLoading: restaurantLoading } = useRestaurant(slug || "");
+  
+  // Enable realtime updates for instant sync with editor
+  useRealtimeMenuUpdates(restaurant?.id);
+  
   const { data: categories } = useCategories(restaurant?.id || "", {
     enabled: !!restaurant?.id && restaurant?.published === true,
   });

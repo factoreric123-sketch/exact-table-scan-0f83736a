@@ -12,24 +12,23 @@ import { EditableDishes } from "@/components/editor/EditableDishes";
 
 import RestaurantHeader from "@/components/RestaurantHeader";
 import { AllergenFilter } from "@/components/AllergenFilter";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTrigger } from "@/components/ui/sheet";
 import { Filter } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useThemeHistory } from "@/hooks/useThemeHistory";
 import { getDefaultTheme } from "@/lib/presetThemes";
 import { Theme } from "@/lib/types/theme";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useCrossTabSync } from "@/hooks/useCrossTabSync";
+import { useMenuSync, broadcastMenuChange } from "@/hooks/useMenuSync";
 
 const Editor = () => {
   const { restaurantId } = useParams<{ restaurantId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  // Enable cross-tab cache synchronization
-  useCrossTabSync();
+  // Enable cross-tab and realtime menu synchronization
+  const { invalidateMenuCache, broadcastMenuUpdate } = useMenuSync(restaurantId);
   
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [activeSubcategory, setActiveSubcategory] = useState<string>("");
@@ -68,21 +67,18 @@ const Editor = () => {
     return () => unsubscribe();
   }, [queryClient]);
 
-  // Handle Update button - force sync all caches
+  // Handle Update button - force sync all caches and broadcast to other tabs
   const handleUpdate = async () => {
     if (!restaurantId) return;
 
-    // Invalidate all React Query caches
-    await queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
-    await queryClient.invalidateQueries({ queryKey: ["restaurant", restaurantId] });
-    await queryClient.invalidateQueries({ queryKey: ["categories", restaurantId] });
-    await queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
-    
-    // Clear localStorage cache
-    localStorage.removeItem(`fullMenu:${restaurantId}`);
+    // Invalidate all caches using the sync helper
+    invalidateMenuCache(restaurantId);
     
     // Force refetch
     await refetchRestaurant();
+    
+    // Broadcast to other tabs (live menu, other editor tabs)
+    broadcastMenuUpdate('menu-updated');
     
     // Clear pending changes flag
     setHasPendingChanges(false);
