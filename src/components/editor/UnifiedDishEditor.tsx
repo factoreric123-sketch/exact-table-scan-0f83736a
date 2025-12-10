@@ -250,10 +250,12 @@ export function UnifiedDishEditor({
   const updateDish = useUpdateDish();
   const uploadImage = useImageUpload();
 
-  // Loading state with timeout protection
+  // Loading state with timeout protection - only show error if STILL loading after timeout
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+  const isStillLoadingAfterTimeout = loadingTimedOut && (optionsLoading || modifiersLoading);
   const isDataLoading = (optionsLoading || modifiersLoading) && !loadingTimedOut;
-  const hasDataError = optionsError || modifiersError || loadingTimedOut;
+  // Only show error if there's an actual error OR if we're still loading after timeout
+  const hasDataError = optionsError || modifiersError || isStillLoadingAfterTimeout;
 
   // Track if we've initialized from server data
   const isInitializedRef = useRef(false);
