@@ -642,6 +642,9 @@ export function UnifiedDishEditor({
     }
 
     try {
+      // Compute has_options automatically based on actual options
+      const hasActualOptions = visibleOptions.filter(o => o.name.trim()).length > 0;
+      
       // Build dish updates
       const dishUpdates: Partial<Dish> = {
         name: localName.trim(),
@@ -657,7 +660,7 @@ export function UnifiedDishEditor({
         is_special: localSpecial,
         is_popular: localPopular,
         is_chef_recommendation: localChefRec,
-        has_options: localHasOptions,
+        has_options: hasActualOptions, // Auto-compute based on actual options
       };
 
       // Compute diffs
