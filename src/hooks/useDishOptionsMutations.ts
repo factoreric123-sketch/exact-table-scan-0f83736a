@@ -46,17 +46,12 @@ export const applyOptimisticOptionsUpdate = (
   queryClient.invalidateQueries({ queryKey: ["dishes"] });
   queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
   queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
+  queryClient.invalidateQueries({ queryKey: ["public-menu-dishes"] });
+  queryClient.invalidateQueries({ queryKey: ["subcategory-dishes-with-options"] });
   
-  // Clear localStorage cache and broadcast
-  if ('requestIdleCallback' in window) {
-    requestIdleCallback(() => {
-      try { localStorage.removeItem(`fullMenu:${restaurantId}`); } catch {}
-      broadcastMenuChange(restaurantId, 'menu-updated');
-    }, { timeout: 5000 });
-  } else {
-    try { localStorage.removeItem(`fullMenu:${restaurantId}`); } catch {}
-    broadcastMenuChange(restaurantId, 'menu-updated');
-  }
+  // IMMEDIATE: Clear localStorage cache and broadcast - no delay for critical sync
+  try { localStorage.removeItem(`fullMenu:${restaurantId}`); } catch {}
+  broadcastMenuChange(restaurantId, 'menu-updated');
 };
 
 // ============= BACKGROUND MUTATION EXECUTOR =============

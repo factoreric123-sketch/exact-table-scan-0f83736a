@@ -35,6 +35,7 @@ export const EditableDishes = ({
 }: EditableDishesProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const [autoOpenDishId, setAutoOpenDishId] = useState<string | null>(null);
   const createDish = useCreateDish();
   const updateDishesOrder = useUpdateDishesOrder();
   
@@ -91,7 +92,7 @@ export const EditableDishes = ({
 
   const handleAddDish = async () => {
     try {
-      await createDish.mutateAsync({
+      const newDish = await createDish.mutateAsync({
         subcategory_id: subcategoryId,
         name: "New Dish",
         description: "Add description",
@@ -100,6 +101,12 @@ export const EditableDishes = ({
         is_new: false,
       });
       toast.success("Dish added");
+      
+      // Auto-open editor for the new dish if we have restaurantId
+      if (newDish && restaurant?.id) {
+        // Set a flag to auto-open editor - handled by SortableDish
+        setAutoOpenDishId(newDish.id);
+      }
     } catch (error) {
       toast.error("Failed to add dish");
     }
@@ -187,6 +194,8 @@ export const EditableDishes = ({
                 dish={dish} 
                 subcategoryId={subcategoryId}
                 restaurantId={restaurantId}
+                autoOpen={autoOpenDishId === dish.id}
+                onAutoOpenHandled={() => setAutoOpenDishId(null)}
               />
             ))}
           </div>

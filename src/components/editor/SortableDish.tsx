@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Trash2, Image as ImageIcon, Pencil, Sparkles, Star, TrendingUp, ChefHat } from "lucide-react";
@@ -25,9 +25,17 @@ interface SortableDishProps {
   dish: Dish;
   subcategoryId: string;
   restaurantId: string;
+  autoOpen?: boolean;
+  onAutoOpenHandled?: () => void;
 }
 
-export const SortableDish = ({ dish, subcategoryId, restaurantId }: SortableDishProps) => {
+export const SortableDish = ({ 
+  dish, 
+  subcategoryId, 
+  restaurantId, 
+  autoOpen = false,
+  onAutoOpenHandled 
+}: SortableDishProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: dish.id,
   });
@@ -38,6 +46,14 @@ export const SortableDish = ({ dish, subcategoryId, restaurantId }: SortableDish
   const [showCropModal, setShowCropModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [showEditor, setShowEditor] = useState(false);
+
+  // Auto-open editor when autoOpen prop is true (after creating new dish)
+  useEffect(() => {
+    if (autoOpen && !showEditor) {
+      setShowEditor(true);
+      onAutoOpenHandled?.();
+    }
+  }, [autoOpen, showEditor, onAutoOpenHandled]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
