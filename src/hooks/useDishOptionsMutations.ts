@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { DishOption } from "./useDishOptions";
 import type { DishModifier } from "./useDishModifiers";
@@ -28,9 +28,6 @@ export const normalizePrice = (price: string): string => {
 };
 
 // ============= OPTIMISTIC CACHE UPDATE - INSTANT =============
-// This is the key to Apple-quality speed: update cache BEFORE network
-// NO invalidateQueries here - that causes heavy refetches that block UI
-
 export const applyOptimisticOptionsUpdate = (
   queryClient: any,
   dishId: string,
@@ -50,14 +47,9 @@ export const applyOptimisticOptionsUpdate = (
       try { localStorage.removeItem(`fullMenu:${restaurantId}`); } catch {}
     }, { timeout: 5000 });
   }
-  
-  // NOTE: We do NOT invalidate queries here - that causes heavy refetches
-  // The mutations will handle cache updates after they complete
 };
 
 // ============= BACKGROUND MUTATION EXECUTOR =============
-// Fire-and-forget with error recovery
-
 export interface MutationTask {
   type: 'create-option' | 'update-option' | 'delete-option' | 'create-modifier' | 'update-modifier' | 'delete-modifier' | 'update-dish';
   name: string;
@@ -72,8 +64,6 @@ export const executeBackgroundMutations = (
 ) => {
   if (tasks.length === 0) return;
 
-  // FIRE AND FORGET - Execute in background, don't await
-  // This function returns immediately, mutations happen async
   setTimeout(() => {
     Promise.allSettled(
       tasks.map(task => task.execute())
@@ -81,7 +71,6 @@ export const executeBackgroundMutations = (
       const failed = results.filter(r => r.status === 'rejected');
       
       if (failed.length > 0) {
-        // Retry failed ones once
         const failedTasks = tasks.filter((_, i) => results[i].status === 'rejected');
         
         Promise.allSettled(failedTasks.map(t => t.execute())).then(retryResults => {
@@ -211,45 +200,4 @@ export const useDeleteDishModifierSilent = () => {
       if (error) throw error;
     },
   });
-};
-
-// Legacy function - kept for compatibility but no longer used in optimistic flow
-export const invalidateAllCaches = async (dishId: string, queryClient: any) => {
-  // Get restaurant ID synchronously from existing cache if possible
-  const dishes = queryClient.getQueryData(["dishes"]) as any[];
-  const dish = dishes?.find((d: any) => d.id === dishId);
-  
-  let restaurantId: string | null = null;
-  
-  if (dish?.subcategories?.categories?.restaurant_id) {
-    restaurantId = dish.subcategories.categories.restaurant_id;
-  } else {
-    // Fallback: fetch from DB (slower path)
-    const { data } = await supabase
-      .from("dishes")
-      .select(`
-        subcategory_id,
-        subcategories!inner(
-          category_id,
-          categories!inner(restaurant_id)
-        )
-      `)
-      .eq("id", dishId)
-      .single();
-    
-    restaurantId = data?.subcategories?.categories?.restaurant_id || null;
-  }
-  
-  // Batch invalidations
-  await Promise.all([
-    queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] }),
-    queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] }),
-    queryClient.invalidateQueries({ queryKey: ["dishes"] }),
-    queryClient.invalidateQueries({ queryKey: ["subcategory-dishes-with-options"] }),
-    ...(restaurantId ? [queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] })] : []),
-  ]);
-  
-  if (restaurantId) {
-    localStorage.removeItem(`fullMenu:${restaurantId}`);
-  }
 };
