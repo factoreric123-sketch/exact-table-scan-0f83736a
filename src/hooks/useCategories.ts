@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { generateTempId } from "@/lib/utils/uuid";
 import { getErrorMessage } from "@/lib/errorUtils";
+import { clearAllMenuCaches, invalidateMenuQueries } from "@/lib/cacheUtils";
 
 export interface Category {
   id: string;
@@ -65,6 +66,9 @@ export const useCreateCategory = () => {
       // Optimistic create
       if (!category.restaurant_id) return;
       
+      // Clear localStorage FIRST to prevent stale reads
+      clearAllMenuCaches(category.restaurant_id);
+      
       await queryClient.cancelQueries({ queryKey: ["categories", category.restaurant_id] });
       const previous = queryClient.getQueryData<Category[]>(["categories", category.restaurant_id]);
       
@@ -81,7 +85,9 @@ export const useCreateCategory = () => {
       
       return { previous, restaurantId: category.restaurant_id };
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      // Invalidate all related caches
+      await invalidateMenuQueries(queryClient, data.restaurant_id);
       queryClient.invalidateQueries({ queryKey: ["categories", data.restaurant_id] });
       queryClient.invalidateQueries({ queryKey: ["subcategories"] });
     },
@@ -92,8 +98,9 @@ export const useCreateCategory = () => {
       const message = getErrorMessage(error);
       toast.error(`Failed to create category: ${message}`);
     },
-    onSettled: (_, __, variables) => {
+    onSettled: async (_, __, variables) => {
       if (variables.restaurant_id) {
+        await invalidateMenuQueries(queryClient, variables.restaurant_id);
         queryClient.invalidateQueries({ queryKey: ["categories", variables.restaurant_id] });
       }
     },
@@ -115,7 +122,27 @@ export const useUpdateCategory = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onMutate: async ({ id }) => {
+      // Get restaurant ID from existing category data
+      const allCategories = queryClient.getQueriesData<Category[]>({ queryKey: ["categories"] });
+      let restaurantId: string | null = null;
+      
+      for (const [, categories] of allCategories) {
+        const category = categories?.find(c => c.id === id);
+        if (category) {
+          restaurantId = category.restaurant_id;
+          break;
+        }
+      }
+      
+      if (restaurantId) {
+        clearAllMenuCaches(restaurantId);
+      }
+      
+      return { restaurantId };
+    },
+    onSuccess: async (data) => {
+      await invalidateMenuQueries(queryClient, data.restaurant_id);
       queryClient.invalidateQueries({ queryKey: ["categories", data.restaurant_id] });
     },
   });
@@ -134,7 +161,13 @@ export const useDeleteCategory = () => {
       if (error) throw error;
       return restaurantId;
     },
-    onSuccess: (restaurantId) => {
+    onMutate: async ({ restaurantId }) => {
+      // Clear localStorage FIRST
+      clearAllMenuCaches(restaurantId);
+      return { restaurantId };
+    },
+    onSuccess: async (restaurantId) => {
+      await invalidateMenuQueries(queryClient, restaurantId);
       queryClient.invalidateQueries({ queryKey: ["categories", restaurantId] });
       queryClient.invalidateQueries({ queryKey: ["subcategories"] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
@@ -163,6 +196,9 @@ export const useUpdateCategoriesOrder = () => {
       if (error) throw error;
     },
     onMutate: async ({ categories, restaurantId }) => {
+      // Clear localStorage FIRST
+      clearAllMenuCaches(restaurantId);
+      
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["categories", restaurantId] });
 
@@ -189,8 +225,9 @@ export const useUpdateCategoriesOrder = () => {
       const message = getErrorMessage(error);
       toast.error(`Failed to reorder categories: ${message}`);
     },
-    onSettled: (_, __, variables) => {
+    onSettled: async (_, __, variables) => {
       // Invalidate after completion
+      await invalidateMenuQueries(queryClient, variables.restaurantId);
       queryClient.invalidateQueries({ queryKey: ["categories", variables.restaurantId] });
     },
   });

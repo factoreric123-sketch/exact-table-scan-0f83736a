@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface FullMenuData {
   restaurant: any;
@@ -13,25 +14,36 @@ interface UseFullMenuReturn {
   refetch: () => Promise<void>;
 }
 
+interface UseFullMenuOptions {
+  /**
+   * Whether to use localStorage caching (default: true)
+   * Set to false for Editor Preview to ensure fresh data
+   */
+  useLocalStorageCache?: boolean;
+}
+
 const CACHE_KEY_PREFIX = 'fullMenu:';
-const CACHE_TTL = 1000 * 60 * 5; // 5 minutes - reduced for faster settings updates
+const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
 
 interface CacheEntry {
   data: FullMenuData;
   timestamp: number;
-  version: string; // Add version based on restaurant updated_at
 }
 
 /**
- * Instant menu loading with localStorage cache
- * - Synchronous cache read for instant rendering
- * - Single RPC call to fetch all menu data
- * - Background refresh to keep data fresh
+ * Menu loading with optional localStorage cache
+ * - For Live Menu: Uses localStorage for fast initial load
+ * - For Editor Preview: Skips localStorage, uses React Query cache only
  */
-export const useFullMenu = (restaurantId: string | undefined): UseFullMenuReturn => {
+export const useFullMenu = (
+  restaurantId: string | undefined, 
+  options: UseFullMenuOptions = {}
+): UseFullMenuReturn => {
+  const { useLocalStorageCache = true } = options;
   const [data, setData] = useState<FullMenuData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
 
   const cacheKey = restaurantId ? `${CACHE_KEY_PREFIX}${restaurantId}` : '';
 
@@ -50,16 +62,20 @@ export const useFullMenu = (restaurantId: string | undefined): UseFullMenuReturn
       const parsed = menuData as unknown as FullMenuData;
       setData(parsed);
       
-      // Write to cache
-      try {
-        const entry: CacheEntry = {
-          data: parsed,
-          timestamp: Date.now(),
-          version: parsed?.restaurant?.updated_at || '',
-        };
-        localStorage.setItem(cacheKey, JSON.stringify(entry));
-      } catch (err) {
-        console.warn('Failed to cache menu data:', err);
+      // Update React Query cache for instant access by other components
+      queryClient.setQueryData(['full-menu', restaurantId], parsed);
+      
+      // Only write to localStorage if enabled (not for Editor Preview)
+      if (useLocalStorageCache) {
+        try {
+          const entry: CacheEntry = {
+            data: parsed,
+            timestamp: Date.now(),
+          };
+          localStorage.setItem(cacheKey, JSON.stringify(entry));
+        } catch (err) {
+          console.warn('Failed to cache menu data:', err);
+        }
       }
       
       setError(null);
@@ -68,11 +84,12 @@ export const useFullMenu = (restaurantId: string | undefined): UseFullMenuReturn
     } finally {
       setIsLoading(false);
     }
-  }, [restaurantId, cacheKey]);
+  }, [restaurantId, cacheKey, useLocalStorageCache, queryClient]);
 
   // Refetch function for external use
   const refetch = useCallback(async () => {
     if (restaurantId) {
+      // Always clear localStorage on refetch
       localStorage.removeItem(cacheKey);
       await fetchMenu();
     }
@@ -84,46 +101,67 @@ export const useFullMenu = (restaurantId: string | undefined): UseFullMenuReturn
       return;
     }
 
-    // Try to read from cache synchronously
-    const readCache = (): FullMenuData | null => {
-      try {
-        const cached = localStorage.getItem(cacheKey);
-        if (!cached) return null;
-
-        const entry: CacheEntry = JSON.parse(cached);
-        const age = Date.now() - entry.timestamp;
-
-        // Check if cache is expired
-        if (age > CACHE_TTL) {
-          localStorage.removeItem(cacheKey);
-          return null;
-        }
-
-        // Check if restaurant settings have changed by comparing version
-        const currentVersion = entry.data?.restaurant?.updated_at || '';
-        if (entry.version !== currentVersion) {
-          localStorage.removeItem(cacheKey);
-          return null;
-        }
-
-        return entry.data;
-      } catch {
-        return null;
-      }
-    };
-
-    // Try cache first
-    const cachedData = readCache();
-    if (cachedData) {
-      setData(cachedData);
+    // PRIORITY 1: Check React Query cache FIRST (has optimistic updates)
+    const rqCached = queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
+    if (rqCached) {
+      setData(rqCached);
       setIsLoading(false);
-      // Background refresh
+      // Background refresh to ensure data is fresh
       fetchMenu();
-    } else {
-      // No cache, fetch immediately
-      fetchMenu();
+      return;
     }
-  }, [restaurantId, cacheKey, fetchMenu]);
+
+    // PRIORITY 2: Check localStorage cache (only if enabled)
+    if (useLocalStorageCache) {
+      const readLocalStorageCache = (): FullMenuData | null => {
+        try {
+          const cached = localStorage.getItem(cacheKey);
+          if (!cached) return null;
+
+          const entry: CacheEntry = JSON.parse(cached);
+          const age = Date.now() - entry.timestamp;
+
+          // Check if cache is expired
+          if (age > CACHE_TTL) {
+            localStorage.removeItem(cacheKey);
+            return null;
+          }
+
+          return entry.data;
+        } catch {
+          return null;
+        }
+      };
+
+      const cachedData = readLocalStorageCache();
+      if (cachedData) {
+        setData(cachedData);
+        setIsLoading(false);
+        // Background refresh
+        fetchMenu();
+        return;
+      }
+    }
+
+    // PRIORITY 3: No cache, fetch immediately
+    fetchMenu();
+  }, [restaurantId, cacheKey, fetchMenu, useLocalStorageCache, queryClient]);
+
+  // Subscribe to React Query cache updates (for optimistic updates from mutations)
+  useEffect(() => {
+    if (!restaurantId) return;
+
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      if (event?.type === 'updated' && event?.query?.queryKey?.[0] === 'full-menu' && event?.query?.queryKey?.[1] === restaurantId) {
+        const newData = queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
+        if (newData) {
+          setData(newData);
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [restaurantId, queryClient]);
 
   return { data, isLoading, error, refetch };
 };

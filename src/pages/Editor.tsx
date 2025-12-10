@@ -45,7 +45,8 @@ const Editor = () => {
   const updateRestaurant = useUpdateRestaurant();
   
   // Use same data source as Live Menu for Preview - instant sync!
-  const { data: fullMenuData, refetch: refetchFullMenu } = useFullMenu(restaurantId);
+  // Disable localStorage cache for Editor Preview to ensure optimistic updates take effect
+  const { data: fullMenuData, refetch: refetchFullMenu } = useFullMenu(restaurantId, { useLocalStorageCache: false });
 
   // Listen to all dish mutations to detect changes
   useEffect(() => {
@@ -418,10 +419,17 @@ const Editor = () => {
           previewMode={previewMode}
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
-          onPreviewToggle={() => {
+        onPreviewToggle={() => {
             const newPreviewMode = !previewMode;
-            if (newPreviewMode && viewMode === 'table') {
-              setViewMode('grid');
+            if (newPreviewMode) {
+              // Force refresh when entering preview mode
+              if (restaurantId) {
+                localStorage.removeItem(`fullMenu:${restaurantId}`);
+              }
+              refetchFullMenu();
+              if (viewMode === 'table') {
+                setViewMode('grid');
+              }
             }
             setPreviewMode(newPreviewMode);
           }}
