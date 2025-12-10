@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { Theme } from "@/lib/types/theme";
 import { generateTempId } from "@/lib/utils/uuid";
 import { logger } from "@/lib/logger";
-import { broadcastMenuInvalidation, broadcastRestaurantInvalidation } from "./useCrossTabSync";
 
 export interface Restaurant {
   id: string;
@@ -278,9 +277,6 @@ export const useUpdateRestaurant = () => {
       
       // Invalidate all-dishes-for-category for editor preview
       queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
-      
-      // Broadcast to other tabs for cross-tab sync
-      broadcastMenuInvalidation(data.id, data.slug);
       
       toast.success("Settings updated");
     },

@@ -253,7 +253,7 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
   const activeCategoryName = categories?.find((c) => c.id === activeCategory)?.name || '';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div key={restaurant?.updated_at} className="min-h-screen bg-background">
       {/* Top Action Bar */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
