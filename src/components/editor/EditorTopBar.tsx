@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Eye, EyeOff, QrCode, Palette, Upload, Undo2, Redo2, LayoutGrid, Table2, Settings, Share2, RefreshCw, Check } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, QrCode, Palette, Upload, Undo2, Redo2, Settings, Share2, RefreshCw } from "lucide-react";
 import { QRCodeModal } from "@/components/editor/QRCodeModal";
 import { ShareDialog } from "@/components/editor/ShareDialog";
 import { ThemeGalleryModal } from "@/components/editor/ThemeGalleryModal";
@@ -15,8 +15,6 @@ import { Theme } from "@/lib/types/theme";
 interface EditorTopBarProps {
   restaurant: Restaurant;
   previewMode: boolean;
-  viewMode: 'grid' | 'table';
-  onViewModeChange: (mode: 'grid' | 'table') => void;
   onPreviewToggle: () => void;
   onPublishToggle: () => void;
   onUndo?: () => void;
@@ -33,8 +31,6 @@ interface EditorTopBarProps {
 export const EditorTopBar = ({
   restaurant,
   previewMode,
-  viewMode,
-  onViewModeChange,
   onPreviewToggle,
   onPublishToggle,
   onUndo,
@@ -119,9 +115,7 @@ export const EditorTopBar = ({
             <div className="flex items-center gap-2">
               <div>
                 <h1 className="text-lg font-bold">{restaurant.name}</h1>
-                <p className="text-xs text-muted-foreground">
-                  {viewMode === 'grid' ? 'Visual Editor' : 'Table Editor'}
-                </p>
+                <p className="text-xs text-muted-foreground">Visual Editor</p>
               </div>
               {!restaurant.published && (
                 <Badge variant="secondary" className="text-xs">
@@ -132,26 +126,6 @@ export const EditorTopBar = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {!previewMode && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onViewModeChange(viewMode === 'grid' ? 'table' : 'grid')}
-                className="gap-2"
-              >
-                {viewMode === 'grid' ? (
-                  <>
-                    <Table2 className="h-4 w-4" />
-                    Table View
-                  </>
-                ) : (
-                  <>
-                    <LayoutGrid className="h-4 w-4" />
-                    Grid View
-                  </>
-                )}
-              </Button>
-            )}
 
             
 
