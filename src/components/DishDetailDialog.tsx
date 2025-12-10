@@ -180,7 +180,8 @@ export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogP
               )}
             </div>
 
-            {dish.hasOptions && hasAnyOptions && (
+            {/* Show options if they exist, regardless of hasOptions flag */}
+            {hasAnyOptions && (
               <div className="space-y-4 pt-2">
                 {options.length > 0 && (
                   <div className="space-y-3">

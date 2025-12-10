@@ -70,7 +70,7 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
     enabled: !!activeCategoryObj?.id && restaurant?.published === true,
   });
 
-  // Optimized dish fetching - instant with cache
+  // Optimized dish fetching - instant with cache, including options/modifiers
   useEffect(() => {
     const fetchDishes = async () => {
       if (!subcategories?.length) {
@@ -81,13 +81,46 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
       setDishesLoading(true);
       const subcategoryIds = subcategories.map((sub) => sub.id);
 
-      const { data } = await supabase
+      // Fetch dishes
+      const { data: dishesData } = await supabase
         .from("dishes")
         .select("*")
         .in("subcategory_id", subcategoryIds)
         .order("order_index");
 
-      setDishes(data || []);
+      if (!dishesData || dishesData.length === 0) {
+        setDishes([]);
+        setDishesLoading(false);
+        return;
+      }
+
+      // Fetch all options and modifiers for these dishes in parallel
+      const dishIds = dishesData.map((d) => d.id);
+      
+      const [optionsResult, modifiersResult] = await Promise.all([
+        supabase
+          .from("dish_options")
+          .select("*")
+          .in("dish_id", dishIds)
+          .order("order_index"),
+        supabase
+          .from("dish_modifiers")
+          .select("*")
+          .in("dish_id", dishIds)
+          .order("order_index"),
+      ]);
+
+      const options = optionsResult.data || [];
+      const modifiers = modifiersResult.data || [];
+
+      // Merge options and modifiers into dishes
+      const dishesWithOptionsModifiers = dishesData.map((dish) => ({
+        ...dish,
+        options: options.filter((o) => o.dish_id === dish.id),
+        modifiers: modifiers.filter((m) => m.dish_id === dish.id),
+      }));
+
+      setDishes(dishesWithOptionsModifiers);
       setDishesLoading(false);
     };
 
