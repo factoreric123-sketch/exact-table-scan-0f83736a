@@ -24,9 +24,10 @@ import { toast } from "sonner";
 interface SortableDishProps {
   dish: Dish;
   subcategoryId: string;
+  restaurantId: string;
 }
 
-export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
+export const SortableDish = ({ dish, subcategoryId, restaurantId }: SortableDishProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: dish.id,
   });
@@ -62,6 +63,8 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
       setSelectedImage(file);
       setShowCropModal(true);
     }
+    // Reset input value so the same file can be selected again
+    e.target.value = "";
   };
 
   const handleImageCrop = async (croppedFile: File) => {
@@ -69,7 +72,7 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
       const imageUrl = await uploadImage.mutateAsync({
         file: croppedFile,
         bucket: "dish-images",
-        path: `${dish.id}/${croppedFile.name}`,
+        path: `${dish.id}/${Date.now()}-${croppedFile.name}`,
       });
       
       updateDish.mutate({
@@ -193,7 +196,10 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
       {selectedImage && (
         <ImageCropModal
           open={showCropModal}
-          onOpenChange={setShowCropModal}
+          onOpenChange={(open) => {
+            setShowCropModal(open);
+            if (!open) setSelectedImage(null);
+          }}
           imageFile={selectedImage}
           onCropComplete={handleImageCrop}
         />
@@ -201,6 +207,7 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
 
       <UnifiedDishEditor
         dish={dish}
+        restaurantId={restaurantId}
         open={showEditor}
         onOpenChange={setShowEditor}
       />
