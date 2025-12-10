@@ -64,6 +64,9 @@ export const executeBackgroundMutations = (
 ) => {
   if (tasks.length === 0) return;
 
+  // Track failed tasks for persistent error recovery
+  let persistentFailures: MutationTask[] = [];
+
   setTimeout(() => {
     Promise.allSettled(
       tasks.map(task => task.execute())
@@ -73,23 +76,41 @@ export const executeBackgroundMutations = (
       if (failed.length > 0) {
         const failedTasks = tasks.filter((_, i) => results[i].status === 'rejected');
         
+        // First retry attempt
         Promise.allSettled(failedTasks.map(t => t.execute())).then(retryResults => {
           const stillFailed = retryResults.filter(r => r.status === 'rejected');
           
           if (stillFailed.length > 0) {
-            const failedNames = failedTasks
-              .filter((_, i) => retryResults[i].status === 'rejected')
-              .map(t => t.name)
-              .slice(0, 2);
+            persistentFailures = failedTasks.filter((_, i) => retryResults[i].status === 'rejected');
+            const failedNames = persistentFailures.map(t => t.name).slice(0, 3);
             
-            toast.error(`Failed to save: ${failedNames.join(", ")}`, {
+            // Show persistent error toast with retry action
+            toast.error(`Failed to save ${persistentFailures.length} item(s): ${failedNames.join(", ")}`, {
+              duration: 10000, // Keep visible longer
               action: {
-                label: "Refresh",
+                label: "Retry",
                 onClick: () => {
-                  queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
-                  queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
+                  // Retry all failed mutations
+                  toast.promise(
+                    Promise.allSettled(persistentFailures.map(t => t.execute())).then(finalResults => {
+                      const finalFailed = finalResults.filter(r => r.status === 'rejected');
+                      if (finalFailed.length > 0) {
+                        throw new Error(`${finalFailed.length} items still failed`);
+                      }
+                      // Refresh data on success
+                      queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
+                      queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
+                      queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
+                    }),
+                    {
+                      loading: "Retrying...",
+                      success: "All items saved successfully!",
+                      error: "Some items still failed. Please try again.",
+                    }
+                  );
                 }
-              }
+              },
+              description: "Your changes may not have been saved. Click Retry to try again.",
             });
           }
         });

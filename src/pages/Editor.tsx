@@ -21,11 +21,15 @@ import { getDefaultTheme } from "@/lib/presetThemes";
 import { Theme } from "@/lib/types/theme";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useCrossTabSync } from "@/hooks/useCrossTabSync";
 
 const Editor = () => {
   const { restaurantId } = useParams<{ restaurantId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  
+  // Enable cross-tab cache synchronization
+  useCrossTabSync();
   
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [activeSubcategory, setActiveSubcategory] = useState<string>("");
