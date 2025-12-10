@@ -422,8 +422,14 @@ const Editor = () => {
       <EditorTopBar
           restaurant={restaurant}
           previewMode={previewMode}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
           onPreviewToggle={() => {
-            setPreviewMode(!previewMode);
+            const newPreviewMode = !previewMode;
+            if (newPreviewMode && viewMode === 'table') {
+              setViewMode('grid');
+            }
+            setPreviewMode(newPreviewMode);
           }}
           onPublishToggle={handlePublishToggle}
           onUndo={handleUndo}
