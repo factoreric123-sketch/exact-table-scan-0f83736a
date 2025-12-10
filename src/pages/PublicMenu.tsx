@@ -13,6 +13,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useSubcategories } from "@/hooks/useSubcategories";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeMenuUpdates } from "@/hooks/useMenuSync";
+import { useQuery } from "@tanstack/react-query";
 
 interface PublicMenuProps {
   slugOverride?: string;
@@ -48,7 +49,6 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
   const [selectedSpicy, setSelectedSpicy] = useState<boolean | null>(null);
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [dishes, setDishes] = useState<Dish[]>([]);
   const [dishesLoading, setDishesLoading] = useState(false);
   const subcategoryRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
@@ -70,29 +70,23 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
     enabled: !!activeCategoryObj?.id && restaurant?.published === true,
   });
 
-  // Optimized dish fetching - instant with cache, including options/modifiers
-  useEffect(() => {
-    const fetchDishes = async () => {
-      if (!subcategories?.length) {
-        setDishes([]);
-        return;
-      }
+  // Real-time dish fetching with React Query for instant updates
+  const { data: dishes = [], isLoading: dishesLoadingQuery } = useQuery({
+    queryKey: ["public-menu-dishes", activeCategory, subcategories?.map(s => s.id).join(',')],
+    queryFn: async () => {
+      if (!subcategories?.length) return [];
 
-      setDishesLoading(true);
       const subcategoryIds = subcategories.map((sub) => sub.id);
 
       // Fetch dishes
-      const { data: dishesData } = await supabase
+      const { data: dishesData, error: dishesError } = await supabase
         .from("dishes")
         .select("*")
         .in("subcategory_id", subcategoryIds)
         .order("order_index");
 
-      if (!dishesData || dishesData.length === 0) {
-        setDishes([]);
-        setDishesLoading(false);
-        return;
-      }
+      if (dishesError) throw dishesError;
+      if (!dishesData || dishesData.length === 0) return [];
 
       // Fetch all options and modifiers for these dishes in parallel
       const dishIds = dishesData.map((d) => d.id);
@@ -120,12 +114,14 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
         modifiers: modifiers.filter((m) => m.dish_id === dish.id),
       }));
 
-      setDishes(dishesWithOptionsModifiers);
-      setDishesLoading(false);
-    };
-
-    fetchDishes();
-  }, [subcategories]);
+      return dishesWithOptionsModifiers;
+    },
+    enabled: !!subcategories?.length && restaurant?.published === true,
+    staleTime: 0, // Always refetch on mount for latest data
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    placeholderData: (prev) => prev, // Keep previous data while refetching
+  });
 
   // Set initial active category
   useEffect(() => {
@@ -420,7 +416,7 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
 
       {/* Main Content */}
       <main>
-        {dishesLoading ? (
+        {dishesLoadingQuery ? (
           <div className="container mx-auto px-4 py-8">
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (

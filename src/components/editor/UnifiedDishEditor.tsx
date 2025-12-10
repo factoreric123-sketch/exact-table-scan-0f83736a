@@ -21,6 +21,7 @@ import { useDishModifiers } from "@/hooks/useDishModifiers";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { ImageCropModal } from "@/components/ImageCropModal";
 import { ALLERGEN_OPTIONS } from "@/components/AllergenFilter";
+import { broadcastMenuChange } from "@/hooks/useMenuSync";
 import { 
   useCreateDishOptionSilent, 
   useUpdateDishOptionSilent, 
@@ -690,8 +691,22 @@ export function UnifiedDishEditor({
           created_at: mod.created_at,
         }));
 
-      // INSTANT: Apply optimistic updates
+      // INSTANT: Apply optimistic updates to all caches
       applyOptimisticOptionsUpdate(queryClient, dish.id, restaurantId, finalOptions, finalModifiers);
+      
+      // INSTANT: Update dish cache optimistically
+      queryClient.setQueryData(["dishes", dish.subcategory_id], (oldDishes: Dish[] | undefined) => {
+        if (!oldDishes) return oldDishes;
+        return oldDishes.map(d => d.id === dish.id ? { ...d, ...dishUpdates } : d);
+      });
+      
+      // INSTANT: Invalidate all related queries to trigger refetch
+      queryClient.invalidateQueries({ queryKey: ["dishes", dish.subcategory_id] });
+      queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
+      queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
+      
+      // INSTANT: Broadcast to all tabs (Editor preview, Live Menu, other tabs)
+      broadcastMenuChange(restaurantId, 'menu-updated');
 
       // Close dialog and show success toast INSTANTLY
       toast.success("Saved", { 

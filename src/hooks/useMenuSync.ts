@@ -20,7 +20,7 @@ export const useMenuSync = (restaurantId: string | undefined) => {
 
   // Invalidate all menu-related caches for a restaurant
   const invalidateMenuCache = useCallback((targetRestaurantId: string) => {
-    // Clear React Query caches
+    // Clear React Query caches - ALL menu-related queries
     queryClient.invalidateQueries({ queryKey: ['full-menu', targetRestaurantId] });
     queryClient.invalidateQueries({ queryKey: ['restaurant', targetRestaurantId] });
     queryClient.invalidateQueries({ queryKey: ['categories', targetRestaurantId] });
@@ -29,6 +29,8 @@ export const useMenuSync = (restaurantId: string | undefined) => {
     queryClient.invalidateQueries({ queryKey: ['all-dishes-for-category'] });
     queryClient.invalidateQueries({ queryKey: ['dish-options'] });
     queryClient.invalidateQueries({ queryKey: ['dish-modifiers'] });
+    queryClient.invalidateQueries({ queryKey: ['public-menu-dishes'] }); // Live Menu dishes
+    queryClient.invalidateQueries({ queryKey: ['subcategory-dishes-with-options'] }); // Preview dishes
     
     // Clear localStorage cache
     try {
@@ -138,10 +140,14 @@ export const useRealtimeMenuUpdates = (restaurantId: string | undefined) => {
           table: 'dishes',
         },
         () => {
-          // Dishes updated - refresh menu
+          // Dishes updated - refresh ALL menu views instantly
           queryClient.invalidateQueries({ queryKey: ['full-menu', restaurantId] });
           queryClient.invalidateQueries({ queryKey: ['dishes'] });
           queryClient.invalidateQueries({ queryKey: ['all-dishes-for-category'] });
+          queryClient.invalidateQueries({ queryKey: ['public-menu-dishes'] });
+          queryClient.invalidateQueries({ queryKey: ['subcategory-dishes-with-options'] });
+          queryClient.invalidateQueries({ queryKey: ['dish-options'] });
+          queryClient.invalidateQueries({ queryKey: ['dish-modifiers'] });
           localStorage.removeItem(`fullMenu:${restaurantId}`);
         }
       )
@@ -195,8 +201,12 @@ export const useRealtimeMenuUpdates = (restaurantId: string | undefined) => {
           table: 'dish_options',
         },
         () => {
+          // Options updated - refresh ALL menu views instantly
           queryClient.invalidateQueries({ queryKey: ['full-menu', restaurantId] });
           queryClient.invalidateQueries({ queryKey: ['dish-options'] });
+          queryClient.invalidateQueries({ queryKey: ['dishes'] });
+          queryClient.invalidateQueries({ queryKey: ['public-menu-dishes'] });
+          queryClient.invalidateQueries({ queryKey: ['subcategory-dishes-with-options'] });
           localStorage.removeItem(`fullMenu:${restaurantId}`);
         }
       )
@@ -213,8 +223,12 @@ export const useRealtimeMenuUpdates = (restaurantId: string | undefined) => {
           table: 'dish_modifiers',
         },
         () => {
+          // Modifiers updated - refresh ALL menu views instantly
           queryClient.invalidateQueries({ queryKey: ['full-menu', restaurantId] });
           queryClient.invalidateQueries({ queryKey: ['dish-modifiers'] });
+          queryClient.invalidateQueries({ queryKey: ['dishes'] });
+          queryClient.invalidateQueries({ queryKey: ['public-menu-dishes'] });
+          queryClient.invalidateQueries({ queryKey: ['subcategory-dishes-with-options'] });
           localStorage.removeItem(`fullMenu:${restaurantId}`);
         }
       )

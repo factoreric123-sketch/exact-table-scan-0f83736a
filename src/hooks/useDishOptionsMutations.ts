@@ -42,15 +42,20 @@ export const applyOptimisticOptionsUpdate = (
   // 2. Instantly update dish-modifiers cache (synchronous, ~0ms)
   queryClient.setQueryData(["dish-modifiers", dishId], newModifiers);
   
-  // 3. Clear localStorage cache and broadcast
+  // 3. INSTANT: Invalidate all menu-related caches
+  queryClient.invalidateQueries({ queryKey: ["dishes"] });
+  queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
+  queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
+  
+  // Clear localStorage cache and broadcast
   if ('requestIdleCallback' in window) {
     requestIdleCallback(() => {
       try { localStorage.removeItem(`fullMenu:${restaurantId}`); } catch {}
-      broadcastMenuChange(restaurantId);
+      broadcastMenuChange(restaurantId, 'menu-updated');
     }, { timeout: 5000 });
   } else {
     try { localStorage.removeItem(`fullMenu:${restaurantId}`); } catch {}
-    broadcastMenuChange(restaurantId);
+    broadcastMenuChange(restaurantId, 'menu-updated');
   }
 };
 
@@ -105,8 +110,10 @@ export const executeBackgroundMutations = (
                       // Refresh data on success and broadcast
                       queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
                       queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
+                      queryClient.invalidateQueries({ queryKey: ["dishes"] });
+                      queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
                       queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
-                      broadcastMenuChange(restaurantId);
+                      broadcastMenuChange(restaurantId, 'menu-updated');
                     }),
                     {
                       loading: "Retrying...",
