@@ -15,10 +15,12 @@ const isUuid = (id: string): boolean => {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 };
 
-export const useDishModifiers = (dishId: string) => {
+export const useDishModifiers = (dishId: string | undefined) => {
   return useQuery({
     queryKey: ["dish-modifiers", dishId],
     queryFn: async () => {
+      if (!dishId) return [];
+      
       const { data, error } = await supabase
         .from("dish_modifiers")
         .select("*")

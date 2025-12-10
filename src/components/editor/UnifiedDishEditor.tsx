@@ -332,16 +332,23 @@ export function UnifiedDishEditor({
     }
   }, [open, optionsLoading, modifiersLoading]);
 
-  // Reset initialization when dialog opens
+  // Track dish.id to reset initialization when different dish is opened
+  const prevDishIdRef = useRef<string | null>(null);
+
+  // Reset initialization when dialog opens OR when dish.id changes
   useEffect(() => {
     if (open) {
+      // If dish.id changed, force re-initialization
+      if (prevDishIdRef.current !== dish.id) {
+        isInitializedRef.current = false;
+        prevDishIdRef.current = dish.id;
+      }
       dialogJustOpenedRef.current = true;
-      isInitializedRef.current = false;
     } else {
       dialogJustOpenedRef.current = false;
       isInitializedRef.current = false;
     }
-  }, [open]);
+  }, [open, dish.id]);
 
   // Initialize dish fields when dialog opens
   useEffect(() => {
