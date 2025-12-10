@@ -96,20 +96,58 @@ const Editor = () => {
     [subcategories, activeCategory]
   );
 
-  // Get all dishes for all subcategories in preview mode
+  // Get all dishes for all subcategories in preview mode - including options/modifiers
   const { data: allDishesForCategory } = useQuery({
     queryKey: ['all-dishes-for-category', activeCategory],
     queryFn: async () => {
       if (!activeCategory) return [];
       
-      const { data, error } = await supabase
+      // Fetch dishes with subcategory info
+      const { data: dishesData, error } = await supabase
         .from('dishes')
         .select('*, subcategories!inner(id, name, category_id)')
         .eq('subcategories.category_id', activeCategory)
         .order('order_index');
       
       if (error) throw error;
-      return data || [];
+      if (!dishesData || dishesData.length === 0) return [];
+      
+      // Fetch options and modifiers in parallel for ALL dishes in this category
+      const dishIds = dishesData.map(d => d.id);
+      
+      const [optionsResult, modifiersResult] = await Promise.all([
+        supabase
+          .from('dish_options')
+          .select('*')
+          .in('dish_id', dishIds)
+          .order('order_index'),
+        supabase
+          .from('dish_modifiers')
+          .select('*')
+          .in('dish_id', dishIds)
+          .order('order_index'),
+      ]);
+      
+      // Group options and modifiers by dish_id
+      const optionsByDish: Record<string, any[]> = {};
+      const modifiersByDish: Record<string, any[]> = {};
+      
+      (optionsResult.data || []).forEach(opt => {
+        if (!optionsByDish[opt.dish_id]) optionsByDish[opt.dish_id] = [];
+        optionsByDish[opt.dish_id].push(opt);
+      });
+      
+      (modifiersResult.data || []).forEach(mod => {
+        if (!modifiersByDish[mod.dish_id]) modifiersByDish[mod.dish_id] = [];
+        modifiersByDish[mod.dish_id].push(mod);
+      });
+      
+      // Merge options/modifiers into dishes
+      return dishesData.map(dish => ({
+        ...dish,
+        options: optionsByDish[dish.id] || [],
+        modifiers: modifiersByDish[dish.id] || [],
+      }));
     },
     enabled: !!activeCategory,
   });
@@ -145,6 +183,8 @@ const Editor = () => {
     const prevTheme = undo();
     if (prevTheme && restaurant) {
       updateRestaurant.mutate({ id: restaurant.id, updates: { theme: prevTheme } });
+      // Broadcast theme change to live menu
+      broadcastMenuUpdate('restaurant-updated');
     }
   };
 
@@ -152,6 +192,8 @@ const Editor = () => {
     const nextTheme = redo();
     if (nextTheme && restaurant) {
       updateRestaurant.mutate({ id: restaurant.id, updates: { theme: nextTheme } });
+      // Broadcast theme change to live menu
+      broadcastMenuUpdate('restaurant-updated');
     }
   };
 
@@ -192,17 +234,18 @@ const Editor = () => {
     }
   }, [categories, activeCategory]);
 
-  // Set initial active subcategory when category changes
+  // Reset active subcategory when category changes
   useEffect(() => {
     if (!activeCategory) return;
     
     const subsForActiveCategory = subcategories.filter(s => s.category_id === activeCategory);
-    if (subsForActiveCategory.length > 0 && !activeSubcategory) {
+    if (subsForActiveCategory.length > 0) {
+      // Always select first subcategory when category changes
       setActiveSubcategory(subsForActiveCategory[0].id);
-    } else if (subsForActiveCategory.length === 0) {
+    } else {
       setActiveSubcategory("");
     }
-  }, [subcategories, activeCategory]);
+  }, [activeCategory]); // Only depend on activeCategory, not activeSubcategory
 
   // Scroll to subcategory when clicked with offset for sticky header (preview mode only)
   const handleSubcategoryClick = useCallback((subcategoryId: string) => {
@@ -225,27 +268,39 @@ const Editor = () => {
     }
   }, [previewMode, currentSubcategories]);
 
-  // Update active subcategory based on scroll position (preview mode only)
+  // Update active subcategory based on scroll position (preview mode only) - throttled with RAF
   useEffect(() => {
     if (!previewMode || currentSubcategories.length === 0) return;
 
+    let rafId: number | null = null;
+    let isScrolling = false;
+
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 250;
+      if (isScrolling) return;
+      isScrolling = true;
       
-      for (const subcategory of currentSubcategories) {
-        const element = subcategoryRefs.current[subcategory.name];
-        if (element) {
-          const { offsetTop, offsetHeight } = element;
-          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-            setActiveSubcategory(subcategory.id);
-            break;
+      rafId = requestAnimationFrame(() => {
+        const scrollPosition = window.scrollY + 250;
+        
+        for (const subcategory of currentSubcategories) {
+          const element = subcategoryRefs.current[subcategory.name];
+          if (element) {
+            const { offsetTop, offsetHeight } = element;
+            if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+              setActiveSubcategory(subcategory.id);
+              break;
+            }
           }
         }
-      }
+        isScrolling = false;
+      });
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, [previewMode, currentSubcategories]);
 
   const handlePublishToggle = async () => {
@@ -500,6 +555,7 @@ const Editor = () => {
             dishes={filteredDishes || dishes}
             subcategoryId={activeSubcategory}
             previewMode={previewMode}
+            restaurant={restaurant}
           />
         )}
       </div>

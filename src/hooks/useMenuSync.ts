@@ -75,19 +75,29 @@ export const useMenuSync = (restaurantId: string | undefined) => {
     };
   }, [restaurantId, invalidateMenuCache]);
 
-  // Broadcast menu update to other tabs
+  // Broadcast menu update to other tabs using persistent channel
   const broadcastMenuUpdate = useCallback((type: MenuSyncMessage['type'] = 'menu-updated') => {
     if (!restaurantId) return;
     if (typeof BroadcastChannel === 'undefined') return;
 
     try {
-      const channel = new BroadcastChannel(SYNC_CHANNEL_NAME);
-      channel.postMessage({
-        type,
-        restaurantId,
-        timestamp: Date.now(),
-      } satisfies MenuSyncMessage);
-      channel.close();
+      // Use the persistent channel ref if available, otherwise create temporary
+      if (channelRef.current) {
+        channelRef.current.postMessage({
+          type,
+          restaurantId,
+          timestamp: Date.now(),
+        } satisfies MenuSyncMessage);
+      } else {
+        // Fallback: create temporary channel
+        const channel = new BroadcastChannel(SYNC_CHANNEL_NAME);
+        channel.postMessage({
+          type,
+          restaurantId,
+          timestamp: Date.now(),
+        } satisfies MenuSyncMessage);
+        channel.close();
+      }
     } catch {
       // Silently fail
     }
@@ -247,19 +257,26 @@ export const useRealtimeMenuUpdates = (restaurantId: string | undefined) => {
 
 /**
  * Broadcast helper for use in mutation hooks
+ * Creates a temporary channel for one-time broadcast
  */
+let sharedBroadcastChannel: BroadcastChannel | null = null;
+
 export const broadcastMenuChange = (restaurantId: string, type: MenuSyncMessage['type'] = 'menu-updated') => {
   if (typeof BroadcastChannel === 'undefined') return;
 
   try {
-    const channel = new BroadcastChannel(SYNC_CHANNEL_NAME);
-    channel.postMessage({
+    // Reuse shared channel if available
+    if (!sharedBroadcastChannel) {
+      sharedBroadcastChannel = new BroadcastChannel(SYNC_CHANNEL_NAME);
+    }
+    
+    sharedBroadcastChannel.postMessage({
       type,
       restaurantId,
       timestamp: Date.now(),
     } satisfies MenuSyncMessage);
-    channel.close();
   } catch {
-    // Silently fail
+    // On error, reset and try to recreate
+    sharedBroadcastChannel = null;
   }
 };
