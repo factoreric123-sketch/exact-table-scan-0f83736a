@@ -1,21 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DndContext, closestCorners, DragEndEvent, DragStartEvent, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { SortableDish } from "./SortableDish";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useCreateDish, useUpdateDishesOrder, type Dish } from "@/hooks/useDishes";
-import { useImageUpload } from "@/hooks/useImageUpload";
 import { useSubcategoryDishesWithOptions } from "@/hooks/useSubcategoryDishesWithOptions";
 import MenuGrid from "@/components/MenuGrid";
-import DishCard from "@/components/DishCard";
 import { toast } from "sonner";
 
 interface EditableDishesProps {
   dishes: Dish[];
   subcategoryId: string;
   previewMode: boolean;
-  restaurant?: any;
+  restaurant?: {
+    id: string;
+    name?: string;
+    show_prices?: boolean;
+    show_images?: boolean;
+    grid_columns?: number;
+    layout_density?: string;
+    menu_font_size?: string;
+    image_size?: string;
+    badge_colors?: Record<string, string>;
+    updated_at?: string;
+  };
 }
 
 export const EditableDishes = ({
@@ -36,10 +45,10 @@ export const EditableDishes = ({
   );
 
   // Prevent flicker by ensuring content is ready
-  useState(() => {
+  useEffect(() => {
     const timer = setTimeout(() => setIsReady(true), 50);
     return () => clearTimeout(timer);
-  });
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -151,14 +160,17 @@ export const EditableDishes = ({
         sectionTitle=""
         showPrice={restaurant?.show_prices !== false}
         showImage={restaurant?.show_images !== false}
-        gridColumns={restaurant?.grid_columns || 2}
-        layoutDensity={restaurant?.layout_density || 'spacious'}
-        fontSize={restaurant?.menu_font_size || 'medium'}
-        imageSize={restaurant?.image_size || 'large'}
-        badgeColors={restaurant?.badge_colors}
+        gridColumns={(restaurant?.grid_columns || 2) as 1 | 2 | 3}
+        layoutDensity={(restaurant?.layout_density || 'spacious') as 'compact' | 'spacious'}
+        fontSize={(restaurant?.menu_font_size || 'medium') as 'small' | 'medium' | 'large'}
+        imageSize={(restaurant?.image_size || 'large') as 'compact' | 'large'}
+        badgeColors={restaurant?.badge_colors as { new_addition: string; special: string; popular: string; chef_recommendation: string } | undefined}
       />
     );
   }
+
+  // Get restaurant ID - it's required for the unified editor
+  const restaurantId = restaurant?.id || "";
 
   return (
     <div className="px-4 py-6">
@@ -171,7 +183,12 @@ export const EditableDishes = ({
         <SortableContext items={dishes.map((d) => d.id)} strategy={rectSortingStrategy}>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-6">
             {dishes.map((dish) => (
-              <SortableDish key={dish.id} dish={dish} subcategoryId={subcategoryId} />
+              <SortableDish 
+                key={dish.id} 
+                dish={dish} 
+                subcategoryId={subcategoryId}
+                restaurantId={restaurantId}
+              />
             ))}
           </div>
         </SortableContext>
