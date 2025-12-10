@@ -16,7 +16,7 @@ const getRestaurantIdFromSubcategory = async (subcategoryId: string): Promise<st
   return (data.categories as any)?.restaurant_id || null;
 };
 
-// Helper to invalidate full menu cache
+// Helper to invalidate full menu cache (for Live Menu sync)
 const invalidateFullMenuCache = async (queryClient: any, subcategoryId: string) => {
   const restaurantId = await getRestaurantIdFromSubcategory(subcategoryId);
   if (restaurantId) {
@@ -25,6 +25,72 @@ const invalidateFullMenuCache = async (queryClient: any, subcategoryId: string) 
     // Clear localStorage cache
     localStorage.removeItem(`fullMenu:${restaurantId}`);
   }
+};
+
+// Helper to update dish in full-menu cache optimistically (for Preview sync)
+const updateDishInFullMenuCache = (queryClient: any, dishId: string, updates: Partial<Dish>) => {
+  // Get all full-menu queries
+  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
+  
+  fullMenuQueries.forEach(([key, data]: [any, any]) => {
+    if (!data?.categories) return;
+    
+    // Deep clone and update
+    const updatedCategories = data.categories.map((category: any) => ({
+      ...category,
+      subcategories: category.subcategories?.map((subcategory: any) => ({
+        ...subcategory,
+        dishes: subcategory.dishes?.map((dish: any) => 
+          dish.id === dishId ? { ...dish, ...updates } : dish
+        )
+      }))
+    }));
+    
+    queryClient.setQueryData(key, { ...data, categories: updatedCategories });
+  });
+};
+
+// Helper to add dish to full-menu cache optimistically
+const addDishToFullMenuCache = (queryClient: any, subcategoryId: string, newDish: Dish) => {
+  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
+  
+  fullMenuQueries.forEach(([key, data]: [any, any]) => {
+    if (!data?.categories) return;
+    
+    const updatedCategories = data.categories.map((category: any) => ({
+      ...category,
+      subcategories: category.subcategories?.map((subcategory: any) => {
+        if (subcategory.id === subcategoryId) {
+          return {
+            ...subcategory,
+            dishes: [...(subcategory.dishes || []), newDish]
+          };
+        }
+        return subcategory;
+      })
+    }));
+    
+    queryClient.setQueryData(key, { ...data, categories: updatedCategories });
+  });
+};
+
+// Helper to remove dish from full-menu cache optimistically
+const removeDishFromFullMenuCache = (queryClient: any, dishId: string) => {
+  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
+  
+  fullMenuQueries.forEach(([key, data]: [any, any]) => {
+    if (!data?.categories) return;
+    
+    const updatedCategories = data.categories.map((category: any) => ({
+      ...category,
+      subcategories: category.subcategories?.map((subcategory: any) => ({
+        ...subcategory,
+        dishes: subcategory.dishes?.filter((dish: any) => dish.id !== dishId)
+      }))
+    }));
+    
+    queryClient.setQueryData(key, { ...data, categories: updatedCategories });
+  });
 };
 
 export interface Dish {
@@ -151,6 +217,9 @@ export const useCreateDish = () => {
           has_options: dish.has_options || false,
         };
         queryClient.setQueryData<Dish[]>(["dishes", dish.subcategory_id], [...previous, tempDish]);
+        
+        // Also update full-menu cache for instant Preview sync
+        addDishToFullMenuCache(queryClient, dish.subcategory_id, tempDish);
       }
       
       return { previous, subcategoryId: dish.subcategory_id };
@@ -162,7 +231,6 @@ export const useCreateDish = () => {
       // Invalidate editor caches
       queryClient.invalidateQueries({ queryKey: ["dishes", data.subcategory_id] });
       queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
-      queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
       toast.success("Dish created");
     },
     onError: (error: Error, _variables, context) => {
@@ -221,6 +289,9 @@ export const useUpdateDish = () => {
           );
         }
         
+        // Also update full-menu cache for instant Preview sync
+        updateDishInFullMenuCache(queryClient, id, updates);
+        
         return { previous, subcategoryId: dish.subcategory_id };
       }
     },
@@ -231,7 +302,6 @@ export const useUpdateDish = () => {
       // Invalidate editor caches
       queryClient.invalidateQueries({ queryKey: ["dishes", data.subcategory_id] });
       queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
-      queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
     },
     onError: (_error, _variables, context) => {
       if (context?.previous && context.subcategoryId) {
@@ -264,6 +334,9 @@ export const useDeleteDish = () => {
           ["dishes", subcategoryId],
           previous.filter((d) => d.id !== id)
         );
+        
+        // Also update full-menu cache for instant Preview sync
+        removeDishFromFullMenuCache(queryClient, id);
       }
       
       return { previous, subcategoryId };
@@ -275,7 +348,6 @@ export const useDeleteDish = () => {
       // Invalidate editor caches
       queryClient.invalidateQueries({ queryKey: ["dishes", subcategoryId] });
       queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
-      queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
       toast.success("Dish deleted");
     },
     onError: (error, _variables, context) => {
@@ -341,7 +413,6 @@ export const useUpdateDishesOrder = () => {
       // Invalidate editor caches after completion
       queryClient.invalidateQueries({ queryKey: ["dishes", variables.subcategoryId] });
       queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
-      queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
     },
   });
 };

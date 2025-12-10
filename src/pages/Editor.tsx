@@ -5,6 +5,7 @@ import { useRestaurantById, useUpdateRestaurant } from "@/hooks/useRestaurants";
 import { useCategories } from "@/hooks/useCategories";
 import { useSubcategories } from "@/hooks/useSubcategories";
 import { useDishes } from "@/hooks/useDishes";
+import { useFullMenu } from "@/hooks/useFullMenu";
 import { EditorTopBar } from "@/components/editor/EditorTopBar";
 import { EditableCategories } from "@/components/editor/EditableCategories";
 import { EditableSubcategories } from "@/components/editor/EditableSubcategories";
@@ -19,8 +20,7 @@ import { toast } from "sonner";
 import { useThemeHistory } from "@/hooks/useThemeHistory";
 import { getDefaultTheme } from "@/lib/presetThemes";
 import { Theme } from "@/lib/types/theme";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Editor = () => {
   const { restaurantId } = useParams<{ restaurantId: string }>();
@@ -43,31 +43,29 @@ const Editor = () => {
   const { data: subcategories = [], isLoading: subcategoriesLoading } = useSubcategories(activeCategory);
   const { data: dishes = [], isLoading: dishesLoading } = useDishes(activeSubcategory);
   const updateRestaurant = useUpdateRestaurant();
+  
+  // Use same data source as Live Menu for Preview - instant sync!
+  const { data: fullMenuData, refetch: refetchFullMenu } = useFullMenu(restaurantId);
 
-  // Listen to all dish mutations to detect changes and sync preview
+  // Listen to all dish mutations to detect changes
   useEffect(() => {
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      // Listen for successful mutations on dishes, categories, subcategories, or restaurant
       if (event?.type === 'updated') {
         const queryKey = event?.query?.queryKey;
         if (queryKey && (
           queryKey[0] === 'dishes' || 
           queryKey[0] === 'categories' || 
           queryKey[0] === 'subcategories' ||
-          queryKey[0] === 'restaurant'
+          queryKey[0] === 'restaurant' ||
+          queryKey[0] === 'full-menu'
         )) {
           setHasPendingChanges(true);
-          
-          // Sync preview with editor changes - invalidate preview query when dishes change
-          if (queryKey[0] === 'dishes' && activeCategory) {
-            queryClient.invalidateQueries({ queryKey: ['all-dishes-for-category', activeCategory] });
-          }
         }
       }
     });
 
     return () => unsubscribe();
-  }, [queryClient, activeCategory]);
+  }, [queryClient]);
 
   // Handle Update button - force sync all caches
   const handleUpdate = async () => {
@@ -77,13 +75,12 @@ const Editor = () => {
     await queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
     await queryClient.invalidateQueries({ queryKey: ["restaurant", restaurantId] });
     await queryClient.invalidateQueries({ queryKey: ["categories", restaurantId] });
-    await queryClient.invalidateQueries({ queryKey: ["all-dishes-for-category"] });
     
     // Clear localStorage cache
     localStorage.removeItem(`fullMenu:${restaurantId}`);
     
-    // Force refetch
-    await refetchRestaurant();
+    // Force refetch both
+    await Promise.all([refetchRestaurant(), refetchFullMenu()]);
     
     // Clear pending changes flag
     setHasPendingChanges(false);
@@ -95,47 +92,36 @@ const Editor = () => {
 
   // No more polling needed - React Query cache invalidation handles updates instantly
 
-  // Get current category's subcategories for preview mode
-  const currentSubcategories = useMemo(() => 
-    subcategories.filter(s => s.category_id === activeCategory),
-    [subcategories, activeCategory]
-  );
+  // Get current category's subcategories from fullMenuData for preview mode (same as Live Menu!)
+  const currentSubcategoriesFromFullMenu = useMemo(() => {
+    if (!fullMenuData?.categories || !activeCategory) return [];
+    const category = fullMenuData.categories.find((c: any) => c.id === activeCategory);
+    return category?.subcategories || [];
+  }, [fullMenuData, activeCategory]);
 
-  // Get all dishes for all subcategories in preview mode
-  // Use shorter staleTime for instant sync with editor changes
-  const { data: allDishesForCategory, refetch: refetchPreviewDishes } = useQuery({
-    queryKey: ['all-dishes-for-category', activeCategory],
-    queryFn: async () => {
-      if (!activeCategory) return [];
-      
-      const { data, error } = await supabase
-        .from('dishes')
-        .select('*, subcategories!inner(id, name, category_id)')
-        .eq('subcategories.category_id', activeCategory)
-        .order('order_index');
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!activeCategory,
-    staleTime: 0, // Always refetch when invalidated for instant preview sync
-    refetchOnMount: 'always',
-  });
+  // Fallback to regular subcategories query for edit mode
+  const currentSubcategories = useMemo(() => {
+    if (previewMode) {
+      return currentSubcategoriesFromFullMenu;
+    }
+    return subcategories.filter(s => s.category_id === activeCategory);
+  }, [previewMode, currentSubcategoriesFromFullMenu, subcategories, activeCategory]);
 
-  // Group dishes by subcategory for preview mode
+  // Group dishes by subcategory for preview mode - using fullMenuData (same as Live Menu!)
   const dishesBySubcategory = useMemo(() => {
-    if (!previewMode || !allDishesForCategory || !currentSubcategories) return {};
+    if (!previewMode) return {};
+    if (!fullMenuData?.categories || !activeCategory) return {};
+    
+    const category = fullMenuData.categories.find((c: any) => c.id === activeCategory);
+    if (!category?.subcategories) return {};
     
     const grouped: Record<string, any[]> = {};
-    
-    currentSubcategories.forEach(sub => {
-      grouped[sub.id] = allDishesForCategory.filter(
-        dish => (dish as any).subcategories.id === sub.id
-      );
+    category.subcategories.forEach((sub: any) => {
+      // Each dish from fullMenuData includes options and modifiers!
+      grouped[sub.id] = sub.dishes || [];
     });
-    
     return grouped;
-  }, [allDishesForCategory, currentSubcategories, previewMode]);
+  }, [fullMenuData, activeCategory, previewMode]);
 
   // Theme history for undo/redo
   const { canUndo, canRedo, undo, redo, push, reset } = useThemeHistory(
