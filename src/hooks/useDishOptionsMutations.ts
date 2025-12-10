@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { DishOption } from "./useDishOptions";
 import type { DishModifier } from "./useDishModifiers";
 import { toast } from "sonner";
+import { broadcastMenuChange } from "./useMenuSync";
 
 // Client-side price normalization - INSTANT, no async
 export const normalizePrice = (price: string): string => {
@@ -41,11 +42,15 @@ export const applyOptimisticOptionsUpdate = (
   // 2. Instantly update dish-modifiers cache (synchronous, ~0ms)
   queryClient.setQueryData(["dish-modifiers", dishId], newModifiers);
   
-  // 3. Clear localStorage cache - ultra low priority, truly non-blocking
+  // 3. Clear localStorage cache and broadcast
   if ('requestIdleCallback' in window) {
     requestIdleCallback(() => {
       try { localStorage.removeItem(`fullMenu:${restaurantId}`); } catch {}
+      broadcastMenuChange(restaurantId);
     }, { timeout: 5000 });
+  } else {
+    try { localStorage.removeItem(`fullMenu:${restaurantId}`); } catch {}
+    broadcastMenuChange(restaurantId);
   }
 };
 
@@ -97,10 +102,11 @@ export const executeBackgroundMutations = (
                       if (finalFailed.length > 0) {
                         throw new Error(`${finalFailed.length} items still failed`);
                       }
-                      // Refresh data on success
+                      // Refresh data on success and broadcast
                       queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
                       queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
                       queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
+                      broadcastMenuChange(restaurantId);
                     }),
                     {
                       loading: "Retrying...",

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { generateTempId } from "@/lib/utils/uuid";
 import { getErrorMessage } from "@/lib/errorUtils";
+import { broadcastMenuChange } from "@/hooks/useMenuSync";
 
 // Helper to get restaurant ID from subcategory ID
 const getRestaurantIdFromSubcategory = async (subcategoryId: string): Promise<string | null> => {
@@ -16,7 +17,7 @@ const getRestaurantIdFromSubcategory = async (subcategoryId: string): Promise<st
   return (data.categories as any)?.restaurant_id || null;
 };
 
-// Helper to invalidate full menu cache
+// Helper to invalidate full menu cache and broadcast
 const invalidateFullMenuCache = async (queryClient: any, subcategoryId: string) => {
   const restaurantId = await getRestaurantIdFromSubcategory(subcategoryId);
   if (restaurantId) {
@@ -24,6 +25,8 @@ const invalidateFullMenuCache = async (queryClient: any, subcategoryId: string) 
     queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
     // Clear localStorage cache
     localStorage.removeItem(`fullMenu:${restaurantId}`);
+    // Broadcast to other tabs for instant sync
+    broadcastMenuChange(restaurantId);
   }
 };
 

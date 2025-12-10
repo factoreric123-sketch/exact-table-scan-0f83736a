@@ -2,6 +2,29 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/errorUtils";
+import { broadcastMenuChange } from "@/hooks/useMenuSync";
+
+// Helper to get restaurant ID from category ID
+const getRestaurantIdFromCategory = async (categoryId: string): Promise<string | null> => {
+  const { data, error } = await supabase
+    .from("categories")
+    .select("restaurant_id")
+    .eq("id", categoryId)
+    .single();
+  
+  if (error || !data) return null;
+  return data.restaurant_id;
+};
+
+// Helper to invalidate and broadcast
+const invalidateAndBroadcast = async (queryClient: any, categoryId: string) => {
+  const restaurantId = await getRestaurantIdFromCategory(categoryId);
+  if (restaurantId) {
+    queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
+    localStorage.removeItem(`fullMenu:${restaurantId}`);
+    broadcastMenuChange(restaurantId);
+  }
+};
 
 export interface Subcategory {
   id: string;
@@ -103,9 +126,10 @@ export const useCreateSubcategory = () => {
       
       return { previous, categoryId: subcategory.category_id };
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["subcategories", data.category_id] });
       queryClient.invalidateQueries({ queryKey: ["subcategories", "restaurant"] });
+      await invalidateAndBroadcast(queryClient, data.category_id);
     },
     onError: (error, _variables, context) => {
       if (context?.previous && context.categoryId) {
@@ -137,9 +161,10 @@ export const useUpdateSubcategory = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["subcategories", data.category_id] });
       queryClient.invalidateQueries({ queryKey: ["subcategories", "restaurant"] });
+      await invalidateAndBroadcast(queryClient, data.category_id);
     },
   });
 };
@@ -157,10 +182,11 @@ export const useDeleteSubcategory = () => {
       if (error) throw error;
       return categoryId;
     },
-    onSuccess: (categoryId) => {
+    onSuccess: async (categoryId) => {
       queryClient.invalidateQueries({ queryKey: ["subcategories", categoryId] });
       queryClient.invalidateQueries({ queryKey: ["subcategories", "restaurant"] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
+      await invalidateAndBroadcast(queryClient, categoryId);
       toast.success("Subcategory deleted");
     },
   });
