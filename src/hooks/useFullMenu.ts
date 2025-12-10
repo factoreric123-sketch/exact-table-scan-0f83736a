@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface FullMenuData {
@@ -10,6 +10,7 @@ interface UseFullMenuReturn {
   data: FullMenuData | null;
   isLoading: boolean;
   error: Error | null;
+  refetch: () => Promise<void>;
 }
 
 const CACHE_KEY_PREFIX = 'fullMenu:';
@@ -32,14 +33,57 @@ export const useFullMenu = (restaurantId: string | undefined): UseFullMenuReturn
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  const cacheKey = restaurantId ? `${CACHE_KEY_PREFIX}${restaurantId}` : '';
+
+  // Fetch from database
+  const fetchMenu = useCallback(async () => {
+    if (!restaurantId) return;
+    
+    try {
+      setIsLoading(true);
+      const { data: menuData, error: rpcError } = await supabase.rpc('get_restaurant_full_menu', {
+        p_restaurant_id: restaurantId,
+      });
+
+      if (rpcError) throw rpcError;
+
+      const parsed = menuData as unknown as FullMenuData;
+      setData(parsed);
+      
+      // Write to cache
+      try {
+        const entry: CacheEntry = {
+          data: parsed,
+          timestamp: Date.now(),
+          version: parsed?.restaurant?.updated_at || '',
+        };
+        localStorage.setItem(cacheKey, JSON.stringify(entry));
+      } catch (err) {
+        console.warn('Failed to cache menu data:', err);
+      }
+      
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch menu'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [restaurantId, cacheKey]);
+
+  // Refetch function for external use
+  const refetch = useCallback(async () => {
+    if (restaurantId) {
+      localStorage.removeItem(cacheKey);
+      await fetchMenu();
+    }
+  }, [restaurantId, cacheKey, fetchMenu]);
+
   useEffect(() => {
     if (!restaurantId) {
       setIsLoading(false);
       return;
     }
 
-    const cacheKey = `${CACHE_KEY_PREFIX}${restaurantId}`;
-    
     // Try to read from cache synchronously
     const readCache = (): FullMenuData | null => {
       try {
@@ -68,41 +112,6 @@ export const useFullMenu = (restaurantId: string | undefined): UseFullMenuReturn
       }
     };
 
-    // Write to cache with version
-    const writeCache = (menuData: FullMenuData) => {
-      try {
-        const entry: CacheEntry = {
-          data: menuData,
-          timestamp: Date.now(),
-          version: menuData?.restaurant?.updated_at || '',
-        };
-        localStorage.setItem(cacheKey, JSON.stringify(entry));
-      } catch (err) {
-        // Silent fail if localStorage is full or disabled
-        console.warn('Failed to cache menu data:', err);
-      }
-    };
-
-    // Fetch from database
-    const fetchMenu = async () => {
-      try {
-        const { data: menuData, error: rpcError } = await supabase.rpc('get_restaurant_full_menu', {
-          p_restaurant_id: restaurantId,
-        });
-
-        if (rpcError) throw rpcError;
-
-        const parsed = menuData as unknown as FullMenuData;
-        setData(parsed);
-        writeCache(parsed);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to fetch menu'));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     // Try cache first
     const cachedData = readCache();
     if (cachedData) {
@@ -114,7 +123,7 @@ export const useFullMenu = (restaurantId: string | undefined): UseFullMenuReturn
       // No cache, fetch immediately
       fetchMenu();
     }
-  }, [restaurantId]);
+  }, [restaurantId, cacheKey, fetchMenu]);
 
-  return { data, isLoading, error };
+  return { data, isLoading, error, refetch };
 };
