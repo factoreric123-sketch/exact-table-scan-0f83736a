@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { useDebounce } from "use-debounce";
 import { CSS } from "@dnd-kit/utilities";
@@ -32,7 +32,7 @@ interface SortableDishProps {
   subcategoryId: string;
 }
 
-export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
+const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: dish.id,
   });
@@ -45,7 +45,7 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showOptionsEditor, setShowOptionsEditor] = useState(false);
   const [localCalories, setLocalCalories] = useState(dish.calories?.toString() || "");
-  const [debouncedCalories] = useDebounce(localCalories, 200); // Reduced from 500ms to 200ms for instant feel
+  const [debouncedCalories] = useDebounce(localCalories, 100); // Minimal debounce for typing
   
   // Optimistic local state for instant feedback
   const [localAllergens, setLocalAllergens] = useState<string[]>(dish.allergens || []);
@@ -83,27 +83,31 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
     opacity: isDragging ? 0.3 : 1,
   };
 
-  // Batched update mechanism to prevent lag
+  // Fire-and-forget background updates - UI is instant, DB syncs in background
   const pendingUpdates = useRef<Partial<Dish>>({});
-  const updateTimer = useRef<any>(null);
+  const updateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scheduleUpdate = useCallback((updates: Partial<Dish>) => {
+    // Merge updates
     pendingUpdates.current = { ...pendingUpdates.current, ...updates };
     
+    // Clear any pending timer
     if (updateTimer.current) {
       clearTimeout(updateTimer.current);
     }
     
+    // Batch updates with minimal delay - just enough to catch rapid clicks
     updateTimer.current = setTimeout(() => {
       const toUpdate = pendingUpdates.current;
       pendingUpdates.current = {};
       updateTimer.current = null;
       
+      // Fire and forget - don't wait for response
       updateDish.mutate({
         id: dish.id,
         updates: toUpdate,
       });
-    }, 50); // Reduced from 150ms to 50ms for 3x faster response
+    }, 16); // Single frame (~60fps) - imperceptible delay
   }, [dish.id, updateDish]);
 
   const handleUpdate = (field: keyof Dish, value: string | boolean | string[] | number | null) => {
@@ -441,3 +445,16 @@ export const SortableDish = ({ dish, subcategoryId }: SortableDishProps) => {
     </>
   );
 };
+
+// Memoize to prevent re-renders from parent list updates
+export const SortableDish = React.memo(SortableDishInner, (prev, next) => {
+  // Only re-render if essential props changed
+  return (
+    prev.dish.id === next.dish.id &&
+    prev.dish.name === next.dish.name &&
+    prev.dish.price === next.dish.price &&
+    prev.dish.description === next.dish.description &&
+    prev.dish.image_url === next.dish.image_url &&
+    prev.subcategoryId === next.subcategoryId
+  );
+});
