@@ -625,7 +625,7 @@ export function UnifiedDishEditor({
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] w-full">
           <DialogHeader>
             <DialogTitle>Edit Dish</DialogTitle>
           </DialogHeader>
@@ -644,7 +644,7 @@ export function UnifiedDishEditor({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Dish</DialogTitle>
           </DialogHeader>
