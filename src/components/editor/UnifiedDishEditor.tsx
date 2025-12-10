@@ -657,247 +657,249 @@ export function UnifiedDishEditor({
             </div>
           )}
 
-          <div className="space-y-6">
-            {/* Photo Section */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Photo</Label>
-              <label className="block w-32 h-32 rounded-lg overflow-hidden cursor-pointer group relative border-2 border-dashed border-border hover:border-primary transition-colors">
-                {isUploadingImage ? (
-                  <div className="w-full h-full bg-muted flex items-center justify-center">
-                    <Loader2 className="h-6 w-6 animate-spin" />
-                  </div>
-                ) : localImageUrl ? (
-                  <>
-                    <img src={localImageUrl} alt={localName} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                      <Upload className="h-6 w-6 text-white" />
+          <div className="space-y-4">
+            {/* Row 1: Photo + Name/Price/Description + Dietary/Badges */}
+            <div className="grid grid-cols-[auto_1fr_auto_1fr] gap-4 items-start">
+              {/* Photo */}
+              <div>
+                <Label className="text-xs font-medium mb-1 block">Photo</Label>
+                <label className="block w-24 h-24 rounded-lg overflow-hidden cursor-pointer group relative border-2 border-dashed border-border hover:border-primary transition-colors">
+                  {isUploadingImage ? (
+                    <div className="w-full h-full bg-muted flex items-center justify-center">
+                      <Loader2 className="h-5 w-5 animate-spin" />
                     </div>
-                  </>
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground">
-                    <Upload className="h-6 w-6 mb-1" />
-                    <span className="text-xs">Upload</span>
-                  </div>
-                )}
-                <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
-              </label>
-            </div>
-
-            {/* Name & Description */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="dish-name" className="text-sm font-medium">Name *</Label>
-                <Input
-                  id="dish-name"
-                  value={localName}
-                  onChange={(e) => { setLocalName(e.target.value); setIsDirty(true); }}
-                  placeholder="Dish name"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="dish-price" className="text-sm font-medium">Price</Label>
-                <Input
-                  id="dish-price"
-                  value={localPrice}
-                  onChange={(e) => { setLocalPrice(e.target.value); setIsDirty(true); }}
-                  placeholder="$0.00"
-                  className="mt-1"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="dish-description" className="text-sm font-medium">Description</Label>
-              <Textarea
-                id="dish-description"
-                value={localDescription}
-                onChange={(e) => { setLocalDescription(e.target.value); setIsDirty(true); }}
-                placeholder="Describe your dish..."
-                className="mt-1 min-h-[80px]"
-              />
-            </div>
-
-            <Separator />
-
-            {/* Allergens */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Allergens</Label>
-              <div className="flex flex-wrap gap-2">
-                {ALLERGEN_OPTIONS.map((option) => {
-                  const Icon = option.Icon;
-                  const isSelected = localAllergens.includes(option.value);
-                  return (
-                    <Badge
-                      key={option.value}
-                      variant={isSelected ? "default" : "outline"}
-                      className="cursor-pointer flex items-center gap-1 active:scale-95 transition-transform"
-                      onClick={() => handleAllergenToggle(option.value)}
-                    >
-                      <Icon className="h-3 w-3" />
-                      {option.label}
-                    </Badge>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Dietary & Badges */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">Dietary</Label>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm flex items-center gap-1.5">
-                      <Salad className="h-4 w-4 text-green-500" />
-                      Vegetarian
-                    </Label>
-                    <Switch checked={localVegetarian} onCheckedChange={(v) => { setLocalVegetarian(v); setIsDirty(true); }} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm flex items-center gap-1.5">
-                      <Sprout className="h-4 w-4 text-green-500" />
-                      Vegan
-                    </Label>
-                    <Switch checked={localVegan} onCheckedChange={(v) => { setLocalVegan(v); setIsDirty(true); }} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm flex items-center gap-1.5">
-                      <Flame className="h-4 w-4 text-red-500" />
-                      Spicy
-                    </Label>
-                    <Switch checked={localSpicy} onCheckedChange={(v) => { setLocalSpicy(v); setIsDirty(true); }} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">Badges</Label>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm flex items-center gap-1.5">
-                      <Sparkles className="h-4 w-4 text-green-500" />
-                      New
-                    </Label>
-                    <Switch checked={localNew} onCheckedChange={(v) => { setLocalNew(v); setIsDirty(true); }} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm flex items-center gap-1.5">
-                      <Star className="h-4 w-4 text-orange-500" />
-                      Special
-                    </Label>
-                    <Switch checked={localSpecial} onCheckedChange={(v) => { setLocalSpecial(v); setIsDirty(true); }} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm flex items-center gap-1.5">
-                      <TrendingUp className="h-4 w-4 text-blue-500" />
-                      Popular
-                    </Label>
-                    <Switch checked={localPopular} onCheckedChange={(v) => { setLocalPopular(v); setIsDirty(true); }} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm flex items-center gap-1.5">
-                      <ChefHat className="h-4 w-4 text-purple-500" />
-                      Chef's Pick
-                    </Label>
-                    <Switch checked={localChefRec} onCheckedChange={(v) => { setLocalChefRec(v); setIsDirty(true); }} />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Calories */}
-            <div>
-              <Label htmlFor="dish-calories" className="text-sm font-medium">Calories</Label>
-              <Input
-                id="dish-calories"
-                type="number"
-                value={localCalories}
-                onChange={(e) => { setLocalCalories(e.target.value); setIsDirty(true); }}
-                placeholder="e.g., 450"
-                className="mt-1 w-32"
-              />
-            </div>
-
-            <Separator />
-
-            {/* Size Options */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm font-medium">Size Options</Label>
-                  <p className="text-xs text-muted-foreground">Different sizes with prices (e.g., Small, Large)</p>
-                </div>
-                <Switch checked={localHasOptions} onCheckedChange={(v) => { setLocalHasOptions(v); setIsDirty(true); }} />
-              </div>
-
-              {localHasOptions && (
-                <>
-                  <Button onClick={handleAddOption} variant="outline" size="sm" className="w-full">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Size
-                  </Button>
-                  
-                  {visibleOptions.length > 0 && (
-                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndOptions}>
-                      <SortableContext items={visibleOptions.map(o => o.id)} strategy={verticalListSortingStrategy}>
-                        <div className="space-y-2">
-                          {visibleOptions.map(opt => (
-                            <SortableItem
-                              key={opt.id}
-                              id={opt.id}
-                              name={opt.name}
-                              price={opt.price}
-                              onUpdate={handleUpdateOption}
-                              onDelete={handleDeleteOption}
-                              type="option"
-                            />
-                          ))}
-                        </div>
-                      </SortableContext>
-                    </DndContext>
+                  ) : localImageUrl ? (
+                    <>
+                      <img src={localImageUrl} alt={localName} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <Upload className="h-5 w-5 text-white" />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground">
+                      <Upload className="h-5 w-5 mb-1" />
+                      <span className="text-xs">Upload</span>
+                    </div>
                   )}
-                </>
-              )}
-            </div>
-
-            {/* Modifiers */}
-            <div className="space-y-3">
-              <div>
-                <Label className="text-sm font-medium">Add-ons & Modifiers</Label>
-                <p className="text-xs text-muted-foreground">Extra toppings or upgrades</p>
+                  <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+                </label>
               </div>
 
-              <Button onClick={handleAddModifier} variant="outline" size="sm" className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Modifier
-              </Button>
-              
-              {visibleModifiers.length > 0 && (
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndModifiers}>
-                  <SortableContext items={visibleModifiers.map(m => m.id)} strategy={verticalListSortingStrategy}>
-                    <div className="space-y-2">
-                      {visibleModifiers.map(mod => (
-                        <SortableItem
-                          key={mod.id}
-                          id={mod.id}
-                          name={mod.name}
-                          price={mod.price}
-                          onUpdate={handleUpdateModifier}
-                          onDelete={handleDeleteModifier}
-                          type="modifier"
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-                </DndContext>
-              )}
+              {/* Name, Price, Description */}
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="dish-name" className="text-xs font-medium">Name *</Label>
+                    <Input
+                      id="dish-name"
+                      value={localName}
+                      onChange={(e) => { setLocalName(e.target.value); setIsDirty(true); }}
+                      placeholder="Dish name"
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="dish-price" className="text-xs font-medium">Price</Label>
+                    <Input
+                      id="dish-price"
+                      value={localPrice}
+                      onChange={(e) => { setLocalPrice(e.target.value); setIsDirty(true); }}
+                      placeholder="$0.00"
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="dish-description" className="text-xs font-medium">Description</Label>
+                  <Textarea
+                    id="dish-description"
+                    value={localDescription}
+                    onChange={(e) => { setLocalDescription(e.target.value); setIsDirty(true); }}
+                    placeholder="Describe your dish..."
+                    className="min-h-[60px] text-sm resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Dietary */}
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Dietary</Label>
+                <div className="flex items-center justify-between gap-2 py-0.5">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Salad className="h-3 w-3 text-green-500" />
+                    Vegetarian
+                  </Label>
+                  <Switch checked={localVegetarian} onCheckedChange={(v) => { setLocalVegetarian(v); setIsDirty(true); }} className="scale-90" />
+                </div>
+                <div className="flex items-center justify-between gap-2 py-0.5">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Sprout className="h-3 w-3 text-green-500" />
+                    Vegan
+                  </Label>
+                  <Switch checked={localVegan} onCheckedChange={(v) => { setLocalVegan(v); setIsDirty(true); }} className="scale-90" />
+                </div>
+                <div className="flex items-center justify-between gap-2 py-0.5">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Flame className="h-3 w-3 text-red-500" />
+                    Spicy
+                  </Label>
+                  <Switch checked={localSpicy} onCheckedChange={(v) => { setLocalSpicy(v); setIsDirty(true); }} className="scale-90" />
+                </div>
+              </div>
+
+              {/* Badges */}
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Badges</Label>
+                <div className="flex items-center justify-between gap-2 py-0.5">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Sparkles className="h-3 w-3 text-green-500" />
+                    New
+                  </Label>
+                  <Switch checked={localNew} onCheckedChange={(v) => { setLocalNew(v); setIsDirty(true); }} className="scale-90" />
+                </div>
+                <div className="flex items-center justify-between gap-2 py-0.5">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Star className="h-3 w-3 text-orange-500" />
+                    Special
+                  </Label>
+                  <Switch checked={localSpecial} onCheckedChange={(v) => { setLocalSpecial(v); setIsDirty(true); }} className="scale-90" />
+                </div>
+                <div className="flex items-center justify-between gap-2 py-0.5">
+                  <Label className="text-xs flex items-center gap-1">
+                    <TrendingUp className="h-3 w-3 text-blue-500" />
+                    Popular
+                  </Label>
+                  <Switch checked={localPopular} onCheckedChange={(v) => { setLocalPopular(v); setIsDirty(true); }} className="scale-90" />
+                </div>
+                <div className="flex items-center justify-between gap-2 py-0.5">
+                  <Label className="text-xs flex items-center gap-1">
+                    <ChefHat className="h-3 w-3 text-purple-500" />
+                    Chef's Pick
+                  </Label>
+                  <Switch checked={localChefRec} onCheckedChange={(v) => { setLocalChefRec(v); setIsDirty(true); }} className="scale-90" />
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Row 2: Allergens + Calories */}
+            <div className="flex items-start gap-6">
+              <div className="flex-1">
+                <Label className="text-xs font-medium mb-1 block">Allergens</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {ALLERGEN_OPTIONS.map((option) => {
+                    const Icon = option.Icon;
+                    const isSelected = localAllergens.includes(option.value);
+                    return (
+                      <Badge
+                        key={option.value}
+                        variant={isSelected ? "default" : "outline"}
+                        className="cursor-pointer flex items-center gap-1 active:scale-95 transition-transform text-xs py-0.5"
+                        onClick={() => handleAllergenToggle(option.value)}
+                      >
+                        <Icon className="h-3 w-3" />
+                        {option.label}
+                      </Badge>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="w-24">
+                <Label htmlFor="dish-calories" className="text-xs font-medium">Calories</Label>
+                <Input
+                  id="dish-calories"
+                  type="number"
+                  value={localCalories}
+                  onChange={(e) => { setLocalCalories(e.target.value); setIsDirty(true); }}
+                  placeholder="e.g., 450"
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Row 3: Size Options + Modifiers side by side */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Size Options */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-xs font-medium">Size Options</Label>
+                    <p className="text-xs text-muted-foreground">Different sizes with prices</p>
+                  </div>
+                  <Switch checked={localHasOptions} onCheckedChange={(v) => { setLocalHasOptions(v); setIsDirty(true); }} className="scale-90" />
+                </div>
+
+                {localHasOptions && (
+                  <>
+                    <Button onClick={handleAddOption} variant="outline" size="sm" className="w-full h-8 text-xs">
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add Size
+                    </Button>
+                    
+                    {visibleOptions.length > 0 && (
+                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndOptions}>
+                        <SortableContext items={visibleOptions.map(o => o.id)} strategy={verticalListSortingStrategy}>
+                          <div className="space-y-1.5 max-h-[120px] overflow-y-auto">
+                            {visibleOptions.map(opt => (
+                              <SortableItem
+                                key={opt.id}
+                                id={opt.id}
+                                name={opt.name}
+                                price={opt.price}
+                                onUpdate={handleUpdateOption}
+                                onDelete={handleDeleteOption}
+                                type="option"
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Modifiers */}
+              <div className="space-y-2">
+                <div>
+                  <Label className="text-xs font-medium">Add-ons & Modifiers</Label>
+                  <p className="text-xs text-muted-foreground">Extra toppings or upgrades</p>
+                </div>
+
+                <Button onClick={handleAddModifier} variant="outline" size="sm" className="w-full h-8 text-xs">
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add Modifier
+                </Button>
+                
+                {visibleModifiers.length > 0 && (
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndModifiers}>
+                    <SortableContext items={visibleModifiers.map(m => m.id)} strategy={verticalListSortingStrategy}>
+                      <div className="space-y-1.5 max-h-[120px] overflow-y-auto">
+                        {visibleModifiers.map(mod => (
+                          <SortableItem
+                            key={mod.id}
+                            id={mod.id}
+                            name={mod.name}
+                            price={mod.price}
+                            onUpdate={handleUpdateModifier}
+                            onDelete={handleDeleteModifier}
+                            type="modifier"
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                )}
+              </div>
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-2 pt-4 border-t">
-              <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-              <Button onClick={handleSave}>Save Changes</Button>
+            <div className="flex justify-end gap-2 pt-2 border-t">
+              <Button variant="outline" size="sm" onClick={handleCancel}>Cancel</Button>
+              <Button size="sm" onClick={handleSave}>Save Changes</Button>
             </div>
           </div>
         </DialogContent>
