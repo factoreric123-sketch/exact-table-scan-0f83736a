@@ -1,4 +1,4 @@
-import { useState, memo, useCallback } from "react";
+import { useState } from "react";
 import { DndContext, closestCorners, DragEndEvent, DragStartEvent, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
@@ -26,9 +26,15 @@ export const EditableCategories = ({
   filterSheetTrigger,
 }: EditableCategoriesProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [isReady, setIsReady] = useState(true); // Instant ready - no delay
+  const [isReady, setIsReady] = useState(false);
   const createCategory = useCreateCategory();
   const updateCategoriesOrder = useUpdateCategoriesOrder();
+
+  // Prevent flicker by ensuring content is ready
+  useState(() => {
+    const timer = setTimeout(() => setIsReady(true), 50);
+    return () => clearTimeout(timer);
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

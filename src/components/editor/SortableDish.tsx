@@ -45,7 +45,7 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showOptionsEditor, setShowOptionsEditor] = useState(false);
   const [localCalories, setLocalCalories] = useState(dish.calories?.toString() || "");
-  const [debouncedCalories] = useDebounce(localCalories, 50); // Ultra-fast debounce
+  const [debouncedCalories] = useDebounce(localCalories, 100); // Minimal debounce for typing
   
   // Optimistic local state for instant feedback - only initialize once per dish ID
   const [localAllergens, setLocalAllergens] = useState<string[]>(dish.allergens || []);
@@ -102,10 +102,8 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
       clearTimeout(updateTimer.current);
     }
     
-    // Use queueMicrotask for zero-delay batching - faster than setTimeout
-    queueMicrotask(() => {
-      if (Object.keys(pendingUpdates.current).length === 0) return;
-      
+    // Batch updates with minimal delay - just enough to catch rapid clicks
+    updateTimer.current = setTimeout(() => {
       const toUpdate = pendingUpdates.current;
       pendingUpdates.current = {};
       updateTimer.current = null;
@@ -115,7 +113,7 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
         id: dish.id,
         updates: toUpdate,
       });
-    });
+    }, 16); // Single frame (~60fps) - imperceptible delay
   }, [dish.id, updateDish]);
 
   const handleUpdate = (field: keyof Dish, value: string | boolean | string[] | number | null) => {
@@ -216,14 +214,12 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
           </button>
         </div>
 
-        <div className="bg-dish-card rounded-2xl overflow-hidden aspect-square mb-2.5 relative shadow-md group/image will-change-transform">
+        <div className="bg-dish-card rounded-2xl overflow-hidden aspect-square mb-2.5 relative shadow-md group/image">
           {dish.image_url ? (
             <img 
               src={dish.image_url} 
               alt={dish.name}
-              className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105 will-change-transform"
-              loading="lazy"
-              decoding="async"
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-muted">
