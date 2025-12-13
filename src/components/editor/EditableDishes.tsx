@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo, useCallback } from "react";
 import { DndContext, closestCorners, DragEndEvent, DragStartEvent, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { SortableDish } from "./SortableDish";
@@ -18,14 +18,14 @@ interface EditableDishesProps {
   restaurant?: any;
 }
 
-export const EditableDishes = ({
+const EditableDishes = memo(({
   dishes,
   subcategoryId,
   previewMode,
   restaurant,
 }: EditableDishesProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [isReady, setIsReady] = useState(false);
+  const [isReady, setIsReady] = useState(true); // Instant ready - no delay
   const createDish = useCreateDish();
   const updateDishesOrder = useUpdateDishesOrder();
   
@@ -39,12 +39,6 @@ export const EditableDishes = ({
     dishes,
     !previewMode && !dishesAlreadyHaveOptions // Only fetch when needed
   );
-
-  // Prevent flicker by ensuring content is ready
-  useState(() => {
-    const timer = setTimeout(() => setIsReady(true), 50);
-    return () => clearTimeout(timer);
-  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -204,4 +198,8 @@ export const EditableDishes = ({
       </Button>
     </div>
   );
-};
+});
+
+EditableDishes.displayName = 'EditableDishes';
+
+export { EditableDishes };

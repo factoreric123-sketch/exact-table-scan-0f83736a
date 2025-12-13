@@ -100,13 +100,14 @@ const RestaurantHeader = memo(({
 
   return (
     <>
-      <header className="relative w-full h-64 md:h-80 overflow-hidden group">
+      <header className="relative w-full h-64 md:h-80 overflow-hidden group will-change-transform">
         <img 
           src={displayImage} 
           alt="Restaurant ambiance" 
           className="w-full h-full object-cover"
-          loading="lazy"
+          loading="eager"
           decoding="async"
+          fetchPriority="high"
         />
         
         {editable && (
