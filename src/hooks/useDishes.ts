@@ -276,16 +276,16 @@ export const useUpdateDish = () => {
     retry: 3,
     retryDelay: (attempt) => Math.min(200 * Math.pow(2, attempt), 2000),
     onMutate: ({ id, updates }) => {
-      // Find the dish first to get subcategory_id
+      // Find the dish first to get subcategory_id - SYNCHRONOUS lookup
       const dish = queryClient.getQueriesData<Dish[]>({ queryKey: ["dishes"] })
         .flatMap(([, data]) => data || [])
         .find((d) => d.id === id);
       
       if (dish) {
-        // INSTANT optimistic update to full-menu cache FIRST (before any async)
+        // INSTANT optimistic update to full-menu cache FIRST (completely synchronous)
         updateDishInFullMenuCache(queryClient, id, updates);
         
-        // Cancel queries and update dishes cache synchronously
+        // Cancel queries synchronously (no await)
         queryClient.cancelQueries({ queryKey: ["dishes", dish.subcategory_id] });
         const previous = queryClient.getQueryData<Dish[]>(["dishes", dish.subcategory_id]);
         
@@ -296,9 +296,11 @@ export const useUpdateDish = () => {
           );
         }
         
-        // Clear localStorage in background (non-blocking)
-        getRestaurantIdFromSubcategory(dish.subcategory_id).then(restaurantId => {
-          if (restaurantId) clearAllMenuCaches(restaurantId);
+        // Clear localStorage via microtask (non-blocking, zero delay)
+        queueMicrotask(() => {
+          getRestaurantIdFromSubcategory(dish.subcategory_id).then(restaurantId => {
+            if (restaurantId) clearAllMenuCaches(restaurantId);
+          });
         });
         
         return { previous, subcategoryId: dish.subcategory_id };
