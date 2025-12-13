@@ -157,21 +157,15 @@ export const useFullMenu = (
     fetchMenu();
   }, [restaurantId, cacheKey, fetchMenu, useLocalStorageCache, queryClient]);
 
-  // Subscribe to React Query cache updates (for optimistic updates from mutations)
-  // Listen for BOTH 'added' (setQueryData) and 'updated' events
+  // Subscribe to React Query cache updates for INSTANT optimistic sync
   useEffect(() => {
     if (!restaurantId) return;
 
-    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      // Check for any cache change event on our query
-      if (
-        event?.query?.queryKey?.[0] === 'full-menu' && 
-        event?.query?.queryKey?.[1] === restaurantId
-      ) {
-        const newData = queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
-        if (newData && newData !== data) {
-          setData(newData);
-        }
+    const unsubscribe = queryClient.getQueryCache().subscribe(() => {
+      // Check cache on every event - this catches setQueryData immediately
+      const newData = queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
+      if (newData && newData !== data) {
+        setData(newData);
       }
     });
 
