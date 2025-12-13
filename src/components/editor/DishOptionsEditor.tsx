@@ -193,7 +193,8 @@ export function DishOptionsEditor({
   // Loading timeout protection - never show loading for more than 2 seconds
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
   const isLoading = (optionsLoading || modifiersLoading) && !loadingTimedOut;
-  const hasError = optionsError || modifiersError || loadingTimedOut;
+  // Only show error if there's an actual query error OR still loading after timeout (not just timeout with no data yet)
+  const hasDataError = (optionsError || modifiersError) || (loadingTimedOut && (optionsLoading || modifiersLoading));
 
   useEffect(() => {
     if (open && (optionsLoading || modifiersLoading)) {
@@ -219,6 +220,8 @@ export function DishOptionsEditor({
   const initialOptionsRef = useRef<EditableDishOption[]>([]);
   const initialModifiersRef = useRef<EditableDishModifier[]>([]);
   const saveInProgressRef = useRef(false);
+  // Track if we've initialized for this session to prevent background refetches from overwriting edits
+  const isInitializedRef = useRef(false);
 
   const MAX_OPTIONS = 50;
   const MAX_MODIFIERS = 50;
@@ -237,9 +240,11 @@ export function DishOptionsEditor({
     [localModifiers]
   );
 
-  // INSTANT initialization - no delays
+  // Initialize ONLY once when dialog opens - prevent background refetches from overwriting user edits
   useEffect(() => {
-    if (open) {
+    if (open && !isInitializedRef.current) {
+      isInitializedRef.current = true;
+      
       const editableOptions: EditableDishOption[] = options.map(opt => ({
         ...opt,
         _status: "unchanged" as const,
@@ -259,6 +264,11 @@ export function DishOptionsEditor({
 
       initialOptionsRef.current = editableOptions.map(o => ({ ...o }));
       initialModifiersRef.current = editableModifiers.map(m => ({ ...m }));
+    }
+    
+    // Reset initialization flag when dialog closes
+    if (!open) {
+      isInitializedRef.current = false;
     }
   }, [open, options, modifiers, initialHasOptions]);
 
@@ -578,7 +588,7 @@ export function DishOptionsEditor({
           <DialogTitle>Pricing Options for "{dishName}"</DialogTitle>
         </DialogHeader>
 
-        {hasError && (
+        {hasDataError && (
           <div className="text-center py-4 px-4 mb-4 bg-muted/30 rounded-lg">
             <p className="text-sm text-muted-foreground">
               {loadingTimedOut ? "Loading took too long. You can still add new options below." : "Could not load existing options. You can still add new ones."}
