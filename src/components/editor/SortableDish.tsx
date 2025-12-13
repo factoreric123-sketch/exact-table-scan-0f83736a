@@ -47,7 +47,7 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
   const [localCalories, setLocalCalories] = useState(dish.calories?.toString() || "");
   const [debouncedCalories] = useDebounce(localCalories, 100); // Minimal debounce for typing
   
-  // Optimistic local state for instant feedback
+  // Optimistic local state for instant feedback - only initialize once per dish ID
   const [localAllergens, setLocalAllergens] = useState<string[]>(dish.allergens || []);
   const [localVegetarian, setLocalVegetarian] = useState(dish.is_vegetarian);
   const [localVegan, setLocalVegan] = useState(dish.is_vegan);
@@ -56,18 +56,24 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
   const [localSpecial, setLocalSpecial] = useState(dish.is_special);
   const [localPopular, setLocalPopular] = useState(dish.is_popular);
   const [localChefRec, setLocalChefRec] = useState(dish.is_chef_recommendation);
+  
+  // Track if we've initialized for this dish ID - prevents background refetches from overwriting user edits
+  const initializedDishId = useRef<string | null>(null);
 
-  // Sync local state when dish prop changes
+  // Only sync from dish prop when switching to a different dish (not on refetches)
   useEffect(() => {
-    setLocalAllergens(dish.allergens || []);
-    setLocalVegetarian(dish.is_vegetarian);
-    setLocalVegan(dish.is_vegan);
-    setLocalSpicy(dish.is_spicy);
-    setLocalNew(dish.is_new);
-    setLocalSpecial(dish.is_special);
-    setLocalPopular(dish.is_popular);
-    setLocalChefRec(dish.is_chef_recommendation);
-  }, [dish]);
+    if (initializedDishId.current !== dish.id) {
+      initializedDishId.current = dish.id;
+      setLocalAllergens(dish.allergens || []);
+      setLocalVegetarian(dish.is_vegetarian);
+      setLocalVegan(dish.is_vegan);
+      setLocalSpicy(dish.is_spicy);
+      setLocalNew(dish.is_new);
+      setLocalSpecial(dish.is_special);
+      setLocalPopular(dish.is_popular);
+      setLocalChefRec(dish.is_chef_recommendation);
+    }
+  }, [dish.id]);
 
   // Update database only when debounced value changes
   useEffect(() => {
@@ -446,15 +452,7 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
   );
 };
 
-// Memoize to prevent re-renders from parent list updates
+// Memoize - only re-render when dish ID changes (local state handles everything else)
 export const SortableDish = React.memo(SortableDishInner, (prev, next) => {
-  // Only re-render if essential props changed
-  return (
-    prev.dish.id === next.dish.id &&
-    prev.dish.name === next.dish.name &&
-    prev.dish.price === next.dish.price &&
-    prev.dish.description === next.dish.description &&
-    prev.dish.image_url === next.dish.image_url &&
-    prev.subcategoryId === next.subcategoryId
-  );
+  return prev.dish.id === next.dish.id && prev.subcategoryId === next.subcategoryId;
 });
