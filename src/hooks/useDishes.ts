@@ -275,20 +275,18 @@ export const useUpdateDish = () => {
     },
     retry: 3,
     retryDelay: (attempt) => Math.min(200 * Math.pow(2, attempt), 2000),
-    onMutate: async ({ id, updates }) => {
+    onMutate: ({ id, updates }) => {
       // Find the dish first to get subcategory_id
       const dish = queryClient.getQueriesData<Dish[]>({ queryKey: ["dishes"] })
         .flatMap(([, data]) => data || [])
         .find((d) => d.id === id);
       
       if (dish) {
-        // Get restaurant ID and clear localStorage FIRST
-        const restaurantId = await getRestaurantIdFromSubcategory(dish.subcategory_id);
-        if (restaurantId) {
-          clearAllMenuCaches(restaurantId);
-        }
+        // INSTANT optimistic update to full-menu cache FIRST (before any async)
+        updateDishInFullMenuCache(queryClient, id, updates);
         
-        await queryClient.cancelQueries({ queryKey: ["dishes", dish.subcategory_id] });
+        // Cancel queries and update dishes cache synchronously
+        queryClient.cancelQueries({ queryKey: ["dishes", dish.subcategory_id] });
         const previous = queryClient.getQueryData<Dish[]>(["dishes", dish.subcategory_id]);
         
         if (previous) {
@@ -298,21 +296,19 @@ export const useUpdateDish = () => {
           );
         }
         
-        // Also update full-menu cache for instant Preview sync
-        updateDishInFullMenuCache(queryClient, id, updates);
+        // Clear localStorage in background (non-blocking)
+        getRestaurantIdFromSubcategory(dish.subcategory_id).then(restaurantId => {
+          if (restaurantId) clearAllMenuCaches(restaurantId);
+        });
         
-        return { previous, subcategoryId: dish.subcategory_id, restaurantId };
+        return { previous, subcategoryId: dish.subcategory_id };
       }
     },
-    onSuccess: async (data, _, context) => {
-      // Invalidate full menu cache for live menu sync
-      if (context?.restaurantId) {
-        await invalidateMenuQueries(queryClient, context.restaurantId);
-      } else {
-        const restaurantId = await getRestaurantIdFromSubcategory(data.subcategory_id);
-        if (restaurantId) {
-          await invalidateMenuQueries(queryClient, restaurantId);
-        }
+    onSuccess: async (data) => {
+      // Invalidate full menu cache for live menu sync (background, non-blocking)
+      const restaurantId = await getRestaurantIdFromSubcategory(data.subcategory_id);
+      if (restaurantId) {
+        invalidateMenuQueries(queryClient, restaurantId);
       }
       
       // Invalidate editor caches
