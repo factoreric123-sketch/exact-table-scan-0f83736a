@@ -1,5 +1,4 @@
-import { useState, useCallback } from "react";
-import { useDebouncedCallback } from "use-debounce";
+import { useState, useCallback, memo } from "react";
 import { DndContext, closestCorners, DragEndEvent, DragStartEvent, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
@@ -25,15 +24,9 @@ export const EditableSubcategories = ({
   previewMode,
 }: EditableSubcategoriesProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [isReady, setIsReady] = useState(false);
+  const [isReady, setIsReady] = useState(true); // Instant ready - no delay
   const createSubcategory = useCreateSubcategory();
   const updateSubcategoriesOrder = useUpdateSubcategoriesOrder();
-
-  // Prevent flicker by ensuring content is ready
-  useState(() => {
-    const timer = setTimeout(() => setIsReady(true), 50);
-    return () => clearTimeout(timer);
-  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -47,16 +40,7 @@ export const EditableSubcategories = ({
     setActiveId(event.active.id as string);
   };
 
-  const debouncedUpdate = useDebouncedCallback(
-    (updates: { id: string; order_index: number }[]) => {
-      updateSubcategoriesOrder.mutate({ 
-        subcategories: updates,
-        categoryId 
-      });
-    },
-    300
-  );
-
+  // Use immediate update instead of debounce for faster response
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     setActiveId(null);
     
@@ -75,8 +59,12 @@ export const EditableSubcategories = ({
       order_index: index,
     }));
 
-    debouncedUpdate(updates);
-  }, [subcategories, categoryId, debouncedUpdate]);
+    // Fire immediately - no debounce for instant feel
+    updateSubcategoriesOrder.mutate({ 
+      subcategories: updates,
+      categoryId 
+    });
+  }, [subcategories, categoryId, updateSubcategoriesOrder]);
 
   const handleAddSubcategory = () => {
     createSubcategory.mutate({
