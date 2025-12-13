@@ -158,26 +158,19 @@ export const useFullMenu = (
   }, [restaurantId, cacheKey, fetchMenu, useLocalStorageCache, queryClient]);
 
   // Subscribe to React Query cache updates for INSTANT optimistic sync
-  // Uses reference comparison for maximum performance
   useEffect(() => {
     if (!restaurantId) return;
 
-    let lastDataRef = data;
-    
-    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      // Only process relevant events for our query
-      if (event?.query?.queryKey?.[0] === 'full-menu' && event?.query?.queryKey?.[1] === restaurantId) {
-        const newData = queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
-        // Fast reference check - only update if data changed
-        if (newData && newData !== lastDataRef) {
-          lastDataRef = newData;
-          setData(newData);
-        }
+    const unsubscribe = queryClient.getQueryCache().subscribe(() => {
+      // Check cache on every event - this catches setQueryData immediately
+      const newData = queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
+      if (newData && newData !== data) {
+        setData(newData);
       }
     });
 
     return () => unsubscribe();
-  }, [restaurantId, queryClient]);
+  }, [restaurantId, queryClient, data]);
 
   return { data, isLoading, error, refetch };
 };

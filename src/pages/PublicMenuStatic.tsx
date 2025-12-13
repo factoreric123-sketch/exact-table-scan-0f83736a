@@ -180,39 +180,32 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
     [subcategories]
   );
 
-  // Scroll tracking with RAF throttling for 60fps performance
+  // Scroll tracking (deferred)
   useEffect(() => {
     if (!subcategories || subcategories.length === 0) return;
 
-    let rafId: number | null = null;
-    let ticking = false;
+    // Defer scroll listener to after paint
+    const timeoutId = setTimeout(() => {
+      const handleScroll = () => {
+        const scrollPosition = window.scrollY + 250;
 
-    const handleScroll = () => {
-      if (!ticking) {
-        rafId = requestAnimationFrame(() => {
-          const scrollPosition = window.scrollY + 250;
-
-          for (const subcategory of subcategories) {
-            const element = subcategoryRefs.current[subcategory.name];
-            if (element) {
-              const { offsetTop, offsetHeight } = element;
-              if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-                setActiveSubcategory(subcategory.id);
-                break;
-              }
+        for (const subcategory of subcategories) {
+          const element = subcategoryRefs.current[subcategory.name];
+          if (element) {
+            const { offsetTop, offsetHeight } = element;
+            if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+              setActiveSubcategory(subcategory.id);
+              break;
             }
           }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
+        }
+      };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (rafId) cancelAnimationFrame(rafId);
-    };
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      return () => window.removeEventListener('scroll', handleScroll);
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [subcategories]);
 
   // Load filters after idle

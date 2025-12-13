@@ -220,39 +220,27 @@ const Editor = () => {
     }
   }, [previewMode, currentSubcategories]);
 
-  // Update active subcategory based on scroll position with RAF throttling (preview mode only)
+  // Update active subcategory based on scroll position (preview mode only)
   useEffect(() => {
     if (!previewMode || currentSubcategories.length === 0) return;
 
-    let rafId: number | null = null;
-    let ticking = false;
-
     const handleScroll = () => {
-      if (!ticking) {
-        rafId = requestAnimationFrame(() => {
-          const scrollPosition = window.scrollY + 250;
-          
-          for (const subcategory of currentSubcategories) {
-            const element = subcategoryRefs.current[subcategory.name];
-            if (element) {
-              const { offsetTop, offsetHeight } = element;
-              if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-                setActiveSubcategory(subcategory.id);
-                break;
-              }
-            }
+      const scrollPosition = window.scrollY + 250;
+      
+      for (const subcategory of currentSubcategories) {
+        const element = subcategoryRefs.current[subcategory.name];
+        if (element) {
+          const { offsetTop, offsetHeight } = element;
+          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+            setActiveSubcategory(subcategory.id);
+            break;
           }
-          ticking = false;
-        });
-        ticking = true;
+        }
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (rafId) cancelAnimationFrame(rafId);
-    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [previewMode, currentSubcategories]);
 
   const handlePublishToggle = async () => {
