@@ -67,8 +67,8 @@ const DemoPreviewSection = () => {
                 className="text-center p-6 rounded-xl bg-card border border-border animate-fade-in-up"
                 style={{ animationDelay: `${(index + 3) * 100}ms` }}
               >
-                <div className="font-semibold mb-1">{feature.title}</div>
-                <div className="text-sm text-muted-foreground">{feature.desc}</div>
+                <div className="font-semibold mb-1 text-black">{feature.title}</div>
+                <div className="text-sm text-black">{feature.desc}</div>
               </div>
             ))}
           </div>

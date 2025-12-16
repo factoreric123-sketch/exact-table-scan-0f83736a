@@ -151,7 +151,7 @@ const Careers = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold mb-1">{benefit.title}</h3>
-                      <p className="text-sm text-muted-foreground">{benefit.description}</p>
+                      <p className="text-sm text-black">{benefit.description}</p>
                     </div>
                   </div>
                 </CardContent>

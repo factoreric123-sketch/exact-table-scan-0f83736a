@@ -23,7 +23,7 @@ const Footer = () => {
                 href="https://twitter.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-accent transition-colors"
+                className="text-muted-foreground "
               >
                 <Twitter className="w-5 h-5" />
               </a>
@@ -31,7 +31,7 @@ const Footer = () => {
                 href="https://github.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-accent transition-colors"
+                className="text-muted-foreground "
               >
                 <Github className="w-5 h-5" />
               </a>
@@ -39,13 +39,13 @@ const Footer = () => {
                 href="https://linkedin.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-accent transition-colors"
+                className="text-muted-foreground "
               >
                 <Linkedin className="w-5 h-5" />
               </a>
               <a
                 href="mailto:hello@taptab.com"
-                className="text-muted-foreground hover:text-accent transition-colors"
+                className="text-muted-foreground "
               >
                 <Mail className="w-5 h-5" />
               </a>
@@ -57,22 +57,22 @@ const Footer = () => {
             <h3 className="font-semibold text-foreground">Product</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link to="/demo" className="hover:text-accent transition-colors">
+                <Link to="/demo" >
                   Demo
                 </Link>
               </li>
               <li>
-                <a href="#features" className="hover:text-accent transition-colors">
+                <a href="#features" >
                   Features
                 </a>
               </li>
               <li>
-                <Link to="/pricing" className="hover:text-accent transition-colors">
+                <Link to="/pricing" >
                   Pricing
                 </Link>
               </li>
               <li>
-                <Link to="/auth?signup=true" className="hover:text-accent transition-colors">
+                <Link to="/auth?signup=true" >
                   Sign Up
                 </Link>
               </li>
@@ -84,22 +84,22 @@ const Footer = () => {
             <h3 className="font-semibold text-foreground">Company</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link to="/about" className="hover:text-accent transition-colors">
+                <Link to="/about" >
                   About Us
                 </Link>
               </li>
               <li>
-                <Link to="/blog" className="hover:text-accent transition-colors">
+                <Link to="/blog" >
                   Blog
                 </Link>
               </li>
               <li>
-                <Link to="/careers" className="hover:text-accent transition-colors">
+                <Link to="/careers" >
                   Careers
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="hover:text-accent transition-colors">
+                <Link to="/contact" >
                   Contact
                 </Link>
               </li>
@@ -111,22 +111,22 @@ const Footer = () => {
             <h3 className="font-semibold text-foreground">Legal</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link to="/privacy" className="hover:text-accent transition-colors">
+                <Link to="/privacy" >
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="hover:text-accent transition-colors">
+                <Link to="/terms" >
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link to="/cookies" className="hover:text-accent transition-colors">
+                <Link to="/cookies" >
                   Cookie Policy
                 </Link>
               </li>
               <li>
-                <Link to="/gdpr" className="hover:text-accent transition-colors">
+                <Link to="/gdpr" >
                   GDPR
                 </Link>
               </li>
@@ -138,7 +138,7 @@ const Footer = () => {
         <div className="mt-12 pt-8 border-t border-border">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
             © {currentYear} MenuTap. All rights reserved.
-            <p>Made with ❤️ for restaurants worldwide</p>
+            <p>Made for restaurants worldwide</p>
           </div>
         </div>
       </div>

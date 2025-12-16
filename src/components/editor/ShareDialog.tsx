@@ -350,7 +350,7 @@ export const ShareDialog = ({
                   <Button
                     variant={size === 400 ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setSize(400)}
+                    onClick={() => setSize(300)}
                     className="flex-1"
                   >
                     Large

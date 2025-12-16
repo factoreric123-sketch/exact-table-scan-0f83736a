@@ -583,7 +583,7 @@ export function DishOptionsEditor({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl min-h-[8-vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Pricing Options for "{dishName}"</DialogTitle>
         </DialogHeader>

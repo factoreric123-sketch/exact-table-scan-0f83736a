@@ -57,12 +57,12 @@ const Navbar = () => {
               >
                 Features
               </button>
-              <button
-                onClick={() => scrollToSection("demo")}
+              <Link
+                to="/demo"
                 className="text-foreground/80 hover:text-foreground transition-colors text-sm font-medium"
               >
                 Demo
-              </button>
+              </Link>
               <Link
                 to="/pricing"
                 className="text-foreground/80 hover:text-foreground transition-colors text-sm font-medium"
@@ -70,10 +70,10 @@ const Navbar = () => {
                 Pricing
               </Link>
               <Link
-                to="/auth"
+                to="/contact"
                 className="text-foreground/80 hover:text-foreground transition-colors text-sm font-medium"
               >
-                Sign In
+                Contact
               </Link>
             </div>
 

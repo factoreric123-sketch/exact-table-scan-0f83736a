@@ -263,7 +263,7 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
           <Collapsible open={isExpanded} onOpenChange={setIsExpanded} className="mt-3">
             <CollapsibleTrigger asChild>
               <Button variant="ghost" size="sm" className="w-full justify-between p-2 h-auto">
-                <span className="text-xs font-medium">Dietary Info</span>
+                <span className="text-xs  font-medium">Dietary Info</span>
                 <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
               </Button>
             </CollapsibleTrigger>

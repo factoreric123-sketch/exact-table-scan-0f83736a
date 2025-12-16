@@ -4,6 +4,7 @@ import SubcategoryNav from "@/components/SubcategoryNav";
 import MenuGrid from "@/components/MenuGrid";
 import RestaurantHeader from "@/components/RestaurantHeader";
 import { menuData, categories, subcategories } from "@/data/menuData";
+import Footer from "@/components/home/Footer";
 
 const Index = () => {
   const [activeCategory, setActiveCategory] = useState("Dinner");
@@ -102,12 +103,8 @@ const Index = () => {
       </main>
 
       {/* Footer */}
-      <footer className="py-8 text-center">
-        <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
-          Powered By 
-          <span className="font-semibold text-foreground">MenuTap</span>
-        </p>
-      </footer>
+      <Footer/>
+     
     </div>
   );
 };

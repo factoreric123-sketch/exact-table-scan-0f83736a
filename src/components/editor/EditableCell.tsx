@@ -180,7 +180,7 @@ export const EditableCell = (props: EditableCellProps) => {
     };
 
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 ">
         {Object.entries(values).map(([key, active]) => {
           const Icon = iconMap[key];
           const label = key === "chef" ? "Chef's Pick" : capitalize(key);

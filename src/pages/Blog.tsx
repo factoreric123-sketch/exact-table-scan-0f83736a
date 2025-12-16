@@ -39,9 +39,9 @@ const Blog = () => {
                 <div className="inline-block w-fit bg-accent/10 text-accent px-3 py-1 rounded-full text-sm font-medium mb-4">
                   {featuredArticle.category}
                 </div>
-                <h3 className="text-3xl font-bold mb-4">{featuredArticle.title}</h3>
-                <p className="text-muted-foreground mb-6">{featuredArticle.excerpt}</p>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <h3 className="text-3xl text-black font-bold mb-4">{featuredArticle.title}</h3>
+                <p className="text-black mb-6">{featuredArticle.excerpt}</p>
+                <div className="flex items-center gap-4 text-sm text-black">
                   <span>{featuredArticle.date}</span>
                   <span>•</span>
                   <span>{featuredArticle.readTime}</span>

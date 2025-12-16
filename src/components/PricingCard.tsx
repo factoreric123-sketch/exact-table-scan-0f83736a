@@ -23,12 +23,12 @@ const PricingCard = ({ title, price, description, features, ctaText, ctaLink, po
       )}
       <CardHeader>
         <CardTitle className="text-2xl">{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <p className="text-md text-black">{description}</p>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-4xl font-bold">
           {price}
-          {price !== "Custom" && <span className="text-lg font-normal text-muted-foreground">/month</span>}
+          {price !== "Custom" && <span className="text-lg font-normal text-black">/month</span>}
         </div>
         <ul className="space-y-3">
           {features.map((feature, index) => (
@@ -40,7 +40,7 @@ const PricingCard = ({ title, price, description, features, ctaText, ctaLink, po
         </ul>
       </CardContent>
       <CardFooter>
-        <Button asChild className="w-full" variant={popular ? "default" : "outline"}>
+        <Button asChild className="w-full" variant={popular ? "default" : "default"}>
           <Link to={ctaLink}>{ctaText}</Link>
         </Button>
       </CardFooter>

@@ -43,12 +43,12 @@ const JobCard = ({ title, department, location, type, description, responsibilit
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="space-y-6 text-left">
-            <p className="text-muted-foreground">{description}</p>
+            <p className="text-black">{description}</p>
             <div>
               <h4 className="font-semibold mb-3">Responsibilities</h4>
               <ul className="space-y-2 list-disc list-inside">
                 {responsibilities.map((item, index) => (
-                  <li key={index} className="text-muted-foreground">{item}</li>
+                  <li key={index} className="text-black">{item}</li>
                 ))}
               </ul>
             </div>
@@ -56,7 +56,7 @@ const JobCard = ({ title, department, location, type, description, responsibilit
               <h4 className="font-semibold mb-3">Requirements</h4>
               <ul className="space-y-2 list-disc list-inside">
                 {requirements.map((item, index) => (
-                  <li key={index} className="text-muted-foreground">{item}</li>
+                  <li key={index} className="text-black">{item}</li>
                 ))}
               </ul>
             </div>

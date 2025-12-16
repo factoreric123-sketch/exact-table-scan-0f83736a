@@ -132,48 +132,71 @@ export const EditableCategories = ({
   }
 
   return (
-    <div className="pt-4 px-4">
-      <DndContext 
-        sensors={sensors} 
-        collisionDetection={closestCorners} 
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd} 
-        modifiers={[restrictToHorizontalAxis]}
-      >
-        <SortableContext items={categories.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
-          <div className="flex gap-8 justify-between items-center overflow-x-auto pb-3">
-            <div className="flex gap-8 overflow-x-auto">
-              {categories.map((category) => (
-                <SortableCategory
-                  key={category.id}
-                  category={category}
-                  isActive={activeCategory === category.id}
-                  onCategoryChange={onCategoryChange}
-                  restaurantId={restaurantId}
-                />
-              ))}
-              <Button
-                onClick={handleAddCategory}
-                variant="outline"
-                size="sm"
-                className="rounded-full whitespace-nowrap gap-2 shrink-0"
-                disabled={createCategory.isPending}
-              >
-                <Plus className="h-4 w-4" />
-                {createCategory.isPending ? "Adding..." : "Add Category"}
-              </Button>
+   <div className="pt-4 px-3 sm:px-4">
+  <DndContext
+    sensors={sensors}
+    collisionDetection={closestCorners}
+    onDragStart={handleDragStart}
+    onDragEnd={handleDragEnd}
+    modifiers={[restrictToHorizontalAxis]}
+  >
+    <SortableContext
+      items={categories.map((c) => c.id)}
+      strategy={horizontalListSortingStrategy}
+    >
+      {/* Scroll Container */}
+      <div className="w-full overflow-x-auto scrollbar-hide">
+        <div
+          className="
+            flex items-center
+            gap-4 sm:gap-6 lg:gap-8
+            min-w-max
+            pb-3
+            snap-x snap-mandatory
+          "
+        >
+          {categories.map((category) => (
+            <div key={category.id} className="snap-start shrink-0">
+              <SortableCategory
+                category={category}
+                isActive={activeCategory === category.id}
+                onCategoryChange={onCategoryChange}
+                restaurantId={restaurantId}
+              />
             </div>
-          </div>
-        </SortableContext>
-        
-        <DragOverlay dropAnimation={null}>
-          {activeId ? (
-            <div className="px-6 py-2 rounded-full bg-primary text-primary-foreground font-medium shadow-lg cursor-grabbing">
-              {categories.find(c => c.id === activeId)?.name}
-            </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
-    </div>
+          ))}
+
+          {/* Add Button */}
+          <Button
+            onClick={handleAddCategory}
+            variant="outline"
+            size="sm"
+            className="
+              rounded-full
+              whitespace-nowrap
+              gap-2
+              shrink-0
+              snap-start
+            "
+            disabled={createCategory.isPending}
+          >
+            <Plus className="h-4 w-4" />
+            {createCategory.isPending ? "Adding..." : "Add Category"}
+          </Button>
+        </div>
+      </div>
+    </SortableContext>
+
+    {/* Drag Overlay */}
+    <DragOverlay dropAnimation={null}>
+      {activeId ? (
+        <div className="px-5 py-2 rounded-full bg-primary text-primary-foreground font-medium shadow-lg cursor-grabbing">
+          {categories.find((c) => c.id === activeId)?.name}
+        </div>
+      ) : null}
+    </DragOverlay>
+  </DndContext>
+</div>
+
   );
 };

@@ -39,7 +39,7 @@ const BlogCard = ({ slug, title, excerpt, category, date, readTime, image }: Blo
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground line-clamp-3">{excerpt}</p>
+          <p className="text-black line-clamp-3">{excerpt}</p>
         </CardContent>
       </Card>
     </Link>

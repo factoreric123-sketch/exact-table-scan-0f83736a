@@ -61,7 +61,7 @@ const Contact = () => {
                       </div>
                       <CardTitle className="text-lg">{method.title}</CardTitle>
                     </div>
-                    <CardDescription>{method.description}</CardDescription>
+                    <p className="text-black">{method.description}</p>
                   </CardHeader>
                   <CardContent>
                     <a href={`mailto:${method.contact}`} className="text-accent hover:underline font-medium">
@@ -74,8 +74,8 @@ const Contact = () => {
               {/* Response Time */}
               <Card className="bg-accent/5 border-accent/20">
                 <CardContent className="pt-6">
-                  <p className="text-sm">
-                    <span className="font-semibold">Average response time:</span> We typically respond to all inquiries within 24 hours during business days (Monday-Friday, 9am-6pm EST).
+                  <p className="text-sm text-white">
+                    <span className="font-semibold ">Average response time:</span> We typically respond to all inquiries within 24 hours during business days (Monday-Friday, 9am-6pm EST).
                   </p>
                 </CardContent>
               </Card>
@@ -84,10 +84,10 @@ const Contact = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Location</CardTitle>
-                  <CardDescription>We're a fully remote team</CardDescription>
+                  <p className="text-black">We're a fully remote team</p>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">
+                  <p className="text-black">
                     Our distributed team works from around the world, allowing us to provide support across multiple time zones.
                   </p>
                 </CardContent>

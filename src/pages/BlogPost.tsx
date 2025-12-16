@@ -32,10 +32,10 @@ const BlogPost = () => {
             { label: "Blog", href: "/blog" },
             { label: article.title, href: `/blog/${article.slug}` }
           ]} />
-          <div className="mt-8">
+          <div className="mt-8 ">
             <Badge variant="secondary" className="mb-4">{article.category}</Badge>
             <h1 className="text-4xl md:text-5xl font-bold mb-6">{article.title}</h1>
-            <div className="flex items-center gap-6 text-muted-foreground">
+            <div className="flex sm:items-center flex-col sm:flex-row gap-6 text-muted-foreground">
               <span className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
                 {article.date}

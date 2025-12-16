@@ -40,7 +40,7 @@ const CTASection = () => {
                 onClick={() => navigate("/demo")}
                 variant="outline"
                 size="lg"
-                className="text-lg h-14 px-8 border-background/20 hover:bg-background/10 text-background hover:text-background"
+                className="text-lg text-gray-50 h-14 px-8 border-background/20 hover:bg-background/10  hover:text-background"
               >
                 View demo
               </Button>

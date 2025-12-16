@@ -452,7 +452,7 @@ const Editor = () => {
         restaurantId={restaurant.id}
       />
 
-      <div className="container mx-auto max-w-6xl">
+      <div className=" mx-auto max-w-6xl">
         <Sheet>
           <EditableCategories
             categories={categories}

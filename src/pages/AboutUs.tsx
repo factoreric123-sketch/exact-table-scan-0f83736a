@@ -46,7 +46,7 @@ const AboutUs = () => {
       <section className="py-24">
         <div className="container mx-auto px-4 max-w-4xl">
           <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center">Our Story</h2>
-          <div className="prose prose-lg max-w-none dark:prose-invert">
+          <div className="prose prose-lg max-w-none dark:prose-invert  text-center">
             <p>
             MenuTap was born from a simple observation: most restaurants were stuck using outdated paper menus or expensive, clunky digital solutions that required technical expertise to manage.
           </p>
@@ -67,15 +67,15 @@ const AboutUs = () => {
       <section className="bg-muted/30 py-24">
         <div className="container mx-auto px-4 max-w-6xl">
           <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">Our Values</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2  lg:grid-cols-4 gap-8">
             {values.map((value, index) => (
               <Card key={index}>
                 <CardContent className="pt-6 text-center">
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 text-accent mb-4">
                     {value.icon}
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">{value.title}</h3>
-                  <p className="text-muted-foreground">{value.description}</p>
+                  <h3 className="text-xl text-black font-semibold mb-2">{value.title}</h3>
+                  <p className="text-black">{value.description}</p>
                 </CardContent>
               </Card>
             ))}
@@ -88,19 +88,19 @@ const AboutUs = () => {
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="grid md:grid-cols-4 gap-8 text-center">
             <div>
-              <div className="text-4xl md:text-5xl font-bold text-accent mb-2">1,000+</div>
+              <div className="text-4xl md:text-5xl font-bold text-white mb-2">1,000+</div>
               <div className="text-muted-foreground">Restaurants</div>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-bold text-accent mb-2">15</div>
+              <div className="text-4xl md:text-5xl font-bold text-white mb-2">15</div>
               <div className="text-muted-foreground">Countries</div>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-bold text-accent mb-2">50K+</div>
+              <div className="text-4xl md:text-5xl font-bold text-white mb-2">50K+</div>
               <div className="text-muted-foreground">Monthly Scans</div>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-bold text-accent mb-2">12</div>
+              <div className="text-4xl md:text-5xl font-bold text-white mb-2">12</div>
               <div className="text-muted-foreground">Team Members</div>
             </div>
           </div>

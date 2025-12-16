@@ -131,46 +131,69 @@ export const EditableSubcategories = ({
   }
 
   return (
-    <div className="px-4 pb-3">
-      <DndContext 
-        sensors={sensors} 
-        collisionDetection={closestCorners} 
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd} 
-        modifiers={[restrictToHorizontalAxis]}
-      >
-        <SortableContext items={subcategories.map((s) => s.id)} strategy={horizontalListSortingStrategy}>
-          <div className="flex gap-12 overflow-x-auto">
-            {subcategories.map((subcategory) => (
+   <div className="px-3 sm:px-4 pb-3">
+  <DndContext
+    sensors={sensors}
+    collisionDetection={closestCorners}
+    onDragStart={handleDragStart}
+    onDragEnd={handleDragEnd}
+    modifiers={[restrictToHorizontalAxis]}
+  >
+    <SortableContext
+      items={subcategories.map((s) => s.id)}
+      strategy={horizontalListSortingStrategy}
+    >
+      {/* Scroll container */}
+      <div className="w-full overflow-x-auto scrollbar-hide">
+        <div
+          className="
+            flex items-center
+            gap-4 sm:gap-6 lg:gap-10
+            min-w-max
+            pb-2
+            snap-x snap-mandatory
+          "
+        >
+          {subcategories.map((subcategory) => (
+            <div key={subcategory.id} className="shrink-0 snap-start">
               <SortableSubcategory
-                key={subcategory.id}
                 subcategory={subcategory}
                 isActive={activeSubcategory === subcategory.id}
                 onSubcategoryChange={onSubcategoryChange}
                 categoryId={categoryId}
               />
-            ))}
-            <Button
-              onClick={handleAddSubcategory}
-              variant="ghost"
-              size="sm"
-              className="text-xs font-bold uppercase tracking-wider whitespace-nowrap gap-2 shrink-0"
-              disabled={createSubcategory.isPending}
-            >
-              <Plus className="h-3 w-3" />
-              {createSubcategory.isPending ? "Adding..." : "Add Subcategory"}
-            </Button>
-          </div>
-        </SortableContext>
-        
-        <DragOverlay dropAnimation={null}>
-          {activeId ? (
-            <div className="px-4 py-2 rounded-lg bg-background border-2 border-primary text-foreground font-medium shadow-lg cursor-grabbing whitespace-nowrap">
-              {subcategories.find(s => s.id === activeId)?.name}
             </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
-    </div>
+          ))}
+
+          {/* Add Subcategory Button */}
+          <Button
+            onClick={handleAddSubcategory}
+            variant="ghost"
+            size="sm"
+            className="
+              text-xs font-bold uppercase tracking-wider
+              whitespace-nowrap gap-2 shrink-0
+              snap-start
+            "
+            disabled={createSubcategory.isPending}
+          >
+            <Plus className="h-3 w-3" />
+            {createSubcategory.isPending ? "Adding..." : "Add Subcategory"}
+          </Button>
+        </div>
+      </div>
+    </SortableContext>
+
+    {/* Drag Overlay */}
+    <DragOverlay dropAnimation={null}>
+      {activeId ? (
+        <div className="px-4 py-2 rounded-lg bg-background border-2 border-primary text-foreground font-medium shadow-lg cursor-grabbing whitespace-nowrap">
+          {subcategories.find((s) => s.id === activeId)?.name}
+        </div>
+      ) : null}
+    </DragOverlay>
+  </DndContext>
+</div>
+
   );
 };

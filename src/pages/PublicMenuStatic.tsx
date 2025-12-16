@@ -312,7 +312,7 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
       />
 
       {/* Category & Subcategory Navigation */}
-      <div className="sticky top-[57px] z-40 bg-background border-b border-border">
+      <div className=" z-40 bg-background border-b border-border">
         {categoryNames.length > 0 && activeCategoryName && (
           <CategoryNav
             categories={categoryNames}

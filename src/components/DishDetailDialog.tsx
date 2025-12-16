@@ -102,8 +102,8 @@ export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogP
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 gap-0 bg-background overflow-hidden">
+    <Dialog open={open} onOpenChange={onOpenChange} >
+      <DialogContent className=" max-w-2xl rounded-xl p-0 gap-0 bg-background overflow-hidden">
         <Button
           variant="ghost"
           size="icon"
@@ -113,11 +113,11 @@ export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogP
           <X className="h-4 w-4" />
         </Button>
 
-        <div className="relative w-full aspect-square bg-dish-card">
+        <div className="relative w-full  bg-dish-card">
           <img
             src={dish.image}
             alt={dish.name}
-            className="w-full h-full object-cover"
+            className="w-full h-60 md:h-96 object-cover"
           />
         </div>
 
