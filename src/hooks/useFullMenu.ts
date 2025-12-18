@@ -16,10 +16,6 @@ interface UseFullMenuReturn {
 }
 
 interface UseFullMenuOptions {
-  /**
-   * Whether to use localStorage caching (default: true)
-   * Set to false for Editor Preview to ensure fresh data
-   */
   useLocalStorageCache?: boolean;
 }
 
@@ -32,9 +28,9 @@ interface CacheEntry {
 }
 
 /**
- * Menu loading with optional localStorage cache
- * - For Live Menu: Uses localStorage for fast initial load
- * - For Editor Preview: Skips localStorage, uses React Query cache only
+ * Production-ready menu loading with instant sync
+ * - Phase 1: Fixed race conditions with version tracking
+ * - Phase 4: Prevents double-renders with update deduplication
  */
 export const useFullMenu = (
   restaurantId: string | undefined, 
@@ -46,20 +42,50 @@ export const useFullMenu = (
   const [error, setError] = useState<Error | null>(null);
   const queryClient = useQueryClient();
   
-  // Track if we've done initial fetch to prevent background refresh overwriting optimistic updates
+  // Version tracking to prevent duplicate updates (Phase 4)
+  const lastAppliedVersion = useRef(0);
   const hasInitialFetch = useRef(false);
+  const isSubscribed = useRef(false);
 
-  // Use ref to track current data for cache subscription (avoids stale closure)
-  const dataRef = useRef<FullMenuData | null>(null);
+  // Buffer for updates that arrive before data is loaded
+  const pendingBuffer = useRef<Array<{ updater: (d: any) => any; updateId: string; version: number }>>([]);
 
   const cacheKey = restaurantId ? `${CACHE_KEY_PREFIX}${restaurantId}` : '';
 
+  // Apply buffered updates to data
+  const applyBufferedUpdates = useCallback((initialData: FullMenuData): FullMenuData => {
+    if (pendingBuffer.current.length === 0) return initialData;
+    
+    console.log('[useFullMenu] Applying buffered updates:', pendingBuffer.current.length);
+    
+    let result = initialData;
+    pendingBuffer.current.forEach(({ updater, updateId, version }) => {
+      if (!menuSyncEmitter.isApplied(updateId)) {
+        try {
+          const updated = updater(result);
+          if (updated) {
+            result = updated;
+            lastAppliedVersion.current = version;
+            console.log('[useFullMenu] Applied buffered update:', updateId);
+          }
+        } catch (err) {
+          console.error('[useFullMenu] Failed to apply buffered update:', updateId, err);
+        }
+      }
+    });
+    
+    pendingBuffer.current = [];
+    return result;
+  }, []);
+
   // Fetch from database
-  const fetchMenu = useCallback(async (forceRefresh: boolean = false) => {
+  const fetchMenu = useCallback(async () => {
     if (!restaurantId) return;
     
     try {
+      console.log('[useFullMenu] Fetching menu for:', restaurantId);
       setIsLoading(true);
+      
       const { data: menuData, error: rpcError } = await supabase.rpc('get_restaurant_full_menu', {
         p_restaurant_id: restaurantId,
       });
@@ -68,168 +94,185 @@ export const useFullMenu = (
 
       let parsed = menuData as unknown as FullMenuData;
       
-      // Apply any pending updates that arrived before data was loaded
-      const globalPending = menuSyncEmitter.getPendingUpdates();
-      if (globalPending.length > 0 && parsed) {
-        globalPending.forEach(({ updater }) => {
-          const updated = updater(parsed);
-          if (updated) parsed = updated;
-        });
-        menuSyncEmitter.clearPendingUpdates();
-      }
+      // Apply any pending updates from emitter
+      parsed = menuSyncEmitter.applyPendingUpdates(parsed);
       
-      dataRef.current = parsed;
+      // Apply any locally buffered updates
+      parsed = applyBufferedUpdates(parsed);
+      
+      console.log('[useFullMenu] Menu fetched and updates applied');
+      
       setData(parsed);
-      
-      // Update React Query cache for instant access by other components
       queryClient.setQueryData(['full-menu', restaurantId], parsed);
       
-      // Only write to localStorage if enabled (not for Editor Preview)
+      // Cache to localStorage if enabled
       if (useLocalStorageCache) {
         try {
-          const entry: CacheEntry = {
-            data: parsed,
-            timestamp: Date.now(),
-          };
+          const entry: CacheEntry = { data: parsed, timestamp: Date.now() };
           localStorage.setItem(cacheKey, JSON.stringify(entry));
         } catch (err) {
-          console.warn('Failed to cache menu data:', err);
+          console.warn('[useFullMenu] Failed to cache:', err);
         }
       }
       
       setError(null);
       hasInitialFetch.current = true;
     } catch (err) {
+      console.error('[useFullMenu] Fetch error:', err);
       setError(err instanceof Error ? err : new Error('Failed to fetch menu'));
     } finally {
       setIsLoading(false);
     }
-  }, [restaurantId, cacheKey, useLocalStorageCache, queryClient]);
+  }, [restaurantId, cacheKey, useLocalStorageCache, queryClient, applyBufferedUpdates]);
 
-  // Refetch function for external use
+  // Refetch function
   const refetch = useCallback(async () => {
     if (restaurantId) {
-      // Always clear localStorage on refetch
       localStorage.removeItem(cacheKey);
       hasInitialFetch.current = false;
-      await fetchMenu(true);
+      await fetchMenu();
     }
   }, [restaurantId, cacheKey, fetchMenu]);
 
-  // Keep ref in sync with state
-  useEffect(() => {
-    dataRef.current = data;
-  }, [data]);
-
-  // Subscribe to React Query cache changes for instant sync
-  // This catches updates from mutations even when emitter has no listeners
+  // Subscribe to emitter updates FIRST (before any data loading)
   useEffect(() => {
     if (!restaurantId) return;
 
-    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      if (event?.type === 'updated' && event?.query?.queryKey?.[0] === 'full-menu' && event?.query?.queryKey?.[1] === restaurantId) {
-        const newData = queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
-        // Only update if new data exists and is different (by reference from cache)
-        if (newData && newData !== dataRef.current) {
-          dataRef.current = newData;
-          setData(newData);
-        }
+    console.log('[useFullMenu] Setting up sync subscription for:', restaurantId);
+    isSubscribed.current = true;
+
+    const handleUpdate = (payload: any) => {
+      if (payload.type !== 'update' || !payload.updater) return;
+      
+      const { updater, updateId, version } = payload;
+      
+      // Skip if already applied (Phase 4: prevent double-renders)
+      if (updateId && menuSyncEmitter.isApplied(updateId)) {
+        console.log('[useFullMenu] Skipping already applied update:', updateId);
+        return;
       }
-    });
+      
+      // Skip if version is older than last applied
+      if (version && version <= lastAppliedVersion.current) {
+        console.log('[useFullMenu] Skipping older version:', version, 'last:', lastAppliedVersion.current);
+        return;
+      }
 
-    return unsubscribe;
-  }, [restaurantId, queryClient]); // Stable dependencies only!
+      // Get current data from React Query cache or state
+      const currentData = queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
+      
+      if (currentData) {
+        // Apply update immediately
+        try {
+          const updated = updater(currentData);
+          if (updated) {
+            console.log('[useFullMenu] Applied update instantly:', updateId);
+            setData(updated);
+            queryClient.setQueryData(['full-menu', restaurantId], updated);
+            if (version) lastAppliedVersion.current = version;
+          }
+        } catch (err) {
+          console.error('[useFullMenu] Failed to apply update:', err);
+        }
+      } else {
+        // Buffer update for when data loads
+        console.log('[useFullMenu] Buffering update (no data yet):', updateId);
+        pendingBuffer.current.push({ updater, updateId, version });
+      }
+    };
 
+    const unsubscribe = menuSyncEmitter.subscribe(restaurantId, handleUpdate);
+    
+    // Flush any pending updates that arrived before subscription
+    menuSyncEmitter.flushPendingToListener(handleUpdate);
+
+    return () => {
+      isSubscribed.current = false;
+      unsubscribe();
+    };
+  }, [restaurantId, queryClient]);
+
+  // Initialize data from cache or fetch
   useEffect(() => {
     if (!restaurantId) {
       setIsLoading(false);
       return;
     }
 
-    // PRIORITY 1: Check React Query cache FIRST (has optimistic updates)
+    // PRIORITY 1: React Query cache (has optimistic updates)
     const rqCached = queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
     if (rqCached) {
-      setData(rqCached);
+      console.log('[useFullMenu] Using React Query cache');
+      let finalData = rqCached;
+      
+      // Apply any pending updates
+      finalData = menuSyncEmitter.applyPendingUpdates(finalData);
+      finalData = applyBufferedUpdates(finalData);
+      
+      setData(finalData);
       setIsLoading(false);
-      // DON'T do background refresh here - it would overwrite optimistic updates!
-      // Only fetch if we haven't done initial fetch yet
+      
       if (!hasInitialFetch.current) {
+        // Background fetch to ensure fresh data
         fetchMenu();
       }
       return;
     }
 
-    // PRIORITY 2: Check localStorage cache (only if enabled)
+    // PRIORITY 2: localStorage cache
     if (useLocalStorageCache) {
-      const readLocalStorageCache = (): FullMenuData | null => {
-        try {
-          const cached = localStorage.getItem(cacheKey);
-          if (!cached) return null;
-
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
           const entry: CacheEntry = JSON.parse(cached);
           const age = Date.now() - entry.timestamp;
 
-          // Check if cache is expired
-          if (age > CACHE_TTL) {
+          if (age < CACHE_TTL) {
+            console.log('[useFullMenu] Using localStorage cache');
+            let finalData = entry.data;
+            
+            // Apply pending updates
+            finalData = menuSyncEmitter.applyPendingUpdates(finalData);
+            finalData = applyBufferedUpdates(finalData);
+            
+            setData(finalData);
+            queryClient.setQueryData(['full-menu', restaurantId], finalData);
+            setIsLoading(false);
+            hasInitialFetch.current = true;
+            return;
+          } else {
             localStorage.removeItem(cacheKey);
-            return null;
           }
-
-          return entry.data;
-        } catch {
-          return null;
         }
-      };
-
-      const cachedData = readLocalStorageCache();
-      if (cachedData) {
-        setData(cachedData);
-        setIsLoading(false);
-        // Update React Query cache so optimistic updates work
-        queryClient.setQueryData(['full-menu', restaurantId], cachedData);
-        hasInitialFetch.current = true;
-        // DON'T do background refresh - wait for explicit invalidation
-        return;
+      } catch (err) {
+        console.warn('[useFullMenu] localStorage read error:', err);
       }
     }
 
-    // PRIORITY 3: No cache, fetch immediately
+    // PRIORITY 3: Fetch from database
+    console.log('[useFullMenu] No cache, fetching from database');
     fetchMenu();
-  }, [restaurantId, cacheKey, fetchMenu, useLocalStorageCache, queryClient]);
+  }, [restaurantId, cacheKey, fetchMenu, useLocalStorageCache, queryClient, applyBufferedUpdates]);
 
-  // INSTANT sync via direct event emitter - bypasses all React Query overhead
-  // Subscribe IMMEDIATELY on mount, before any data fetching
+  // Subscribe to React Query cache changes (for cross-component sync)
   useEffect(() => {
     if (!restaurantId) return;
 
-    const handleEmitterUpdate = (payload: any) => {
-      if (payload.type === 'update' && payload.updater) {
-        // Try current data first, fall back to React Query cache
-        const currentData = dataRef.current || queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
-        
-        if (currentData) {
-          const updated = payload.updater(currentData);
-          if (updated) {
-            // Update state and cache synchronously
-            dataRef.current = updated;
-            setData(updated);
-            queryClient.setQueryData(['full-menu', restaurantId], updated);
-          }
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      if (
+        event?.type === 'updated' && 
+        event?.query?.queryKey?.[0] === 'full-menu' && 
+        event?.query?.queryKey?.[1] === restaurantId
+      ) {
+        const newData = queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
+        if (newData && newData !== data) {
+          setData(newData);
         }
-      } else if (payload.type === 'full') {
-        dataRef.current = payload.data;
-        setData(payload.data);
-        queryClient.setQueryData(['full-menu', restaurantId], payload.data);
       }
-    };
-
-    const unsubscribe = menuSyncEmitter.subscribe(restaurantId, handleEmitterUpdate);
-    
-    // Also flush any global pending updates (from emitAll before subscription existed)
-    menuSyncEmitter.flushGlobalPending(restaurantId, handleEmitterUpdate);
+    });
 
     return unsubscribe;
-  }, [restaurantId, queryClient]); // NO data dependency - subscription is stable!
+  }, [restaurantId, queryClient, data]);
 
   return { data, isLoading, error, refetch };
 };
