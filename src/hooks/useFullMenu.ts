@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { menuSyncEmitter } from '@/lib/menuSyncEmitter';
@@ -49,6 +49,9 @@ export const useFullMenu = (
   // Track if we've done initial fetch to prevent background refresh overwriting optimistic updates
   const hasInitialFetch = useRef(false);
 
+  // Use ref to track current data for cache subscription (avoids stale closure)
+  const dataRef = useRef<FullMenuData | null>(null);
+
   const cacheKey = restaurantId ? `${CACHE_KEY_PREFIX}${restaurantId}` : '';
 
   // Fetch from database
@@ -63,7 +66,19 @@ export const useFullMenu = (
 
       if (rpcError) throw rpcError;
 
-      const parsed = menuData as unknown as FullMenuData;
+      let parsed = menuData as unknown as FullMenuData;
+      
+      // Apply any pending updates that arrived before data was loaded
+      const globalPending = menuSyncEmitter.getPendingUpdates();
+      if (globalPending.length > 0 && parsed) {
+        globalPending.forEach(({ updater }) => {
+          const updated = updater(parsed);
+          if (updated) parsed = updated;
+        });
+        menuSyncEmitter.clearPendingUpdates();
+      }
+      
+      dataRef.current = parsed;
       setData(parsed);
       
       // Update React Query cache for instant access by other components
@@ -100,6 +115,30 @@ export const useFullMenu = (
       await fetchMenu(true);
     }
   }, [restaurantId, cacheKey, fetchMenu]);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
+
+  // Subscribe to React Query cache changes for instant sync
+  // This catches updates from mutations even when emitter has no listeners
+  useEffect(() => {
+    if (!restaurantId) return;
+
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      if (event?.type === 'updated' && event?.query?.queryKey?.[0] === 'full-menu' && event?.query?.queryKey?.[1] === restaurantId) {
+        const newData = queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
+        // Only update if new data exists and is different (by reference from cache)
+        if (newData && newData !== dataRef.current) {
+          dataRef.current = newData;
+          setData(newData);
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [restaurantId, queryClient]); // Stable dependencies only!
 
   useEffect(() => {
     if (!restaurantId) {
@@ -158,15 +197,12 @@ export const useFullMenu = (
     fetchMenu();
   }, [restaurantId, cacheKey, fetchMenu, useLocalStorageCache, queryClient]);
 
-  // Use ref to hold current data for instant sync (avoids dependency on data state)
-  const dataRef = useRef<FullMenuData | null>(data);
-  dataRef.current = data;
-
   // INSTANT sync via direct event emitter - bypasses all React Query overhead
+  // Subscribe IMMEDIATELY on mount, before any data fetching
   useEffect(() => {
     if (!restaurantId) return;
 
-    const unsubscribe = menuSyncEmitter.subscribe(restaurantId, (payload) => {
+    const handleEmitterUpdate = (payload: any) => {
       if (payload.type === 'update' && payload.updater) {
         // Try current data first, fall back to React Query cache
         const currentData = dataRef.current || queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
@@ -174,15 +210,23 @@ export const useFullMenu = (
         if (currentData) {
           const updated = payload.updater(currentData);
           if (updated) {
+            // Update state and cache synchronously
+            dataRef.current = updated;
             setData(updated);
             queryClient.setQueryData(['full-menu', restaurantId], updated);
           }
         }
       } else if (payload.type === 'full') {
+        dataRef.current = payload.data;
         setData(payload.data);
         queryClient.setQueryData(['full-menu', restaurantId], payload.data);
       }
-    });
+    };
+
+    const unsubscribe = menuSyncEmitter.subscribe(restaurantId, handleEmitterUpdate);
+    
+    // Also flush any global pending updates (from emitAll before subscription existed)
+    menuSyncEmitter.flushGlobalPending(restaurantId, handleEmitterUpdate);
 
     return unsubscribe;
   }, [restaurantId, queryClient]); // NO data dependency - subscription is stable!
