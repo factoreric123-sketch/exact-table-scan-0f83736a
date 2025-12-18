@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useSyncExternalStore } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { menuSyncEmitter } from '@/lib/menuSyncEmitter';
 
 interface FullMenuData {
   restaurant: any;
@@ -157,30 +158,33 @@ export const useFullMenu = (
     fetchMenu();
   }, [restaurantId, cacheKey, fetchMenu, useLocalStorageCache, queryClient]);
 
-  // Subscribe to React Query cache updates for INSTANT optimistic sync
-  // Use a stable subscription that doesn't depend on `data` state to avoid recreation delays
+  // Use ref to hold current data for instant sync (avoids dependency on data state)
+  const dataRef = useRef<FullMenuData | null>(data);
+  dataRef.current = data;
+
+  // INSTANT sync via direct event emitter - bypasses all React Query overhead
   useEffect(() => {
     if (!restaurantId) return;
 
-    // Use a stable ref to track what we've already processed
-    let lastUpdateId = 0;
-
-    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      // Ignore 'removed' events to prevent clearing optimistic updates
-      if (event.type === 'removed') return;
-      
-      // Immediately read and set the new data - no comparison needed
-      // React will handle the de-duplication if value is the same
-      const newData = queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
-      if (newData) {
-        // Use a micro ID to force immediate update
-        lastUpdateId++;
-        setData(newData);
+    const unsubscribe = menuSyncEmitter.subscribe(restaurantId, (payload) => {
+      if (payload.type === 'update' && payload.updater) {
+        // Apply the update function directly to current data via ref
+        const currentData = dataRef.current;
+        if (currentData) {
+          const updated = payload.updater(currentData);
+          if (updated) {
+            setData(updated);
+            queryClient.setQueryData(['full-menu', restaurantId], updated);
+          }
+        }
+      } else if (payload.type === 'full') {
+        setData(payload.data);
+        queryClient.setQueryData(['full-menu', restaurantId], payload.data);
       }
     });
 
-    return () => unsubscribe();
-  }, [restaurantId, queryClient]); // Removed `data` from deps - critical for instant sync!
+    return unsubscribe;
+  }, [restaurantId, queryClient]); // NO data dependency - subscription is stable!
 
   return { data, isLoading, error, refetch };
 };

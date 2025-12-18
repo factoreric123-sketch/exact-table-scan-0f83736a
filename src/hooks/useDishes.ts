@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { generateTempId } from "@/lib/utils/uuid";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { clearAllMenuCaches, invalidateMenuQueries } from "@/lib/cacheUtils";
+import { menuSyncEmitter } from "@/lib/menuSyncEmitter";
 
 // Helper to get restaurant ID from subcategory ID
 const getRestaurantIdFromSubcategory = async (subcategoryId: string): Promise<string | null> => {
@@ -18,68 +19,101 @@ const getRestaurantIdFromSubcategory = async (subcategoryId: string): Promise<st
 };
 
 // Helper to update dish in full-menu cache optimistically (for Preview sync)
+// Now uses direct event emitter for INSTANT sync
 const updateDishInFullMenuCache = (queryClient: any, dishId: string, updates: Partial<Dish>) => {
-  // Get all full-menu queries
-  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
-  
-  fullMenuQueries.forEach(([key, data]: [any, any]) => {
-    if (!data?.categories) return;
+  // Create updater function that will be applied directly
+  const updater = (data: any) => {
+    if (!data?.categories) return null;
     
-    // Deep clone and update
-    const updatedCategories = data.categories.map((category: any) => ({
-      ...category,
-      subcategories: category.subcategories?.map((subcategory: any) => ({
-        ...subcategory,
-        dishes: subcategory.dishes?.map((dish: any) => 
-          dish.id === dishId ? { ...dish, ...updates } : dish
-        )
+    return {
+      ...data,
+      categories: data.categories.map((category: any) => ({
+        ...category,
+        subcategories: category.subcategories?.map((subcategory: any) => ({
+          ...subcategory,
+          dishes: subcategory.dishes?.map((dish: any) => 
+            dish.id === dishId ? { ...dish, ...updates } : dish
+          )
+        }))
       }))
-    }));
-    
-    queryClient.setQueryData(key, { ...data, categories: updatedCategories });
+    };
+  };
+
+  // INSTANT: Emit directly to all listeners - no React Query overhead
+  menuSyncEmitter.emitAll(updater);
+  
+  // Also update React Query cache for consistency
+  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
+  fullMenuQueries.forEach(([key, data]: [any, any]) => {
+    if (data) {
+      const updated = updater(data);
+      if (updated) queryClient.setQueryData(key, updated);
+    }
   });
 };
 
 // Helper to add dish to full-menu cache optimistically
 const addDishToFullMenuCache = (queryClient: any, subcategoryId: string, newDish: Dish) => {
-  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
+  const updater = (data: any) => {
+    if (!data?.categories) return null;
+    
+    return {
+      ...data,
+      categories: data.categories.map((category: any) => ({
+        ...category,
+        subcategories: category.subcategories?.map((subcategory: any) => {
+          if (subcategory.id === subcategoryId) {
+            return {
+              ...subcategory,
+              dishes: [...(subcategory.dishes || []), newDish]
+            };
+          }
+          return subcategory;
+        })
+      }))
+    };
+  };
+
+  // INSTANT: Emit directly
+  menuSyncEmitter.emitAll(updater);
   
+  // Also update React Query cache
+  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
   fullMenuQueries.forEach(([key, data]: [any, any]) => {
-    if (!data?.categories) return;
-    
-    const updatedCategories = data.categories.map((category: any) => ({
-      ...category,
-      subcategories: category.subcategories?.map((subcategory: any) => {
-        if (subcategory.id === subcategoryId) {
-          return {
-            ...subcategory,
-            dishes: [...(subcategory.dishes || []), newDish]
-          };
-        }
-        return subcategory;
-      })
-    }));
-    
-    queryClient.setQueryData(key, { ...data, categories: updatedCategories });
+    if (data) {
+      const updated = updater(data);
+      if (updated) queryClient.setQueryData(key, updated);
+    }
   });
 };
 
 // Helper to remove dish from full-menu cache optimistically
 const removeDishFromFullMenuCache = (queryClient: any, dishId: string) => {
-  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
-  
-  fullMenuQueries.forEach(([key, data]: [any, any]) => {
-    if (!data?.categories) return;
+  const updater = (data: any) => {
+    if (!data?.categories) return null;
     
-    const updatedCategories = data.categories.map((category: any) => ({
-      ...category,
-      subcategories: category.subcategories?.map((subcategory: any) => ({
-        ...subcategory,
-        dishes: subcategory.dishes?.filter((dish: any) => dish.id !== dishId)
+    return {
+      ...data,
+      categories: data.categories.map((category: any) => ({
+        ...category,
+        subcategories: category.subcategories?.map((subcategory: any) => ({
+          ...subcategory,
+          dishes: subcategory.dishes?.filter((dish: any) => dish.id !== dishId)
+        }))
       }))
-    }));
-    
-    queryClient.setQueryData(key, { ...data, categories: updatedCategories });
+    };
+  };
+
+  // INSTANT: Emit directly
+  menuSyncEmitter.emitAll(updater);
+  
+  // Also update React Query cache
+  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
+  fullMenuQueries.forEach(([key, data]: [any, any]) => {
+    if (data) {
+      const updated = updater(data);
+      if (updated) queryClient.setQueryData(key, updated);
+    }
   });
 };
 
