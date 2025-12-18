@@ -419,15 +419,14 @@ const Editor = () => {
           previewMode={previewMode}
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
-        onPreviewToggle={async () => {
+        onPreviewToggle={() => {
             const newPreviewMode = !previewMode;
             if (newPreviewMode) {
-              // Force refresh when entering preview mode - AWAIT to ensure data is ready
+              // Force refresh when entering preview mode
               if (restaurantId) {
                 localStorage.removeItem(`fullMenu:${restaurantId}`);
-                await queryClient.invalidateQueries({ queryKey: ['full-menu', restaurantId] });
               }
-              await refetchFullMenu();
+              refetchFullMenu();
               if (viewMode === 'table') {
                 setViewMode('grid');
               }
