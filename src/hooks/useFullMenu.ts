@@ -161,8 +161,11 @@ export const useFullMenu = (
   useEffect(() => {
     if (!restaurantId) return;
 
-    const unsubscribe = queryClient.getQueryCache().subscribe(() => {
-      // Check cache on every event - this catches setQueryData immediately
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      // Only process setQueryData events for our specific query
+      // Ignore 'removed' events to prevent clearing optimistic updates
+      if (event.type === 'removed') return;
+      
       const newData = queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
       if (newData && newData !== data) {
         setData(newData);

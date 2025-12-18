@@ -305,15 +305,19 @@ export const useUpdateDish = () => {
       }
     },
     onSuccess: async (data) => {
-      // Invalidate full menu cache for live menu sync (background, non-blocking)
-      const restaurantId = await getRestaurantIdFromSubcategory(data.subcategory_id);
-      if (restaurantId) {
-        invalidateMenuQueries(queryClient, restaurantId);
-      }
+      // DON'T invalidate full-menu cache - optimistic update is already correct
+      // Invalidating would trigger refetch that could overwrite with stale DB data
       
-      // Invalidate editor caches
-      queryClient.invalidateQueries({ queryKey: ["dishes", data.subcategory_id] });
-      queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
+      // Only invalidate the dishes queries for the editor (these don't affect Preview)
+      // Use refetchType: 'none' to prevent immediate refetch that could return stale data
+      queryClient.invalidateQueries({ 
+        queryKey: ["dishes", data.subcategory_id],
+        refetchType: 'none' // Mark stale but don't refetch immediately
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["dishes", "restaurant"],
+        refetchType: 'none'
+      });
     },
     onError: (_error, _variables, context) => {
       if (context?.previous && context.subcategoryId) {
