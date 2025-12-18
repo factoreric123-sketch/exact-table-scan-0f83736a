@@ -19,11 +19,13 @@ export const clearAllMenuCaches = (restaurantId: string) => {
  * Uses removeQueries + refetchQueries to force fresh data
  */
 export const invalidateMenuQueries = async (queryClient: any, restaurantId: string) => {
-  // Remove the cached data entirely to force fresh fetch
-  queryClient.removeQueries({ queryKey: ["full-menu", restaurantId] });
+  // IMPORTANT: Do NOT remove or invalidate full-menu queries here!
+  // Optimistic updates are already correct in the cache.
+  // Invalidating would trigger a refetch that overwrites optimistic data with potentially stale DB data.
+  // The cache will naturally refresh on next page load or explicit refetch.
   
-  // Also invalidate to trigger any active observers to refetch
-  await queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
+  // Only mark as stale (for background refresh) but don't trigger immediate refetch
+  queryClient.setQueryDefaults(['full-menu', restaurantId], { staleTime: 0 });
 };
 
 /**
