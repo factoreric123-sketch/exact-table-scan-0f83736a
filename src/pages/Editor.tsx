@@ -421,16 +421,11 @@ const Editor = () => {
           onViewModeChange={handleViewModeChange}
         onPreviewToggle={() => {
             const newPreviewMode = !previewMode;
-            if (newPreviewMode) {
-              // Force refresh when entering preview mode
-              if (restaurantId) {
-                localStorage.removeItem(`fullMenu:${restaurantId}`);
-              }
-              refetchFullMenu();
-              if (viewMode === 'table') {
-                setViewMode('grid');
-              }
+            if (newPreviewMode && viewMode === 'table') {
+              setViewMode('grid');
             }
+            // Don't refetch - React Query cache already has optimistic updates
+            // Refetching would overwrite optimistic data with stale database data
             setPreviewMode(newPreviewMode);
           }}
           onPublishToggle={handlePublishToggle}
