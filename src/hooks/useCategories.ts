@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { generateTempId } from "@/lib/utils/uuid";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { clearAllMenuCaches, invalidateMenuQueries } from "@/lib/cacheUtils";
+import { menuSyncEmitter } from "@/lib/menuSyncEmitter";
 
 export interface Category {
   id: string;
@@ -12,6 +13,106 @@ export interface Category {
   order_index: number;
   created_at: string;
 }
+
+/**
+ * Phase 3: INSTANT sync helper - adds category to full-menu cache
+ */
+const addCategoryToFullMenuCache = (queryClient: any, newCategory: Category) => {
+  const updater = (data: any) => {
+    if (!data?.categories) return null;
+    
+    return {
+      ...data,
+      categories: [...data.categories, { ...newCategory, subcategories: [] }]
+    };
+  };
+
+  menuSyncEmitter.emitAll(updater);
+  
+  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
+  fullMenuQueries.forEach(([key, data]: [any, any]) => {
+    if (data) {
+      const updated = updater(data);
+      if (updated) queryClient.setQueryData(key, updated);
+    }
+  });
+};
+
+/**
+ * Phase 3: INSTANT sync helper - updates category in full-menu cache
+ */
+const updateCategoryInFullMenuCache = (queryClient: any, categoryId: string, updates: Partial<Category>) => {
+  const updater = (data: any) => {
+    if (!data?.categories) return null;
+    
+    return {
+      ...data,
+      categories: data.categories.map((cat: any) =>
+        cat.id === categoryId ? { ...cat, ...updates } : cat
+      )
+    };
+  };
+
+  menuSyncEmitter.emitAll(updater);
+  
+  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
+  fullMenuQueries.forEach(([key, data]: [any, any]) => {
+    if (data) {
+      const updated = updater(data);
+      if (updated) queryClient.setQueryData(key, updated);
+    }
+  });
+};
+
+/**
+ * Phase 3: INSTANT sync helper - removes category from full-menu cache
+ */
+const removeCategoryFromFullMenuCache = (queryClient: any, categoryId: string) => {
+  const updater = (data: any) => {
+    if (!data?.categories) return null;
+    
+    return {
+      ...data,
+      categories: data.categories.filter((cat: any) => cat.id !== categoryId)
+    };
+  };
+
+  menuSyncEmitter.emitAll(updater);
+  
+  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
+  fullMenuQueries.forEach(([key, data]: [any, any]) => {
+    if (data) {
+      const updated = updater(data);
+      if (updated) queryClient.setQueryData(key, updated);
+    }
+  });
+};
+
+/**
+ * Phase 3: INSTANT sync helper - reorders categories in full-menu cache
+ */
+const reorderCategoriesInFullMenuCache = (queryClient: any, orderedCategories: { id: string; order_index: number }[]) => {
+  const updater = (data: any) => {
+    if (!data?.categories) return null;
+    
+    const reordered = [...data.categories].map(cat => {
+      const update = orderedCategories.find(u => u.id === cat.id);
+      return update ? { ...cat, order_index: update.order_index } : cat;
+    }).sort((a, b) => a.order_index - b.order_index);
+    
+    return { ...data, categories: reordered };
+  };
+
+  menuSyncEmitter.emitAll(updater);
+  
+  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
+  fullMenuQueries.forEach(([key, data]: [any, any]) => {
+    if (data) {
+      const updated = updater(data);
+      if (updated) queryClient.setQueryData(key, updated);
+    }
+  });
+};
 
 export const useCategories = (restaurantId: string, options?: { enabled?: boolean }) => {
   return useQuery({
@@ -27,22 +128,19 @@ export const useCategories = (restaurantId: string, options?: { enabled?: boolea
 
         if (error) {
           console.error('[useCategories] Query error:', error);
-          // Don't throw for public menus - return empty array
           return [];
         }
         console.log('[useCategories] Categories fetched:', data?.length || 0);
         return (data as Category[]) || [];
       } catch (err) {
         console.error('[useCategories] Exception:', err);
-        // Never throw - return empty array
         return [];
       }
     },
     enabled: !!restaurantId && (options?.enabled ?? true),
-    staleTime: 1000 * 60, // 1 minute
-    gcTime: 1000 * 60 * 10, // 10 minutes cache
-    placeholderData: (prev) => prev, // Keep previous data during refetch
-    // CRITICAL: Never throw for public menus
+    staleTime: 1000 * 60,
+    gcTime: 1000 * 60 * 10,
+    placeholderData: (prev) => prev,
     retry: 3,
     throwOnError: false,
   });
@@ -62,32 +160,39 @@ export const useCreateCategory = () => {
       if (error) throw error;
       return data;
     },
-    onMutate: async (category) => {
-      // Optimistic create
+    onMutate: (category) => {
       if (!category.restaurant_id) return;
       
-      // Clear localStorage FIRST to prevent stale reads
-      clearAllMenuCaches(category.restaurant_id);
-      
-      await queryClient.cancelQueries({ queryKey: ["categories", category.restaurant_id] });
+      // 1. Get previous data (sync)
       const previous = queryClient.getQueryData<Category[]>(["categories", category.restaurant_id]);
       
+      // 2. Create temp category (sync)
+      const tempCategory: Category = {
+        id: generateTempId(),
+        restaurant_id: category.restaurant_id,
+        name: category.name || "New Category",
+        order_index: category.order_index ?? (previous?.length || 0),
+        created_at: new Date().toISOString(),
+      };
+      
+      // 3. Cancel queries (sync)
+      queryClient.cancelQueries({ queryKey: ["categories", category.restaurant_id] });
+      
+      // 4. Update categories cache (sync)
       if (previous) {
-        const tempCategory: Category = {
-          id: generateTempId(),
-          restaurant_id: category.restaurant_id,
-          name: category.name || "New Category",
-          order_index: category.order_index ?? previous.length,
-          created_at: new Date().toISOString(),
-        };
         queryClient.setQueryData<Category[]>(["categories", category.restaurant_id], [...previous, tempCategory]);
       }
       
+      // 5. INSTANT: Emit to full-menu cache (Phase 3)
+      addCategoryToFullMenuCache(queryClient, tempCategory);
+      
+      // 6. Background: clear localStorage
+      clearAllMenuCaches(category.restaurant_id);
+      
       return { previous, restaurantId: category.restaurant_id };
     },
-    onSuccess: async (data) => {
-      // Invalidate all related caches
-      await invalidateMenuQueries(queryClient, data.restaurant_id);
+    onSuccess: (data) => {
+      invalidateMenuQueries(queryClient, data.restaurant_id);
       queryClient.invalidateQueries({ queryKey: ["categories", data.restaurant_id] });
       queryClient.invalidateQueries({ queryKey: ["subcategories"] });
     },
@@ -97,12 +202,6 @@ export const useCreateCategory = () => {
       }
       const message = getErrorMessage(error);
       toast.error(`Failed to create category: ${message}`);
-    },
-    onSettled: async (_, __, variables) => {
-      if (variables.restaurant_id) {
-        await invalidateMenuQueries(queryClient, variables.restaurant_id);
-        queryClient.invalidateQueries({ queryKey: ["categories", variables.restaurant_id] });
-      }
     },
   });
 };
@@ -122,15 +221,26 @@ export const useUpdateCategory = () => {
       if (error) throw error;
       return data;
     },
-    onMutate: async ({ id }) => {
-      // Get restaurant ID from existing category data
+    onMutate: ({ id, updates }) => {
+      // 1. INSTANT: Emit to full-menu cache (Phase 3)
+      updateCategoryInFullMenuCache(queryClient, id, updates);
+      
+      // 2. Find category and get restaurant ID
       const allCategories = queryClient.getQueriesData<Category[]>({ queryKey: ["categories"] });
       let restaurantId: string | null = null;
+      let previous: Category[] | undefined;
       
-      for (const [, categories] of allCategories) {
+      for (const [key, categories] of allCategories) {
         const category = categories?.find(c => c.id === id);
         if (category) {
           restaurantId = category.restaurant_id;
+          previous = categories;
+          
+          // Update cache
+          queryClient.setQueryData<Category[]>(
+            key,
+            categories.map(c => c.id === id ? { ...c, ...updates } : c)
+          );
           break;
         }
       }
@@ -139,10 +249,10 @@ export const useUpdateCategory = () => {
         clearAllMenuCaches(restaurantId);
       }
       
-      return { restaurantId };
+      return { restaurantId, previous };
     },
-    onSuccess: async (data) => {
-      await invalidateMenuQueries(queryClient, data.restaurant_id);
+    onSuccess: (data) => {
+      invalidateMenuQueries(queryClient, data.restaurant_id);
       queryClient.invalidateQueries({ queryKey: ["categories", data.restaurant_id] });
     },
   });
@@ -161,17 +271,36 @@ export const useDeleteCategory = () => {
       if (error) throw error;
       return restaurantId;
     },
-    onMutate: async ({ restaurantId }) => {
-      // Clear localStorage FIRST
+    onMutate: ({ id, restaurantId }) => {
+      // 1. INSTANT: Emit to full-menu cache (Phase 3)
+      removeCategoryFromFullMenuCache(queryClient, id);
+      
+      // 2. Update categories cache
+      queryClient.cancelQueries({ queryKey: ["categories", restaurantId] });
+      const previous = queryClient.getQueryData<Category[]>(["categories", restaurantId]);
+      if (previous) {
+        queryClient.setQueryData<Category[]>(
+          ["categories", restaurantId],
+          previous.filter(c => c.id !== id)
+        );
+      }
+      
+      // 3. Clear localStorage
       clearAllMenuCaches(restaurantId);
-      return { restaurantId };
+      
+      return { restaurantId, previous };
     },
-    onSuccess: async (restaurantId) => {
-      await invalidateMenuQueries(queryClient, restaurantId);
+    onSuccess: (restaurantId) => {
+      invalidateMenuQueries(queryClient, restaurantId);
       queryClient.invalidateQueries({ queryKey: ["categories", restaurantId] });
       queryClient.invalidateQueries({ queryKey: ["subcategories"] });
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
       toast.success("Category deleted");
+    },
+    onError: (_, __, context) => {
+      if (context?.previous && context.restaurantId) {
+        queryClient.setQueryData(["categories", context.restaurantId], context.previous);
+      }
     },
   });
 };
@@ -187,7 +316,6 @@ export const useUpdateCategoriesOrder = () => {
       categories: { id: string; order_index: number }[];
       restaurantId: string;
     }) => {
-      // Use optimized batch update function
       const { error } = await supabase.rpc('batch_update_order_indexes_optimized', {
         table_name: 'categories',
         updates: categories
@@ -195,17 +323,15 @@ export const useUpdateCategoriesOrder = () => {
 
       if (error) throw error;
     },
-    onMutate: async ({ categories, restaurantId }) => {
-      // Clear localStorage FIRST
-      clearAllMenuCaches(restaurantId);
+    onMutate: ({ categories, restaurantId }) => {
+      // 1. INSTANT: Emit to full-menu cache (Phase 3)
+      reorderCategoriesInFullMenuCache(queryClient, categories);
       
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["categories", restaurantId] });
+      // 2. Cancel queries
+      queryClient.cancelQueries({ queryKey: ["categories", restaurantId] });
 
-      // Snapshot previous value
+      // 3. Update categories cache
       const previousCategories = queryClient.getQueryData(["categories", restaurantId]);
-
-      // Optimistically update cache
       if (previousCategories) {
         const optimisticData = (previousCategories as any[]).map(cat => {
           const update = categories.find(u => u.id === cat.id);
@@ -215,19 +341,20 @@ export const useUpdateCategoriesOrder = () => {
         queryClient.setQueryData(["categories", restaurantId], optimisticData);
       }
 
+      // 4. Clear localStorage
+      clearAllMenuCaches(restaurantId);
+
       return { previousCategories, restaurantId };
     },
     onError: (error, variables, context) => {
-      // Rollback on error
       if (context?.previousCategories) {
         queryClient.setQueryData(["categories", context.restaurantId], context.previousCategories);
       }
       const message = getErrorMessage(error);
       toast.error(`Failed to reorder categories: ${message}`);
     },
-    onSettled: async (_, __, variables) => {
-      // Invalidate after completion
-      await invalidateMenuQueries(queryClient, variables.restaurantId);
+    onSettled: (_, __, variables) => {
+      invalidateMenuQueries(queryClient, variables.restaurantId);
       queryClient.invalidateQueries({ queryKey: ["categories", variables.restaurantId] });
     },
   });

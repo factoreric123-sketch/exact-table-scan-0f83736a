@@ -6,7 +6,7 @@ import { getErrorMessage } from "@/lib/errorUtils";
 import { clearAllMenuCaches, invalidateMenuQueries } from "@/lib/cacheUtils";
 import { menuSyncEmitter } from "@/lib/menuSyncEmitter";
 
-// Helper to get restaurant ID from subcategory ID
+// Helper to get restaurant ID from subcategory ID (background operation)
 const getRestaurantIdFromSubcategory = async (subcategoryId: string): Promise<string | null> => {
   const { data, error } = await supabase
     .from("subcategories")
@@ -18,10 +18,11 @@ const getRestaurantIdFromSubcategory = async (subcategoryId: string): Promise<st
   return (data.categories as any)?.restaurant_id || null;
 };
 
-// Helper to update dish in full-menu cache optimistically (for Preview sync)
-// Now uses direct event emitter for INSTANT sync
+/**
+ * INSTANT sync helper - updates dish in full-menu cache
+ * Phase 2: No blocking operations before emit
+ */
 const updateDishInFullMenuCache = (queryClient: any, dishId: string, updates: Partial<Dish>) => {
-  // Create updater function that will be applied directly
   const updater = (data: any) => {
     if (!data?.categories) return null;
     
@@ -39,10 +40,10 @@ const updateDishInFullMenuCache = (queryClient: any, dishId: string, updates: Pa
     };
   };
 
-  // INSTANT: Emit directly to all listeners - no React Query overhead
+  // INSTANT: Emit to all listeners (no await)
   menuSyncEmitter.emitAll(updater);
   
-  // Also update React Query cache for consistency
+  // Also update React Query cache synchronously
   const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
   fullMenuQueries.forEach(([key, data]: [any, any]) => {
     if (data) {
@@ -52,7 +53,9 @@ const updateDishInFullMenuCache = (queryClient: any, dishId: string, updates: Pa
   });
 };
 
-// Helper to add dish to full-menu cache optimistically
+/**
+ * INSTANT sync helper - adds dish to full-menu cache
+ */
 const addDishToFullMenuCache = (queryClient: any, subcategoryId: string, newDish: Dish) => {
   const updater = (data: any) => {
     if (!data?.categories) return null;
@@ -74,7 +77,7 @@ const addDishToFullMenuCache = (queryClient: any, subcategoryId: string, newDish
     };
   };
 
-  // INSTANT: Emit directly
+  // INSTANT emit
   menuSyncEmitter.emitAll(updater);
   
   // Also update React Query cache
@@ -87,7 +90,9 @@ const addDishToFullMenuCache = (queryClient: any, subcategoryId: string, newDish
   });
 };
 
-// Helper to remove dish from full-menu cache optimistically
+/**
+ * INSTANT sync helper - removes dish from full-menu cache
+ */
 const removeDishFromFullMenuCache = (queryClient: any, dishId: string) => {
   const updater = (data: any) => {
     if (!data?.categories) return null;
@@ -104,7 +109,46 @@ const removeDishFromFullMenuCache = (queryClient: any, dishId: string) => {
     };
   };
 
-  // INSTANT: Emit directly
+  // INSTANT emit
+  menuSyncEmitter.emitAll(updater);
+  
+  // Also update React Query cache
+  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
+  fullMenuQueries.forEach(([key, data]: [any, any]) => {
+    if (data) {
+      const updated = updater(data);
+      if (updated) queryClient.setQueryData(key, updated);
+    }
+  });
+};
+
+/**
+ * INSTANT sync helper - reorders dishes in full-menu cache
+ */
+const reorderDishesInFullMenuCache = (queryClient: any, subcategoryId: string, orderedDishes: { id: string; order_index: number }[]) => {
+  const updater = (data: any) => {
+    if (!data?.categories) return null;
+    
+    return {
+      ...data,
+      categories: data.categories.map((category: any) => ({
+        ...category,
+        subcategories: category.subcategories?.map((subcategory: any) => {
+          if (subcategory.id === subcategoryId) {
+            const reorderedDishes = [...(subcategory.dishes || [])].map(dish => {
+              const update = orderedDishes.find(u => u.id === dish.id);
+              return update ? { ...dish, order_index: update.order_index } : dish;
+            }).sort((a, b) => a.order_index - b.order_index);
+            
+            return { ...subcategory, dishes: reorderedDishes };
+          }
+          return subcategory;
+        })
+      }))
+    };
+  };
+
+  // INSTANT emit
   menuSyncEmitter.emitAll(updater);
   
   // Also update React Query cache
@@ -154,10 +198,10 @@ export const useDishes = (subcategoryId: string) => {
       return data as Dish[];
     },
     enabled: !!subcategoryId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes cache
-    placeholderData: (prev) => prev, // Keep previous data during refetch
-    refetchOnMount: false, // Don't refetch unnecessarily
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
+    placeholderData: (prev) => prev,
+    refetchOnMount: false,
   });
 };
 
@@ -183,17 +227,19 @@ export const useDishesByRestaurant = (restaurantId: string) => {
       return data as Dish[];
     },
     enabled: !!restaurantId,
-    staleTime: 1000 * 30, // 30 seconds
-    gcTime: 1000 * 60 * 10, // 10 minutes cache
+    staleTime: 1000 * 30,
+    gcTime: 1000 * 60 * 10,
   });
 };
 
+/**
+ * Phase 2: ZERO blocking operations before optimistic update
+ */
 export const useCreateDish = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (dish: Partial<Dish>) => {
-      // Ensure subcategory_id is set
       if (!dish.subcategory_id) {
         throw new Error("Subcategory ID is required");
       }
@@ -212,14 +258,14 @@ export const useCreateDish = () => {
       }
       return data as Dish;
     },
-    onMutate: async (dish) => {
-      // Optimistic create - INSTANT, no awaits before UI update
+    onMutate: (dish) => {
+      // PHASE 2: ALL operations here are SYNCHRONOUS - no await!
       if (!dish.subcategory_id) return;
       
-      // Cancel queries synchronously
-      queryClient.cancelQueries({ queryKey: ["dishes", dish.subcategory_id] });
+      // 1. Get previous data (sync)
       const previous = queryClient.getQueryData<Dish[]>(["dishes", dish.subcategory_id]);
       
+      // 2. Create temp dish (sync)
       const tempDish: Dish = {
         id: generateTempId(),
         subcategory_id: dish.subcategory_id,
@@ -241,34 +287,37 @@ export const useCreateDish = () => {
         has_options: dish.has_options || false,
       };
       
-      // INSTANT: Update dishes cache
+      // 3. Cancel queries (sync - fire and forget)
+      queryClient.cancelQueries({ queryKey: ["dishes", dish.subcategory_id] });
+      
+      // 4. Update dishes cache INSTANTLY (sync)
       if (previous) {
         queryClient.setQueryData<Dish[]>(["dishes", dish.subcategory_id], [...previous, tempDish]);
       }
       
-      // INSTANT: Emit to full-menu cache for Preview sync (no await!)
+      // 5. Emit to full-menu cache INSTANTLY (sync)
       addDishToFullMenuCache(queryClient, dish.subcategory_id, tempDish);
       
-      // BACKGROUND: Get restaurantId and clear localStorage (non-blocking)
+      // 6. BACKGROUND: Clear localStorage (non-blocking)
       getRestaurantIdFromSubcategory(dish.subcategory_id).then(restaurantId => {
         if (restaurantId) clearAllMenuCaches(restaurantId);
       });
       
-      return { previous, subcategoryId: dish.subcategory_id };
+      return { previous, subcategoryId: dish.subcategory_id, tempId: tempDish.id };
     },
-    onSuccess: async (data) => {
-      // Invalidate full menu cache for live menu sync
-      const restaurantId = await getRestaurantIdFromSubcategory(data.subcategory_id);
-      if (restaurantId) {
-        await invalidateMenuQueries(queryClient, restaurantId);
-      }
+    onSuccess: (data, _, context) => {
+      // Background: invalidate caches
+      getRestaurantIdFromSubcategory(data.subcategory_id).then(restaurantId => {
+        if (restaurantId) {
+          invalidateMenuQueries(queryClient, restaurantId);
+        }
+      });
       
-      // Invalidate editor caches
       queryClient.invalidateQueries({ queryKey: ["dishes", data.subcategory_id] });
       queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
       toast.success("Dish created");
     },
-    onError: (error: Error, _variables, context) => {
+    onError: (error: Error, variables, context) => {
       if (context?.previous && context.subcategoryId) {
         queryClient.setQueryData(["dishes", context.subcategoryId], context.previous);
       }
@@ -278,12 +327,14 @@ export const useCreateDish = () => {
   });
 };
 
+/**
+ * Phase 2: ZERO blocking operations before optimistic update
+ */
 export const useUpdateDish = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Dish> }) => {
-      // Normalize price if present to a safe currency string
       const payload: Partial<Dish> = { ...updates };
       if (typeof updates.price === "string") {
         let normalizedPrice = updates.price.replace(/[^0-9.]/g, "");
@@ -308,16 +359,15 @@ export const useUpdateDish = () => {
     retry: 3,
     retryDelay: (attempt) => Math.min(200 * Math.pow(2, attempt), 2000),
     onMutate: ({ id, updates }) => {
-      // Find the dish first to get subcategory_id
+      // 1. Emit to full-menu INSTANTLY (sync) - FIRST!
+      updateDishInFullMenuCache(queryClient, id, updates);
+      
+      // 2. Find dish and update dishes cache (sync)
       const dish = queryClient.getQueriesData<Dish[]>({ queryKey: ["dishes"] })
         .flatMap(([, data]) => data || [])
         .find((d) => d.id === id);
       
       if (dish) {
-        // INSTANT optimistic update to full-menu cache FIRST (before any async)
-        updateDishInFullMenuCache(queryClient, id, updates);
-        
-        // Cancel queries and update dishes cache synchronously
         queryClient.cancelQueries({ queryKey: ["dishes", dish.subcategory_id] });
         const previous = queryClient.getQueryData<Dish[]>(["dishes", dish.subcategory_id]);
         
@@ -328,7 +378,7 @@ export const useUpdateDish = () => {
           );
         }
         
-        // Clear localStorage in background (non-blocking)
+        // Background: clear localStorage
         getRestaurantIdFromSubcategory(dish.subcategory_id).then(restaurantId => {
           if (restaurantId) clearAllMenuCaches(restaurantId);
         });
@@ -336,15 +386,10 @@ export const useUpdateDish = () => {
         return { previous, subcategoryId: dish.subcategory_id };
       }
     },
-    onSuccess: async (data) => {
-      // DON'T invalidate full-menu cache - optimistic update is already correct
-      // Invalidating would trigger refetch that could overwrite with stale DB data
-      
-      // Only invalidate the dishes queries for the editor (these don't affect Preview)
-      // Use refetchType: 'none' to prevent immediate refetch that could return stale data
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ 
         queryKey: ["dishes", data.subcategory_id],
-        refetchType: 'none' // Mark stale but don't refetch immediately
+        refetchType: 'none'
       });
       queryClient.invalidateQueries({ 
         queryKey: ["dishes", "restaurant"],
@@ -359,6 +404,9 @@ export const useUpdateDish = () => {
   });
 };
 
+/**
+ * Phase 2: ZERO blocking operations before optimistic update
+ */
 export const useDeleteDish = () => {
   const queryClient = useQueryClient();
 
@@ -372,41 +420,36 @@ export const useDeleteDish = () => {
       if (error) throw error;
       return subcategoryId;
     },
-    onMutate: async ({ id, subcategoryId }) => {
-      // Get restaurant ID and clear localStorage FIRST
-      const restaurantId = await getRestaurantIdFromSubcategory(subcategoryId);
-      if (restaurantId) {
-        clearAllMenuCaches(restaurantId);
-      }
+    onMutate: ({ id, subcategoryId }) => {
+      // 1. Remove from full-menu INSTANTLY (sync) - FIRST!
+      removeDishFromFullMenuCache(queryClient, id);
       
-      // Optimistic delete
-      await queryClient.cancelQueries({ queryKey: ["dishes", subcategoryId] });
+      // 2. Cancel queries (sync)
+      queryClient.cancelQueries({ queryKey: ["dishes", subcategoryId] });
+      
+      // 3. Update dishes cache (sync)
       const previous = queryClient.getQueryData<Dish[]>(["dishes", subcategoryId]);
-      
       if (previous) {
         queryClient.setQueryData<Dish[]>(
           ["dishes", subcategoryId],
           previous.filter((d) => d.id !== id)
         );
-        
-        // Also update full-menu cache for instant Preview sync
-        removeDishFromFullMenuCache(queryClient, id);
       }
       
-      return { previous, subcategoryId, restaurantId };
+      // 4. Background: clear localStorage
+      getRestaurantIdFromSubcategory(subcategoryId).then(restaurantId => {
+        if (restaurantId) clearAllMenuCaches(restaurantId);
+      });
+      
+      return { previous, subcategoryId };
     },
-    onSuccess: async (subcategoryId, _, context) => {
-      // Invalidate full menu cache for live menu sync
-      if (context?.restaurantId) {
-        await invalidateMenuQueries(queryClient, context.restaurantId);
-      } else {
-        const restaurantId = await getRestaurantIdFromSubcategory(subcategoryId);
+    onSuccess: (subcategoryId, _, context) => {
+      getRestaurantIdFromSubcategory(subcategoryId).then(restaurantId => {
         if (restaurantId) {
-          await invalidateMenuQueries(queryClient, restaurantId);
+          invalidateMenuQueries(queryClient, restaurantId);
         }
-      }
+      });
       
-      // Invalidate editor caches
       queryClient.invalidateQueries({ queryKey: ["dishes", subcategoryId] });
       queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
       toast.success("Dish deleted");
@@ -421,6 +464,9 @@ export const useDeleteDish = () => {
   });
 };
 
+/**
+ * Phase 2: ZERO blocking operations before optimistic update
+ */
 export const useUpdateDishesOrder = () => {
   const queryClient = useQueryClient();
 
@@ -432,7 +478,6 @@ export const useUpdateDishesOrder = () => {
       dishes: { id: string; order_index: number }[];
       subcategoryId: string;
     }) => {
-      // Use optimized batch update function
       const { error } = await supabase.rpc('batch_update_order_indexes_optimized', {
         table_name: 'dishes',
         updates: dishes
@@ -440,20 +485,15 @@ export const useUpdateDishesOrder = () => {
 
       if (error) throw error;
     },
-    onMutate: async ({ dishes, subcategoryId }) => {
-      // Get restaurant ID and clear localStorage FIRST
-      const restaurantId = await getRestaurantIdFromSubcategory(subcategoryId);
-      if (restaurantId) {
-        clearAllMenuCaches(restaurantId);
-      }
+    onMutate: ({ dishes, subcategoryId }) => {
+      // 1. Reorder in full-menu INSTANTLY (sync) - FIRST!
+      reorderDishesInFullMenuCache(queryClient, subcategoryId, dishes);
       
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["dishes", subcategoryId] });
+      // 2. Cancel queries (sync)
+      queryClient.cancelQueries({ queryKey: ["dishes", subcategoryId] });
 
-      // Snapshot previous value
+      // 3. Update dishes cache (sync)
       const previousDishes = queryClient.getQueryData(["dishes", subcategoryId]);
-
-      // Optimistically update cache
       if (previousDishes) {
         const optimisticData = (previousDishes as any[]).map(dish => {
           const update = dishes.find(u => u.id === dish.id);
@@ -463,28 +503,27 @@ export const useUpdateDishesOrder = () => {
         queryClient.setQueryData(["dishes", subcategoryId], optimisticData);
       }
 
-      return { previousDishes, subcategoryId, restaurantId };
+      // 4. Background: clear localStorage
+      getRestaurantIdFromSubcategory(subcategoryId).then(restaurantId => {
+        if (restaurantId) clearAllMenuCaches(restaurantId);
+      });
+
+      return { previousDishes, subcategoryId };
     },
     onError: (error, variables, context) => {
-      // Rollback on error
       if (context?.previousDishes) {
         queryClient.setQueryData(["dishes", context.subcategoryId], context.previousDishes);
       }
       const message = getErrorMessage(error);
       toast.error(`Failed to reorder dishes: ${message}`);
     },
-    onSettled: async (_, __, variables, context) => {
-      // Invalidate full menu cache for live menu sync
-      if (context?.restaurantId) {
-        await invalidateMenuQueries(queryClient, context.restaurantId);
-      } else {
-        const restaurantId = await getRestaurantIdFromSubcategory(variables.subcategoryId);
+    onSettled: (_, __, variables) => {
+      getRestaurantIdFromSubcategory(variables.subcategoryId).then(restaurantId => {
         if (restaurantId) {
-          await invalidateMenuQueries(queryClient, restaurantId);
+          invalidateMenuQueries(queryClient, restaurantId);
         }
-      }
+      });
       
-      // Invalidate editor caches after completion
       queryClient.invalidateQueries({ queryKey: ["dishes", variables.subcategoryId] });
       queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
     },

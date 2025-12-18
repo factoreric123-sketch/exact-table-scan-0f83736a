@@ -55,10 +55,9 @@ export const EditableDishes = ({
     !previewMode && !dishesAlreadyHaveOptions // Only fetch when needed
   );
 
-  // Prevent flicker by ensuring content is ready
+  // Phase 5: Remove artificial delay - instant ready
   useState(() => {
-    const timer = setTimeout(() => setIsReady(true), 50);
-    return () => clearTimeout(timer);
+    setIsReady(true);
   });
 
   const sensors = useSensors(
