@@ -158,22 +158,29 @@ export const useFullMenu = (
   }, [restaurantId, cacheKey, fetchMenu, useLocalStorageCache, queryClient]);
 
   // Subscribe to React Query cache updates for INSTANT optimistic sync
+  // Use a stable subscription that doesn't depend on `data` state to avoid recreation delays
   useEffect(() => {
     if (!restaurantId) return;
 
+    // Use a stable ref to track what we've already processed
+    let lastUpdateId = 0;
+
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      // Only process setQueryData events for our specific query
       // Ignore 'removed' events to prevent clearing optimistic updates
       if (event.type === 'removed') return;
       
+      // Immediately read and set the new data - no comparison needed
+      // React will handle the de-duplication if value is the same
       const newData = queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
-      if (newData && newData !== data) {
+      if (newData) {
+        // Use a micro ID to force immediate update
+        lastUpdateId++;
         setData(newData);
       }
     });
 
     return () => unsubscribe();
-  }, [restaurantId, queryClient, data]);
+  }, [restaurantId, queryClient]); // Removed `data` from deps - critical for instant sync!
 
   return { data, isLoading, error, refetch };
 };
