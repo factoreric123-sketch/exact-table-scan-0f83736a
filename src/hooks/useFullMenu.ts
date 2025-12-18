@@ -168,8 +168,9 @@ export const useFullMenu = (
 
     const unsubscribe = menuSyncEmitter.subscribe(restaurantId, (payload) => {
       if (payload.type === 'update' && payload.updater) {
-        // Apply the update function directly to current data via ref
-        const currentData = dataRef.current;
+        // Try current data first, fall back to React Query cache
+        const currentData = dataRef.current || queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
+        
         if (currentData) {
           const updated = payload.updater(currentData);
           if (updated) {

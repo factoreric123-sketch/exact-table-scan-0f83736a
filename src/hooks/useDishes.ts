@@ -213,56 +213,54 @@ export const useCreateDish = () => {
       return data as Dish;
     },
     onMutate: async (dish) => {
-      // Optimistic create
+      // Optimistic create - INSTANT, no awaits before UI update
       if (!dish.subcategory_id) return;
       
-      // Get restaurant ID and clear localStorage FIRST (before any cache reads)
-      const restaurantId = await getRestaurantIdFromSubcategory(dish.subcategory_id);
-      if (restaurantId) {
-        clearAllMenuCaches(restaurantId);
-      }
-      
-      await queryClient.cancelQueries({ queryKey: ["dishes", dish.subcategory_id] });
+      // Cancel queries synchronously
+      queryClient.cancelQueries({ queryKey: ["dishes", dish.subcategory_id] });
       const previous = queryClient.getQueryData<Dish[]>(["dishes", dish.subcategory_id]);
       
+      const tempDish: Dish = {
+        id: generateTempId(),
+        subcategory_id: dish.subcategory_id,
+        name: dish.name || "New Dish",
+        description: dish.description || null,
+        price: dish.price || "0.00",
+        image_url: dish.image_url || null,
+        is_new: dish.is_new || false,
+        is_special: dish.is_special || false,
+        is_popular: dish.is_popular || false,
+        is_chef_recommendation: dish.is_chef_recommendation || false,
+        order_index: dish.order_index ?? (previous?.length || 0),
+        created_at: new Date().toISOString(),
+        allergens: dish.allergens || null,
+        calories: dish.calories || null,
+        is_vegetarian: dish.is_vegetarian || false,
+        is_vegan: dish.is_vegan || false,
+        is_spicy: dish.is_spicy || false,
+        has_options: dish.has_options || false,
+      };
+      
+      // INSTANT: Update dishes cache
       if (previous) {
-        const tempDish: Dish = {
-          id: generateTempId(),
-          subcategory_id: dish.subcategory_id,
-          name: dish.name || "New Dish",
-          description: dish.description || null,
-          price: dish.price || "0.00",
-          image_url: dish.image_url || null,
-          is_new: dish.is_new || false,
-          is_special: dish.is_special || false,
-          is_popular: dish.is_popular || false,
-          is_chef_recommendation: dish.is_chef_recommendation || false,
-          order_index: dish.order_index ?? previous.length,
-          created_at: new Date().toISOString(),
-          allergens: dish.allergens || null,
-          calories: dish.calories || null,
-          is_vegetarian: dish.is_vegetarian || false,
-          is_vegan: dish.is_vegan || false,
-          is_spicy: dish.is_spicy || false,
-          has_options: dish.has_options || false,
-        };
         queryClient.setQueryData<Dish[]>(["dishes", dish.subcategory_id], [...previous, tempDish]);
-        
-        // Also update full-menu cache for instant Preview sync
-        addDishToFullMenuCache(queryClient, dish.subcategory_id, tempDish);
       }
       
-      return { previous, subcategoryId: dish.subcategory_id, restaurantId };
+      // INSTANT: Emit to full-menu cache for Preview sync (no await!)
+      addDishToFullMenuCache(queryClient, dish.subcategory_id, tempDish);
+      
+      // BACKGROUND: Get restaurantId and clear localStorage (non-blocking)
+      getRestaurantIdFromSubcategory(dish.subcategory_id).then(restaurantId => {
+        if (restaurantId) clearAllMenuCaches(restaurantId);
+      });
+      
+      return { previous, subcategoryId: dish.subcategory_id };
     },
-    onSuccess: async (data, _, context) => {
+    onSuccess: async (data) => {
       // Invalidate full menu cache for live menu sync
-      if (context?.restaurantId) {
-        await invalidateMenuQueries(queryClient, context.restaurantId);
-      } else {
-        const restaurantId = await getRestaurantIdFromSubcategory(data.subcategory_id);
-        if (restaurantId) {
-          await invalidateMenuQueries(queryClient, restaurantId);
-        }
+      const restaurantId = await getRestaurantIdFromSubcategory(data.subcategory_id);
+      if (restaurantId) {
+        await invalidateMenuQueries(queryClient, restaurantId);
       }
       
       // Invalidate editor caches
