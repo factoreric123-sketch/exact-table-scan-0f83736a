@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import {
   DndContext,
   closestCorners,
@@ -13,10 +13,16 @@ import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { SortableDish } from "./SortableDish";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { type Dish } from "@/hooks/useDishes";
+import {
+  useCreateDish,
+  useUpdateDishesOrder,
+  type Dish,
+} from "@/hooks/useDishes";
+import { useImageUpload } from "@/hooks/useImageUpload";
 import { useSubcategoryDishesWithOptions } from "@/hooks/useSubcategoryDishesWithOptions";
 import MenuGrid from "@/components/MenuGrid";
-import { useMenuData } from "@/contexts/MenuDataContext";
+import DishCard from "@/components/DishCard";
+import { toast } from "sonner";
 
 interface EditableDishesProps {
   dishes: Dish[];
@@ -33,12 +39,11 @@ export const EditableDishes = ({
 }: EditableDishesProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const isReordering = useRef(false);
-  
-  // Use MenuDataContext for instant sync to preview
-  const { addDish, reorderDishes } = useMenuData();
+  const createDish = useCreateDish();
+  const updateDishesOrder = useUpdateDishesOrder();
 
   // Only fetch options/modifiers if NOT in preview mode AND dishes don't already have them
+  // In preview mode, fullMenuData already includes options/modifiers from the RPC function
   const dishesAlreadyHaveOptions =
     dishes.length > 0 &&
     dishes.some(
@@ -47,7 +52,7 @@ export const EditableDishes = ({
 
   const { data: dishesWithOptions } = useSubcategoryDishesWithOptions(
     dishes,
-    !previewMode && !dishesAlreadyHaveOptions
+    !previewMode && !dishesAlreadyHaveOptions // Only fetch when needed
   );
 
   // Prevent flicker by ensuring content is ready
@@ -59,7 +64,7 @@ export const EditableDishes = ({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5,
+        distance: 5, // Reduced for more responsive drag
       },
     })
   );
@@ -74,8 +79,8 @@ export const EditableDishes = ({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    if (isReordering.current) return;
-    isReordering.current = true;
+    // Don't allow new drags while previous mutation is pending
+    if (updateDishesOrder.isPending) return;
 
     const oldIndex = dishes.findIndex((d) => d.id === active.id);
     const newIndex = dishes.findIndex((d) => d.id === over.id);
@@ -84,22 +89,31 @@ export const EditableDishes = ({
     const [movedDish] = newDishes.splice(oldIndex, 1);
     newDishes.splice(newIndex, 0, movedDish);
 
-    // Use context for instant sync
-    const orderedIds = newDishes.map(d => d.id);
-    reorderDishes(subcategoryId, orderedIds);
+    const updates = newDishes.map((dish, index) => ({
+      id: dish.id,
+      order_index: index,
+    }));
 
-    setTimeout(() => {
-      isReordering.current = false;
-    }, 100);
+    updateDishesOrder.mutate({
+      dishes: updates,
+      subcategoryId,
+    });
   };
 
-  const handleAddDish = () => {
-    // Use context for instant sync
-    addDish(subcategoryId, {
-      name: "New Dish",
-      description: "Add description",
-      price: "0.00",
-    });
+  const handleAddDish = async () => {
+    try {
+      await createDish.mutateAsync({
+        subcategory_id: subcategoryId,
+        name: "New Dish",
+        description: "Add description",
+        price: "0.00",
+        order_index: dishes.length,
+        is_new: false,
+      });
+      toast.success("Dish added");
+    } catch (error) {
+      toast.error("Failed to add dish");
+    }
   };
 
   if (!isReady) {
@@ -174,7 +188,7 @@ export const EditableDishes = ({
   return (
     <div className="px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
       <DndContext
-        sensors={isReordering.current ? [] : sensors}
+        sensors={updateDishesOrder.isPending ? [] : sensors}
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
@@ -222,9 +236,10 @@ export const EditableDishes = ({
         onClick={handleAddDish}
         variant="outline"
         className="w-full gap-2 mt-2 sm:mt-4"
+        disabled={createDish.isPending}
       >
         <Plus className="h-4 w-4" />
-        Add Dish
+        {createDish.isPending ? "Adding..." : "Add Dish"}
       </Button>
     </div>
   );

@@ -10,12 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { InlineEdit } from "./InlineEdit";
-import { type Dish } from "@/hooks/useDishes";
+import { useUpdateDish, useDeleteDish, type Dish } from "@/hooks/useDishes";
 import { ImageCropModal } from "@/components/ImageCropModal";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { ALLERGEN_OPTIONS } from "@/components/AllergenFilter";
 import { DishOptionsEditor } from "./DishOptionsEditor";
-import { useMenuData } from "@/contexts/MenuDataContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,9 +36,8 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: dish.id,
   });
-  
-  // Use MenuDataContext for instant sync
-  const { updateDish: contextUpdateDish, deleteDish: contextDeleteDish } = useMenuData();
+  const updateDish = useUpdateDish();
+  const deleteDish = useDeleteDish();
   const uploadImage = useImageUpload();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showCropModal, setShowCropModal] = useState(false);
@@ -110,10 +108,13 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
       pendingUpdates.current = {};
       updateTimer.current = null;
       
-      // Use context for instant sync - fire and forget
-      contextUpdateDish(dish.id, toUpdate as any);
+      // Fire and forget - don't wait for response
+      updateDish.mutate({
+        id: dish.id,
+        updates: toUpdate,
+      });
     }, 16); // Single frame (~60fps) - imperceptible delay
-  }, [dish.id, contextUpdateDish]);
+  }, [dish.id, updateDish]);
 
   const handleUpdate = (field: keyof Dish, value: string | boolean | string[] | number | null) => {
     scheduleUpdate({ [field]: value });
@@ -133,7 +134,7 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
   };
 
   const handleDelete = () => {
-    contextDeleteDish(dish.id);
+    deleteDish.mutate({ id: dish.id, subcategoryId });
     setShowDeleteDialog(false);
   };
 
@@ -153,8 +154,10 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
         path: `${dish.id}/${croppedFile.name}`,
       });
       
-      // Use context for instant sync
-      contextUpdateDish(dish.id, { image_url: imageUrl } as any);
+      updateDish.mutate({
+        id: dish.id,
+        updates: { image_url: imageUrl },
+      });
       
       setShowCropModal(false);
       setSelectedImage(null);
