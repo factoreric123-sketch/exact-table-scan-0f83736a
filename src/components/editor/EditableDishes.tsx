@@ -213,6 +213,7 @@ export const EditableDishes = ({
                 key={dish.id}
                 dish={dish}
                 subcategoryId={subcategoryId}
+                restaurantId={restaurant?.id}
               />
             ))}
           </div>
