@@ -48,6 +48,9 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
   const [debouncedCalories] = useDebounce(localCalories, 100); // Minimal debounce for typing
   
   // Optimistic local state for instant feedback - only initialize once per dish ID
+  const [localName, setLocalName] = useState(dish.name);
+  const [localDescription, setLocalDescription] = useState(dish.description || "");
+  const [localPrice, setLocalPrice] = useState(dish.price);
   const [localAllergens, setLocalAllergens] = useState<string[]>(dish.allergens || []);
   const [localVegetarian, setLocalVegetarian] = useState(dish.is_vegetarian);
   const [localVegan, setLocalVegan] = useState(dish.is_vegan);
@@ -64,6 +67,9 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
   useEffect(() => {
     if (initializedDishId.current !== dish.id) {
       initializedDishId.current = dish.id;
+      setLocalName(dish.name);
+      setLocalDescription(dish.description || "");
+      setLocalPrice(dish.price);
       setLocalAllergens(dish.allergens || []);
       setLocalVegetarian(dish.is_vegetarian);
       setLocalVegan(dish.is_vegan);
@@ -118,6 +124,22 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
 
   const handleUpdate = (field: keyof Dish, value: string | boolean | string[] | number | null) => {
     scheduleUpdate({ [field]: value });
+  };
+
+  // Instant local state update + DB sync for name/description/price
+  const handleNameChange = (value: string) => {
+    setLocalName(value);
+    scheduleUpdate({ name: value });
+  };
+
+  const handleDescriptionChange = (value: string) => {
+    setLocalDescription(value);
+    scheduleUpdate({ description: value });
+  };
+
+  const handlePriceChange = (value: string) => {
+    setLocalPrice(value);
+    scheduleUpdate({ price: value });
   };
 
   const handleAllergenToggle = (allergen: string) => {
@@ -243,19 +265,19 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
 
         <div>
           <InlineEdit
-            value={dish.name}
-            onSave={(value) => handleUpdate("name", value)}
+            value={localName}
+            onSave={handleNameChange}
             className="text-base font-bold text-foreground mb-1 w-full"
           />
           <InlineEdit
-            value={dish.description || ""}
-            onSave={(value) => handleUpdate("description", value)}
+            value={localDescription}
+            onSave={handleDescriptionChange}
             className="text-xs text-muted-foreground mb-1.5 w-full"
             multiline
           />
           <InlineEdit
-            value={dish.price}
-            onSave={(value) => handleUpdate("price", value)}
+            value={localPrice}
+            onSave={handlePriceChange}
             className="text-sm font-semibold text-foreground w-full"
           />
 
