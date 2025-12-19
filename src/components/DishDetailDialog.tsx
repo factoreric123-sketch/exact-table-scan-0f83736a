@@ -48,17 +48,29 @@ const allergenIconMap: Record<string, any> = {
 export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogProps) => {
   if (!dish) return null;
 
-  const { data: fetchedOptions = [], isLoading: optionsLoading } = useDishOptions(dish.id);
-  const { data: fetchedModifiers = [], isLoading: modifiersLoading } = useDishModifiers(dish.id);
+  const { data: fetchedOptions, isLoading: optionsLoading, isFetched: optionsFetched } = useDishOptions(dish.id);
+  const { data: fetchedModifiers, isLoading: modifiersLoading, isFetched: modifiersFetched } = useDishModifiers(dish.id);
   
-  // CRITICAL: Always prefer React Query data (fetchedOptions/fetchedModifiers) as it has optimistic updates
-  // Only use dish.options as initial fallback BEFORE React Query data loads
-  const options = fetchedOptions.length > 0 ? fetchedOptions : (dish.options || []);
-  const modifiers = fetchedModifiers.length > 0 ? fetchedModifiers : (dish.modifiers || []);
+  // CRITICAL FIX: Use React Query data when available (including empty arrays!)
+  // Only fall back to dish.options BEFORE React Query has fetched/cached data
+  // The key insight: when hasOptions is toggled OFF, we set cache to [] (empty)
+  // Previously, we checked `fetchedOptions.length > 0` which would fall back to stale dish.options
+  // Now we check if the query has fetched - if yes, use the cache (even if empty)
+  const options = optionsFetched ? (fetchedOptions || []) : (dish.options || []);
+  const modifiers = modifiersFetched ? (fetchedModifiers || []) : (dish.modifiers || []);
+  
+  // CRITICAL FIX: Determine if options should be shown based on ACTUAL data in React Query cache
+  // When user disables "Enable Pricing Options" toggle:
+  // 1. DishOptionsEditor passes EMPTY arrays to applyOptimisticOptionsUpdate
+  // 2. This empties the dish-options React Query cache
+  // 3. fetchedOptions becomes empty [], optionsFetched is true
+  // 4. options = [] (not falling back to stale dish.options!)
+  // 5. showOptionsSection becomes false, hiding the options UI
+  const hasAnyOptions = options.length > 0 || modifiers.length > 0;
+  const showOptionsSection = hasAnyOptions;
   
   const [selectedOption, setSelectedOption] = useState("");
   const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
-  const hasAnyOptions = options.length > 0 || modifiers.length > 0;
   const [showOptions, setShowOptions] = useState(true); // Auto-expand options
 
   // Sync selectedOption when options change
@@ -74,7 +86,8 @@ export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogP
     let total = 0;
     
     // Base price or selected option price
-    if (dish.hasOptions && options.length > 0) {
+    // FIXED: Use showOptionsSection (data-driven) instead of stale dish.hasOptions prop
+    if (showOptionsSection && options.length > 0) {
       const option = options.find(o => o.id === selectedOption);
       if (option) {
         const price = parseFloat(option.price.replace(/[^0-9.]/g, ""));
@@ -184,7 +197,8 @@ export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogP
               )}
             </div>
 
-            {dish.hasOptions && hasAnyOptions && (
+            {/* FIXED: Use showOptionsSection (data-driven) instead of stale dish.hasOptions */}
+            {showOptionsSection && (
               <div className="space-y-4 pt-2">
                 {options.length > 0 && (
                   <div className="space-y-3">

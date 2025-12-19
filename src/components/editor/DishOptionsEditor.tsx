@@ -448,12 +448,16 @@ export function DishOptionsEditor({
     }));
 
     // ⚡ INSTANT: Apply optimistic update + close dialog + show toast
-    // CRITICAL: Pass localHasOptions to update has_options flag for instant toggle sync
+    // CRITICAL: When hasOptions is FALSE, pass EMPTY arrays so preview doesn't show options
+    // This is the key to instant enable/disable toggle sync
+    const optionsForCache = localHasOptions ? finalOptions : [];
+    const modifiersForCache = localHasOptions ? finalModifiers : [];
+    
     if (restaurantId) {
-      applyOptimisticOptionsUpdate(queryClient, dishId, restaurantId, finalOptions, finalModifiers, localHasOptions);
+      applyOptimisticOptionsUpdate(queryClient, dishId, restaurantId, optionsForCache, modifiersForCache, localHasOptions);
     } else {
-      queryClient.setQueryData(["dish-options", dishId], finalOptions);
-      queryClient.setQueryData(["dish-modifiers", dishId], finalModifiers);
+      queryClient.setQueryData(["dish-options", dishId], optionsForCache);
+      queryClient.setQueryData(["dish-modifiers", dishId], modifiersForCache);
     }
     
     toast.success("Saved", { icon: <Check className="h-4 w-4" /> });
