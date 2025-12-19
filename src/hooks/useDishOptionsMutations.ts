@@ -31,13 +31,15 @@ export const normalizePrice = (price: string): string => {
 // ============= OPTIMISTIC CACHE UPDATE - INSTANT =============
 // This is the key to Apple-quality speed: update cache BEFORE network
 // Now also syncs to full-menu cache for preview/live menu display
+// CRITICAL: Also updates has_options flag to instantly reflect enable/disable toggle
 
 export const applyOptimisticOptionsUpdate = (
   queryClient: any,
   dishId: string,
   restaurantId: string,
   newOptions: DishOption[],
-  newModifiers: DishModifier[]
+  newModifiers: DishModifier[],
+  hasOptions?: boolean // NEW: Pass has_options flag to update dish state
 ) => {
   // 1. Instantly update dish-options cache (synchronous, ~0ms)
   queryClient.setQueryData(["dish-options", dishId], newOptions);
@@ -46,7 +48,7 @@ export const applyOptimisticOptionsUpdate = (
   queryClient.setQueryData(["dish-modifiers", dishId], newModifiers);
   
   // 3. CRITICAL: Update full-menu cache so preview/live menu shows new options
-  // This is what was missing - the preview uses fullMenu data not individual queries
+  // Also update has_options flag for instant enable/disable sync
   menuSyncEmitter.emitAll((menuData: any) => {
     if (!menuData?.categories) return menuData;
     
@@ -56,9 +58,11 @@ export const applyOptimisticOptionsUpdate = (
         ...sub,
         dishes: sub.dishes?.map((dish: any) => {
           if (dish.id === dishId) {
-            // Update options and modifiers on the dish
+            // Update options, modifiers, AND has_options flag on the dish
             return {
               ...dish,
+              // CRITICAL: Update has_options flag for instant toggle sync
+              ...(hasOptions !== undefined && { has_options: hasOptions, hasOptions: hasOptions }),
               options: newOptions.map(opt => ({
                 id: opt.id,
                 name: opt.name,
@@ -94,6 +98,8 @@ export const applyOptimisticOptionsUpdate = (
             if (dish.id === dishId) {
               return {
                 ...dish,
+                // CRITICAL: Update has_options flag for instant toggle sync
+                ...(hasOptions !== undefined && { has_options: hasOptions, hasOptions: hasOptions }),
                 options: newOptions.map(opt => ({
                   id: opt.id,
                   name: opt.name,
