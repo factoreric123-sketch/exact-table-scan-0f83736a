@@ -54,8 +54,9 @@ export const useDishModifiers = (dishId: string) => {
     staleTime: 5 * 60 * 1000, // 5 minutes for better performance
     gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false, // Don't refetch on window focus
-    refetchOnMount: false, // Don't refetch on mount if data exists
-    placeholderData: (prev) => prev,
+    // CRITICAL: Allow refetch on mount to ensure React Query properly subscribes
+    // This is needed for setQueryData updates to trigger re-renders
+    refetchOnMount: true,
   });
 };
 
