@@ -1,6 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Flame, Sparkles, Star, TrendingUp, ChefHat, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird } from "lucide-react";
 import React, { memo } from "react";
+import { useDishOptions } from "@/hooks/useDishOptions";
+import { useDishModifiers } from "@/hooks/useDishModifiers";
 
 // Capitalize helper
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
@@ -70,6 +72,14 @@ const DishCard = memo(({
     chef_recommendation: "59, 130, 246",
   }
 }: DishCardProps) => {
+  // Use React Query cache for fresh options/modifiers data
+  const { data: cachedOptions = [], isFetched: optionsFetched } = useDishOptions(dish.id);
+  const { data: cachedModifiers = [], isFetched: modifiersFetched } = useDishModifiers(dish.id);
+  
+  // Prioritize cached data over stale props
+  const options = optionsFetched ? cachedOptions : (dish.options || []);
+  const modifiers = modifiersFetched ? cachedModifiers : (dish.modifiers || []);
+  const hasActiveOptions = options.length > 0;
   const fontSizeClasses = {
     small: 'text-sm',
     medium: 'text-base',
@@ -176,9 +186,9 @@ const DishCard = memo(({
           {showPrice && (
             <p className={`${priceFontSizeClasses[fontSize]} font-semibold text-foreground`}>
               {(() => {
-                // If dish has options, show price range
-                if (dish.hasOptions && dish.options && dish.options.length > 0) {
-                  const prices = dish.options
+                // If dish has options, show price range (use fresh cached data)
+                if (hasActiveOptions) {
+                  const prices = options
                     .map(opt => {
                       const num = parseFloat(opt.price.replace(/[^0-9.]/g, ""));
                       return isNaN(num) ? 0 : num;
@@ -193,13 +203,13 @@ const DishCard = memo(({
                       // Show decimals only if not a whole number
                       return p % 1 === 0 ? `$${p.toFixed(0)}` : `$${p.toFixed(2)}`;
                     }).join(' / ');
-                    const addOns = dish.modifiers && dish.modifiers.length > 0 ? ' + Add-ons' : '';
+                    const addOns = modifiers.length > 0 ? ' + Add-ons' : '';
                     return priceRange + addOns;
                   }
                 }
                 
                 // If no options but has modifiers, show base price + Add-ons
-                if (dish.modifiers && dish.modifiers.length > 0) {
+                if (modifiers.length > 0) {
                   return `${dish.price} + Add-ons`;
                 }
                 
