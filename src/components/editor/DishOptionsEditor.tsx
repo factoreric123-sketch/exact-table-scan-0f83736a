@@ -448,8 +448,9 @@ export function DishOptionsEditor({
     }));
 
     // ⚡ INSTANT: Apply optimistic update + close dialog + show toast
+    // CRITICAL: Pass localHasOptions to update has_options flag for instant toggle sync
     if (restaurantId) {
-      applyOptimisticOptionsUpdate(queryClient, dishId, restaurantId, finalOptions, finalModifiers);
+      applyOptimisticOptionsUpdate(queryClient, dishId, restaurantId, finalOptions, finalModifiers, localHasOptions);
     } else {
       queryClient.setQueryData(["dish-options", dishId], finalOptions);
       queryClient.setQueryData(["dish-modifiers", dishId], finalModifiers);
