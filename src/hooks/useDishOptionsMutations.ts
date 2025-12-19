@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { DishOption } from "./useDishOptions";
 import type { DishModifier } from "./useDishModifiers";
 import { toast } from "sonner";
+import { menuSyncEmitter } from "@/lib/menuSyncEmitter";
 
 // Client-side price normalization - INSTANT, no async
 export const normalizePrice = (price: string): string => {
@@ -29,7 +30,7 @@ export const normalizePrice = (price: string): string => {
 
 // ============= OPTIMISTIC CACHE UPDATE - INSTANT =============
 // This is the key to Apple-quality speed: update cache BEFORE network
-// NO invalidateQueries here - that causes heavy refetches that block UI
+// Now also syncs to full-menu cache for preview/live menu display
 
 export const applyOptimisticOptionsUpdate = (
   queryClient: any,
@@ -44,15 +45,83 @@ export const applyOptimisticOptionsUpdate = (
   // 2. Instantly update dish-modifiers cache (synchronous, ~0ms)
   queryClient.setQueryData(["dish-modifiers", dishId], newModifiers);
   
-  // 3. Clear localStorage cache - ultra low priority, truly non-blocking
+  // 3. CRITICAL: Update full-menu cache so preview/live menu shows new options
+  // This is what was missing - the preview uses fullMenu data not individual queries
+  menuSyncEmitter.emitAll((menuData: any) => {
+    if (!menuData?.categories) return menuData;
+    
+    const updatedCategories = menuData.categories.map((cat: any) => ({
+      ...cat,
+      subcategories: cat.subcategories?.map((sub: any) => ({
+        ...sub,
+        dishes: sub.dishes?.map((dish: any) => {
+          if (dish.id === dishId) {
+            // Update options and modifiers on the dish
+            return {
+              ...dish,
+              options: newOptions.map(opt => ({
+                id: opt.id,
+                name: opt.name,
+                price: opt.price,
+                order_index: opt.order_index
+              })),
+              modifiers: newModifiers.map(mod => ({
+                id: mod.id,
+                name: mod.name,
+                price: mod.price,
+                order_index: mod.order_index
+              }))
+            };
+          }
+          return dish;
+        }) || []
+      })) || []
+    }));
+    
+    return { ...menuData, categories: updatedCategories };
+  });
+  
+  // 4. Also update React Query full-menu cache directly
+  const currentFullMenu = queryClient.getQueryData(['full-menu', restaurantId]);
+  if (currentFullMenu) {
+    const updatedMenu = {
+      ...currentFullMenu,
+      categories: (currentFullMenu as any).categories?.map((cat: any) => ({
+        ...cat,
+        subcategories: cat.subcategories?.map((sub: any) => ({
+          ...sub,
+          dishes: sub.dishes?.map((dish: any) => {
+            if (dish.id === dishId) {
+              return {
+                ...dish,
+                options: newOptions.map(opt => ({
+                  id: opt.id,
+                  name: opt.name,
+                  price: opt.price,
+                  order_index: opt.order_index
+                })),
+                modifiers: newModifiers.map(mod => ({
+                  id: mod.id,
+                  name: mod.name,
+                  price: mod.price,
+                  order_index: mod.order_index
+                }))
+              };
+            }
+            return dish;
+          }) || []
+        })) || []
+      })) || []
+    };
+    queryClient.setQueryData(['full-menu', restaurantId], updatedMenu);
+  }
+  
+  // 5. Clear localStorage cache - ultra low priority, truly non-blocking
   if ('requestIdleCallback' in window) {
     requestIdleCallback(() => {
       try { localStorage.removeItem(`fullMenu:${restaurantId}`); } catch {}
     }, { timeout: 5000 });
   }
-  
-  // NOTE: We do NOT invalidate queries here - that causes heavy refetches
-  // The mutations will handle cache updates after they complete
 };
 
 // ============= BACKGROUND MUTATION EXECUTOR =============
