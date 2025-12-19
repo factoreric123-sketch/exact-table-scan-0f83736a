@@ -15,6 +15,7 @@ import { ImageCropModal } from "@/components/ImageCropModal";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { ALLERGEN_OPTIONS } from "@/components/AllergenFilter";
 import { DishOptionsEditor } from "./DishOptionsEditor";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,9 +31,10 @@ import { toast } from "sonner";
 interface SortableDishProps {
   dish: Dish;
   subcategoryId: string;
+  restaurantId?: string;
 }
 
-const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
+const SortableDishInner = ({ dish, subcategoryId, restaurantId }: SortableDishProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: dish.id,
   });
@@ -59,9 +61,12 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
   const [localSpecial, setLocalSpecial] = useState(dish.is_special);
   const [localPopular, setLocalPopular] = useState(dish.is_popular);
   const [localChefRec, setLocalChefRec] = useState(dish.is_chef_recommendation);
+  // CRITICAL FIX: Track has_options locally to sync with DishOptionsEditor saves
+  const [localHasOptions, setLocalHasOptions] = useState(dish.has_options);
   
   // Track if we've initialized for this dish ID - prevents background refetches from overwriting user edits
   const initializedDishId = useRef<string | null>(null);
+  const queryClient = useQueryClient();
 
   // Only sync from dish prop when switching to a different dish (not on refetches)
   useEffect(() => {
@@ -78,8 +83,37 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
       setLocalSpecial(dish.is_special);
       setLocalPopular(dish.is_popular);
       setLocalChefRec(dish.is_chef_recommendation);
+      setLocalHasOptions(dish.has_options);
     }
   }, [dish.id]);
+  
+  // CRITICAL FIX: Sync localHasOptions when DishOptionsEditor saves
+  // Subscribe to React Query cache changes for this dish
+  useEffect(() => {
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      if (
+        event?.type === 'updated' && 
+        event?.query?.queryKey?.[0] === 'full-menu'
+      ) {
+        // Check if this dish's has_options changed in the full-menu cache
+        const fullMenuQueries = queryClient.getQueriesData({ queryKey: ['full-menu'] });
+        for (const [, data] of fullMenuQueries) {
+          if (!data) continue;
+          const menuData = data as any;
+          for (const cat of (menuData.categories || [])) {
+            for (const sub of (cat.subcategories || [])) {
+              const updatedDish = (sub.dishes || []).find((d: any) => d.id === dish.id);
+              if (updatedDish && updatedDish.has_options !== localHasOptions) {
+                setLocalHasOptions(updatedDish.has_options);
+                return;
+              }
+            }
+          }
+        }
+      }
+    });
+    return unsubscribe;
+  }, [queryClient, dish.id, localHasOptions]);
 
   // Update database only when debounced value changes
   useEffect(() => {
@@ -428,7 +462,7 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
           >
             <DollarSign className="h-4 w-4 mr-2" />
             Pricing Options
-            {dish.has_options && (
+            {localHasOptions && (
               <Badge variant="secondary" className="ml-2">
                 Enabled
               </Badge>
@@ -449,7 +483,8 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
       <DishOptionsEditor
         dishId={dish.id}
         dishName={dish.name}
-        hasOptions={dish.has_options}
+        hasOptions={localHasOptions}
+        restaurantId={restaurantId}
         open={showOptionsEditor}
         onOpenChange={setShowOptionsEditor}
       />
@@ -474,7 +509,7 @@ const SortableDishInner = ({ dish, subcategoryId }: SortableDishProps) => {
   );
 };
 
-// Memoize - only re-render when dish ID changes (local state handles everything else)
+// Memoize - only re-render when dish ID or restaurantId changes (local state handles everything else)
 export const SortableDish = React.memo(SortableDishInner, (prev, next) => {
-  return prev.dish.id === next.dish.id && prev.subcategoryId === next.subcategoryId;
+  return prev.dish.id === next.dish.id && prev.subcategoryId === next.subcategoryId && prev.restaurantId === next.restaurantId;
 });
