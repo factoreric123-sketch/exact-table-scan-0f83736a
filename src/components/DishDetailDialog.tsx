@@ -48,16 +48,16 @@ const allergenIconMap: Record<string, any> = {
 export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogProps) => {
   if (!dish) return null;
 
-  const { data: fetchedOptions, isLoading: optionsLoading, isFetched: optionsFetched } = useDishOptions(dish.id);
-  const { data: fetchedModifiers, isLoading: modifiersLoading, isFetched: modifiersFetched } = useDishModifiers(dish.id);
+  // CRITICAL FIX: Use dataUpdatedAt to detect if cache has been set (even via setQueryData)
+  // This ensures optimistic updates are reflected immediately
+  const { data: fetchedOptions, dataUpdatedAt: optionsUpdatedAt } = useDishOptions(dish.id);
+  const { data: fetchedModifiers, dataUpdatedAt: modifiersUpdatedAt } = useDishModifiers(dish.id);
   
-  // CRITICAL FIX: Use React Query data when available (including empty arrays!)
-  // Only fall back to dish.options BEFORE React Query has fetched/cached data
-  // The key insight: when hasOptions is toggled OFF, we set cache to [] (empty)
-  // Previously, we checked `fetchedOptions.length > 0` which would fall back to stale dish.options
-  // Now we check if the query has fetched - if yes, use the cache (even if empty)
-  const options = optionsFetched ? (fetchedOptions || []) : (dish.options || []);
-  const modifiers = modifiersFetched ? (fetchedModifiers || []) : (dish.modifiers || []);
+  // Prioritize cached data if it exists (dataUpdatedAt > 0 means cache has data)
+  // When hasOptions is toggled OFF, we set cache to [] (empty) via setQueryData
+  // dataUpdatedAt will be > 0, so we use [] instead of falling back to stale dish.options
+  const options = optionsUpdatedAt > 0 ? (fetchedOptions || []) : (dish.options || []);
+  const modifiers = modifiersUpdatedAt > 0 ? (fetchedModifiers || []) : (dish.modifiers || []);
   
   // CRITICAL FIX: Determine if options should be shown based on ACTUAL data in React Query cache
   // When user disables "Enable Pricing Options" toggle:

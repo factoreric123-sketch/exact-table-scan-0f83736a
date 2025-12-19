@@ -73,12 +73,14 @@ const DishCard = memo(({
   }
 }: DishCardProps) => {
   // Use React Query cache for fresh options/modifiers data
-  const { data: cachedOptions = [], isFetched: optionsFetched } = useDishOptions(dish.id);
-  const { data: cachedModifiers = [], isFetched: modifiersFetched } = useDishModifiers(dish.id);
+  // CRITICAL: Use dataUpdatedAt to detect if cache has been set (even via setQueryData)
+  const { data: cachedOptions, dataUpdatedAt: optionsUpdatedAt } = useDishOptions(dish.id);
+  const { data: cachedModifiers, dataUpdatedAt: modifiersUpdatedAt } = useDishModifiers(dish.id);
   
-  // Prioritize cached data over stale props
-  const options = optionsFetched ? cachedOptions : (dish.options || []);
-  const modifiers = modifiersFetched ? cachedModifiers : (dish.modifiers || []);
+  // Prioritize cached data if it exists (dataUpdatedAt > 0 means cache has data)
+  // This ensures optimistic updates via setQueryData are respected immediately
+  const options = optionsUpdatedAt > 0 ? (cachedOptions || []) : (dish.options || []);
+  const modifiers = modifiersUpdatedAt > 0 ? (cachedModifiers || []) : (dish.modifiers || []);
   const hasActiveOptions = options.length > 0;
   const fontSizeClasses = {
     small: 'text-sm',

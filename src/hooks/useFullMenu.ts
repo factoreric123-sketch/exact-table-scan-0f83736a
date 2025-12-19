@@ -255,6 +255,7 @@ export const useFullMenu = (
   }, [restaurantId, cacheKey, fetchMenu, useLocalStorageCache, queryClient, applyBufferedUpdates]);
 
   // Subscribe to React Query cache changes (for cross-component sync)
+  // CRITICAL: This ensures optimistic updates via setQueryData trigger re-renders
   useEffect(() => {
     if (!restaurantId) return;
 
@@ -265,14 +266,17 @@ export const useFullMenu = (
         event?.query?.queryKey?.[1] === restaurantId
       ) {
         const newData = queryClient.getQueryData<FullMenuData>(['full-menu', restaurantId]);
-        if (newData && newData !== data) {
+        // CRITICAL FIX: Always update state when cache changes - don't compare references
+        // The previous check `newData !== data` could fail if the update is to nested properties
+        if (newData) {
+          console.log('[useFullMenu] React Query cache updated, syncing state');
           setData(newData);
         }
       }
     });
 
     return unsubscribe;
-  }, [restaurantId, queryClient, data]);
+  }, [restaurantId, queryClient]); // Removed `data` from dependencies to prevent stale closure
 
   return { data, isLoading, error, refetch };
 };
