@@ -71,7 +71,7 @@ export const InlineEdit = ({ value, onSave, className, multiline = false }: Inli
         className
       )}
     >
-      {value || "Click to edit"}
+      {editValue || "Click to edit"}
     </div>
   );
 };
