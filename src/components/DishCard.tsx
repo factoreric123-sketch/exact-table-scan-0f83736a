@@ -176,14 +176,9 @@ const DishCard = memo(({
           {showPrice && (
             <p className={`${priceFontSizeClasses[fontSize]} font-semibold text-foreground`}>
               {(() => {
-                // CRITICAL FIX: Only check if options array has items, NOT hasOptions flag
-                // The hasOptions flag can be stale from props, but options array is from cache
-                // When pricing options are disabled, options[] becomes empty via optimistic update
-                const hasActiveOptions = dish.options && dish.options.length > 0;
-                const hasActiveModifiers = dish.modifiers && dish.modifiers.length > 0;
-                
-                if (hasActiveOptions) {
-                  const prices = dish.options!
+                // If dish has options, show price range
+                if (dish.hasOptions && dish.options && dish.options.length > 0) {
+                  const prices = dish.options
                     .map(opt => {
                       const num = parseFloat(opt.price.replace(/[^0-9.]/g, ""));
                       return isNaN(num) ? 0 : num;
@@ -192,17 +187,19 @@ const DishCard = memo(({
                     .sort((a, b) => a - b);
                   
                   if (prices.length > 0) {
+                    // Get unique prices
                     const uniquePrices = Array.from(new Set(prices));
                     const priceRange = uniquePrices.map(p => {
+                      // Show decimals only if not a whole number
                       return p % 1 === 0 ? `$${p.toFixed(0)}` : `$${p.toFixed(2)}`;
                     }).join(' / ');
-                    const addOns = hasActiveModifiers ? ' + Add-ons' : '';
+                    const addOns = dish.modifiers && dish.modifiers.length > 0 ? ' + Add-ons' : '';
                     return priceRange + addOns;
                   }
                 }
                 
                 // If no options but has modifiers, show base price + Add-ons
-                if (hasActiveModifiers) {
+                if (dish.modifiers && dish.modifiers.length > 0) {
                   return `${dish.price} + Add-ons`;
                 }
                 

@@ -448,22 +448,16 @@ export function DishOptionsEditor({
     }));
 
     // ⚡ INSTANT: Apply optimistic update + close dialog + show toast
-    // CRITICAL FIX: Always keep actual options/modifiers in dish-options cache (for editor)
-    // But when hasOptions is FALSE, pass empty arrays to full-menu cache (for display only)
-    // This preserves data while hiding it from display when disabled
+    // CRITICAL: When hasOptions is FALSE, pass EMPTY arrays so preview doesn't show options
+    // This is the key to instant enable/disable toggle sync
+    const optionsForCache = localHasOptions ? finalOptions : [];
+    const modifiersForCache = localHasOptions ? finalModifiers : [];
     
     if (restaurantId) {
-      // Always update dish-options/dish-modifiers caches with actual data
-      queryClient.setQueryData(["dish-options", dishId], finalOptions);
-      queryClient.setQueryData(["dish-modifiers", dishId], finalModifiers);
-      
-      // For display caches, use empty arrays when disabled
-      const optionsForDisplay = localHasOptions ? finalOptions : [];
-      const modifiersForDisplay = localHasOptions ? finalModifiers : [];
-      applyOptimisticOptionsUpdate(queryClient, dishId, restaurantId, optionsForDisplay, modifiersForDisplay, localHasOptions);
+      applyOptimisticOptionsUpdate(queryClient, dishId, restaurantId, optionsForCache, modifiersForCache, localHasOptions);
     } else {
-      queryClient.setQueryData(["dish-options", dishId], finalOptions);
-      queryClient.setQueryData(["dish-modifiers", dishId], finalModifiers);
+      queryClient.setQueryData(["dish-options", dishId], optionsForCache);
+      queryClient.setQueryData(["dish-modifiers", dishId], modifiersForCache);
     }
     
     toast.success("Saved", { icon: <Check className="h-4 w-4" /> });
