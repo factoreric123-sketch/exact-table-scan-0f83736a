@@ -48,23 +48,27 @@ const allergenIconMap: Record<string, any> = {
 export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogProps) => {
   if (!dish) return null;
 
-  const { data: fetchedOptions = [] } = useDishOptions(dish.id);
-  const { data: fetchedModifiers = [] } = useDishModifiers(dish.id);
+  const { data: fetchedOptions = [], isLoading: optionsLoading } = useDishOptions(dish.id);
+  const { data: fetchedModifiers = [], isLoading: modifiersLoading } = useDishModifiers(dish.id);
   
-  // Use passed-in options/modifiers as fallback for instant display
-  const options = dish.options && dish.options.length > 0 ? dish.options : fetchedOptions;
-  const modifiers = dish.modifiers && dish.modifiers.length > 0 ? dish.modifiers : fetchedModifiers;
+  // CRITICAL: Always prefer React Query data (fetchedOptions/fetchedModifiers) as it has optimistic updates
+  // Only use dish.options as initial fallback BEFORE React Query data loads
+  const options = fetchedOptions.length > 0 ? fetchedOptions : (dish.options || []);
+  const modifiers = fetchedModifiers.length > 0 ? fetchedModifiers : (dish.modifiers || []);
+  
   const [selectedOption, setSelectedOption] = useState("");
   const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
   const hasAnyOptions = options.length > 0 || modifiers.length > 0;
   const [showOptions, setShowOptions] = useState(true); // Auto-expand options
 
-  // Sync selectedOption when options load
+  // Sync selectedOption when options change
   React.useEffect(() => {
-    if (options.length > 0 && !selectedOption) {
-      setSelectedOption(options[0].id);
+    if (options.length > 0) {
+      // Reset selection when options change (e.g., after edit)
+      const firstOptionId = options[0].id;
+      setSelectedOption(prev => options.some(o => o.id === prev) ? prev : firstOptionId);
     }
-  }, [options, selectedOption]);
+  }, [options]);
 
   const calculateTotalPrice = () => {
     let total = 0;
