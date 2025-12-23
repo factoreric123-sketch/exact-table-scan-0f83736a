@@ -11,6 +11,7 @@ interface MenuGridProps {
   showPrice?: boolean;
   showImage?: boolean;
   imageSize?: 'compact' | 'large';
+  forceTwoDecimals?: boolean;
   badgeColors?: {
     new_addition: string;
     special: string;
@@ -28,6 +29,7 @@ const MenuGrid = memo(({
   showPrice = true,
   showImage = true,
   imageSize = 'compact',
+  forceTwoDecimals = false,
   badgeColors
 }: MenuGridProps) => {
   const [selectedDish, setSelectedDish] = useState<DishDetail | null>(null);
@@ -88,6 +90,7 @@ const MenuGrid = memo(({
               showImage={showImage}
               imageSize={imageSize}
               fontSize={fontSize}
+              forceTwoDecimals={forceTwoDecimals}
               badgeColors={badgeColors}
             />
           ))}

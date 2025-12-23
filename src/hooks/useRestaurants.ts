@@ -27,6 +27,7 @@ export interface Restaurant {
   grid_columns?: 1 | 2 | 3;
   menu_font_size?: 'small' | 'medium' | 'large';
   image_size?: 'compact' | 'large';
+  force_two_decimals?: boolean;
   badge_colors?: {
     new_addition: string;
     special: string;
