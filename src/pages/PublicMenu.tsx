@@ -1145,7 +1145,11 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
                   subcategoryRefs.current[subcategory.name] = el;
                 }}
               >
-                <MenuGrid dishes={transformedDishes} sectionTitle={subcategory.name} />
+                <MenuGrid 
+                  dishes={transformedDishes} 
+                  sectionTitle={subcategory.name}
+                  forceTwoDecimals={restaurant?.force_two_decimals === true}
+                />
               </div>
             );
           })

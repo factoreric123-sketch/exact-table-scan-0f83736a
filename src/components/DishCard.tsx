@@ -50,6 +50,7 @@ interface DishCardProps {
   showImage?: boolean;
   imageSize?: 'compact' | 'large';
   fontSize?: 'small' | 'medium' | 'large';
+  forceTwoDecimals?: boolean;
   badgeColors?: {
     new_addition: string;
     special: string;
@@ -65,6 +66,7 @@ const DishCard = memo(({
   showImage = true,
   imageSize = 'compact',
   fontSize = 'medium',
+  forceTwoDecimals = false,
   badgeColors = {
     new_addition: "34, 197, 94",
     special: "249, 115, 22",
@@ -188,6 +190,15 @@ const DishCard = memo(({
           {showPrice && (
             <p className={`${priceFontSizeClasses[fontSize]} font-semibold text-foreground`}>
               {(() => {
+                // Helper to format price based on forceTwoDecimals setting
+                const formatPrice = (num: number) => {
+                  if (forceTwoDecimals) {
+                    return `$${num.toFixed(2)}`;
+                  }
+                  // Show decimals only if not a whole number
+                  return num % 1 === 0 ? `$${num.toFixed(0)}` : `$${num.toFixed(2)}`;
+                };
+                
                 // If dish has options, show price range (use fresh cached data)
                 if (hasActiveOptions) {
                   const prices = options
@@ -201,10 +212,7 @@ const DishCard = memo(({
                   if (prices.length > 0) {
                     // Get unique prices
                     const uniquePrices = Array.from(new Set(prices));
-                    const priceRange = uniquePrices.map(p => {
-                      // Show decimals only if not a whole number
-                      return p % 1 === 0 ? `$${p.toFixed(0)}` : `$${p.toFixed(2)}`;
-                    }).join(' / ');
+                    const priceRange = uniquePrices.map(formatPrice).join(' / ');
                     const addOns = modifiers.length > 0 ? ' + Add-ons' : '';
                     return priceRange + addOns;
                   }
@@ -212,11 +220,15 @@ const DishCard = memo(({
                 
                 // If no options but has modifiers, show base price + Add-ons
                 if (modifiers.length > 0) {
-                  return `${dish.price} + Add-ons`;
+                  // Format the base price too
+                  const baseNum = parseFloat(dish.price.replace(/[^0-9.]/g, ""));
+                  const formattedBase = isNaN(baseNum) ? dish.price : formatPrice(baseNum);
+                  return `${formattedBase} + Add-ons`;
                 }
                 
-                // Default: just show the base price
-                return dish.price;
+                // Default: format the base price
+                const baseNum = parseFloat(dish.price.replace(/[^0-9.]/g, ""));
+                return isNaN(baseNum) ? dish.price : formatPrice(baseNum);
               })()}
             </p>
           )}

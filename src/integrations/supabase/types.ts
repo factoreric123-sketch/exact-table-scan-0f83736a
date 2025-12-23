@@ -518,6 +518,7 @@ export type Database = {
           created_at: string | null
           dietary_filter_order: Json | null
           editor_view_mode: string | null
+          force_two_decimals: boolean | null
           grid_columns: number | null
           hero_image_url: string | null
           id: string
@@ -542,6 +543,7 @@ export type Database = {
           created_at?: string | null
           dietary_filter_order?: Json | null
           editor_view_mode?: string | null
+          force_two_decimals?: boolean | null
           grid_columns?: number | null
           hero_image_url?: string | null
           id?: string
@@ -566,6 +568,7 @@ export type Database = {
           created_at?: string | null
           dietary_filter_order?: Json | null
           editor_view_mode?: string | null
+          force_two_decimals?: boolean | null
           grid_columns?: number | null
           hero_image_url?: string | null
           id?: string

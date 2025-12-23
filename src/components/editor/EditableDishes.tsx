@@ -179,6 +179,7 @@ export const EditableDishes = ({
         layoutDensity={restaurant?.layout_density || "spacious"}
         fontSize={restaurant?.menu_font_size || "medium"}
         imageSize={restaurant?.image_size || "large"}
+        forceTwoDecimals={restaurant?.force_two_decimals === true}
         badgeColors={restaurant?.badge_colors}
       />
     );
