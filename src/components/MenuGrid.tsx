@@ -101,6 +101,7 @@ const MenuGrid = memo(({
         dish={selectedDish}
         open={!!selectedDish}
         onOpenChange={(open) => !open && setSelectedDish(null)}
+        forceTwoDecimals={forceTwoDecimals}
       />
     </>
   );

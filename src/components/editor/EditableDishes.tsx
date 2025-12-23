@@ -215,6 +215,7 @@ export const EditableDishes = ({
                 dish={dish}
                 subcategoryId={subcategoryId}
                 restaurantId={restaurant?.id}
+                forceTwoDecimals={restaurant?.force_two_decimals === true}
               />
             ))}
           </div>

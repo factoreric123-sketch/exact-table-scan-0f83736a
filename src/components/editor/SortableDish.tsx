@@ -32,9 +32,10 @@ interface SortableDishProps {
   dish: Dish;
   subcategoryId: string;
   restaurantId?: string;
+  forceTwoDecimals?: boolean;
 }
 
-const SortableDishInner = ({ dish, subcategoryId, restaurantId }: SortableDishProps) => {
+const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals }: SortableDishProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: dish.id,
   });
@@ -485,6 +486,7 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId }: SortableDishPr
         dishName={dish.name}
         hasOptions={localHasOptions}
         restaurantId={restaurantId}
+        forceTwoDecimals={forceTwoDecimals}
         open={showOptionsEditor}
         onOpenChange={setShowOptionsEditor}
       />
@@ -511,5 +513,5 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId }: SortableDishPr
 
 // Memoize - only re-render when dish ID or restaurantId changes (local state handles everything else)
 export const SortableDish = React.memo(SortableDishInner, (prev, next) => {
-  return prev.dish.id === next.dish.id && prev.subcategoryId === next.subcategoryId && prev.restaurantId === next.restaurantId;
+  return prev.dish.id === next.dish.id && prev.subcategoryId === next.subcategoryId && prev.restaurantId === next.restaurantId && prev.forceTwoDecimals === next.forceTwoDecimals;
 });

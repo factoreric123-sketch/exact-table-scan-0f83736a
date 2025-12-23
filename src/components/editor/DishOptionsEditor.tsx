@@ -34,6 +34,7 @@ interface DishOptionsEditorProps {
   dishName: string;
   hasOptions: boolean;
   restaurantId?: string;
+  forceTwoDecimals?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -57,10 +58,11 @@ interface SortableItemProps {
   onUpdate: (id: string, field: "name" | "price", value: string) => void;
   onDelete: (id: string) => void;
   type: "option" | "modifier";
+  forceTwoDecimals?: boolean;
 }
 
 // Memoized sortable item - ultra-lightweight
-const SortableItem = memo(({ id, name, price, onUpdate, onDelete, type }: SortableItemProps) => {
+const SortableItem = memo(({ id, name, price, onUpdate, onDelete, type, forceTwoDecimals }: SortableItemProps) => {
   const {
     attributes,
     listeners,
@@ -99,7 +101,7 @@ const SortableItem = memo(({ id, name, price, onUpdate, onDelete, type }: Sortab
         <span className="text-sm text-muted-foreground">$</span>
         <Input
           type="text"
-          placeholder="0.00"
+          placeholder={forceTwoDecimals ? "0.00" : "0"}
           value={price.replace("$", "")}
           onChange={(e) => {
             const filtered = e.target.value.replace(/[^0-9.]/g, "");
@@ -128,7 +130,7 @@ const SortableItem = memo(({ id, name, price, onUpdate, onDelete, type }: Sortab
     </div>
   );
 }, (prev, next) => 
-  prev.id === next.id && prev.name === next.name && prev.price === next.price && prev.type === next.type
+  prev.id === next.id && prev.name === next.name && prev.price === next.price && prev.type === next.type && prev.forceTwoDecimals === next.forceTwoDecimals
 );
 
 SortableItem.displayName = "SortableItem";
@@ -182,6 +184,7 @@ export function DishOptionsEditor({
   dishName,
   hasOptions: initialHasOptions = false,
   restaurantId,
+  forceTwoDecimals = false,
   open,
   onOpenChange,
 }: DishOptionsEditorProps) {
@@ -640,6 +643,7 @@ export function DishOptionsEditor({
                         onUpdate={handleUpdateOption}
                         onDelete={handleDeleteOption}
                         type="option"
+                        forceTwoDecimals={forceTwoDecimals}
                       />
                     ))}
                   </div>
@@ -676,6 +680,7 @@ export function DishOptionsEditor({
                         onUpdate={handleUpdateModifier}
                         onDelete={handleDeleteModifier}
                         type="modifier"
+                        forceTwoDecimals={forceTwoDecimals}
                       />
                     ))}
                   </div>
