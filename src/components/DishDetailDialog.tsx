@@ -30,6 +30,7 @@ interface DishDetailDialogProps {
   dish: DishDetail | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  forceTwoDecimals?: boolean;
 }
 
 const allergenIconMap: Record<string, any> = {
@@ -45,7 +46,7 @@ const allergenIconMap: Record<string, any> = {
   poultry: Bird,
 };
 
-export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogProps) => {
+export const DishDetailDialog = ({ dish, open, onOpenChange, forceTwoDecimals = false }: DishDetailDialogProps) => {
   if (!dish) return null;
 
   // CRITICAL FIX: Use dataUpdatedAt to detect if cache has been set (even via setQueryData)
@@ -82,6 +83,13 @@ export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogP
     }
   }, [options]);
 
+  const formatPrice = (num: number, prefix: string = "$") => {
+    if (forceTwoDecimals) {
+      return `${prefix}${num.toFixed(2)}`;
+    }
+    return Number.isInteger(num) ? `${prefix}${num}` : `${prefix}${num.toFixed(2)}`;
+  };
+
   const calculateTotalPrice = () => {
     let total = 0;
     
@@ -107,7 +115,7 @@ export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogP
       }
     });
     
-    return `$${total.toFixed(2)}`;
+    return formatPrice(total);
   };
 
   const handleModifierToggle = (modifierId: string) => {
@@ -206,7 +214,7 @@ export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogP
                     <RadioGroup value={selectedOption} onValueChange={setSelectedOption} className="space-y-2">
                       {options.map((option) => {
                         const priceNum = parseFloat(option.price.replace(/[^0-9.]/g, ""));
-                        const formattedPrice = isNaN(priceNum) ? option.price : `$${priceNum.toFixed(2)}`;
+                        const formattedPrice = isNaN(priceNum) ? option.price : formatPrice(priceNum);
                         return (
                           <Label 
                             key={option.id} 
@@ -233,7 +241,7 @@ export const DishDetailDialog = ({ dish, open, onOpenChange }: DishDetailDialogP
                     <div className="space-y-2">
                       {modifiers.map((modifier) => {
                         const priceNum = parseFloat(modifier.price.replace(/[^0-9.]/g, ""));
-                        const formattedPrice = isNaN(priceNum) ? modifier.price : `+$${priceNum.toFixed(2)}`;
+                        const formattedPrice = isNaN(priceNum) ? modifier.price : formatPrice(priceNum, "+$");
                         return (
                           <Label 
                             key={modifier.id} 
