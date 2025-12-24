@@ -189,52 +189,65 @@ const DishCard = memo(({
         </div>
         <p className={`${descFontSizeClasses[fontSize]} text-muted-foreground mb-1.5 line-clamp-2`}>{dish.description}</p>
         <div className="flex items-center justify-between">
-          {showPrice && (
-            <p className={`${priceFontSizeClasses[fontSize]} font-semibold text-foreground`}>
-              {(() => {
-                // Helper to format price based on settings
-                const currencyPrefix = showCurrencySymbol ? '$' : '';
-                const formatPrice = (num: number) => {
-                  if (forceTwoDecimals) {
-                    return `${currencyPrefix}${num.toFixed(2)}`;
-                  }
-                  // Show decimals only if not a whole number
-                  return num % 1 === 0 ? `${currencyPrefix}${num.toFixed(0)}` : `${currencyPrefix}${num.toFixed(2)}`;
-                };
-                
-                // If dish has options, show price range (use fresh cached data)
-                if (hasActiveOptions) {
-                  const prices = options
-                    .map(opt => {
-                      const num = parseFloat(opt.price.replace(/[^0-9.]/g, ""));
-                      return isNaN(num) ? 0 : num;
-                    })
-                    .filter(p => p > 0)
-                    .sort((a, b) => a - b);
-                  
-                  if (prices.length > 0) {
-                    // Get unique prices
-                    const uniquePrices = Array.from(new Set(prices));
-                    const priceRange = uniquePrices.map(formatPrice).join(' / ');
-                    const addOns = modifiers.length > 0 ? ' + Add-ons' : '';
-                    return priceRange + addOns;
-                  }
-                }
-                
-                // If no options but has modifiers, show base price + Add-ons
-                if (modifiers.length > 0) {
-                  // Format the base price too
-                  const baseNum = parseFloat(dish.price.replace(/[^0-9.]/g, ""));
-                  const formattedBase = isNaN(baseNum) ? dish.price : formatPrice(baseNum);
-                  return `${formattedBase} + Add-ons`;
-                }
-                
-                // Default: format the base price
-                const baseNum = parseFloat(dish.price.replace(/[^0-9.]/g, ""));
-                return isNaN(baseNum) ? dish.price : formatPrice(baseNum);
-              })()}
-            </p>
-          )}
+          {showPrice && (() => {
+            // Helper to format price based on settings
+            const currencyPrefix = showCurrencySymbol ? '$' : '';
+            const formatPrice = (num: number) => {
+              if (forceTwoDecimals) {
+                return `${currencyPrefix}${num.toFixed(2)}`;
+              }
+              // Show decimals only if not a whole number
+              return num % 1 === 0 ? `${currencyPrefix}${num.toFixed(0)}` : `${currencyPrefix}${num.toFixed(2)}`;
+            };
+            
+            // If dish has options, show price range (use fresh cached data)
+            if (hasActiveOptions) {
+              const prices = options
+                .map(opt => {
+                  const num = parseFloat(opt.price.replace(/[^0-9.]/g, ""));
+                  return isNaN(num) ? 0 : num;
+                })
+                .filter(p => p > 0)
+                .sort((a, b) => a - b);
+              
+              if (prices.length > 0) {
+                // Get unique prices
+                const uniquePrices = Array.from(new Set(prices));
+                const priceRange = uniquePrices.map(formatPrice).join(' / ');
+                const addOns = modifiers.length > 0 ? ' + Add-ons' : '';
+                return (
+                  <p className={`${priceFontSizeClasses[fontSize]} font-semibold text-foreground`}>
+                    {priceRange + addOns}
+                  </p>
+                );
+              }
+            }
+            
+            // If no options but has modifiers, show base price + Add-ons
+            if (modifiers.length > 0) {
+              const baseNum = parseFloat(dish.price.replace(/[^0-9.]/g, ""));
+              // Hide if base price is 0
+              if (!isNaN(baseNum) && baseNum > 0) {
+                return (
+                  <p className={`${priceFontSizeClasses[fontSize]} font-semibold text-foreground`}>
+                    {formatPrice(baseNum)} + Add-ons
+                  </p>
+                );
+              }
+              return null;
+            }
+            
+            // Default: format the base price, hide if 0
+            const baseNum = parseFloat(dish.price.replace(/[^0-9.]/g, ""));
+            if (isNaN(baseNum) || baseNum === 0) {
+              return null; // Don't show price if it's 0 or invalid
+            }
+            return (
+              <p className={`${priceFontSizeClasses[fontSize]} font-semibold text-foreground`}>
+                {formatPrice(baseNum)}
+              </p>
+            );
+          })()}
           {dish.calories && (
             <p className="text-xs text-muted-foreground">{dish.calories} cal</p>
           )}
