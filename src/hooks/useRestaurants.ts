@@ -28,6 +28,7 @@ export interface Restaurant {
   menu_font_size?: 'small' | 'medium' | 'large';
   image_size?: 'compact' | 'large';
   force_two_decimals?: boolean;
+  show_currency_symbol?: boolean;
   badge_colors?: {
     new_addition: string;
     special: string;

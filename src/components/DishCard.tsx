@@ -51,6 +51,7 @@ interface DishCardProps {
   imageSize?: 'compact' | 'large';
   fontSize?: 'small' | 'medium' | 'large';
   forceTwoDecimals?: boolean;
+  showCurrencySymbol?: boolean;
   badgeColors?: {
     new_addition: string;
     special: string;
@@ -67,6 +68,7 @@ const DishCard = memo(({
   imageSize = 'compact',
   fontSize = 'medium',
   forceTwoDecimals = false,
+  showCurrencySymbol = true,
   badgeColors = {
     new_addition: "34, 197, 94",
     special: "249, 115, 22",
@@ -190,13 +192,14 @@ const DishCard = memo(({
           {showPrice && (
             <p className={`${priceFontSizeClasses[fontSize]} font-semibold text-foreground`}>
               {(() => {
-                // Helper to format price based on forceTwoDecimals setting
+                // Helper to format price based on settings
+                const currencyPrefix = showCurrencySymbol ? '$' : '';
                 const formatPrice = (num: number) => {
                   if (forceTwoDecimals) {
-                    return `$${num.toFixed(2)}`;
+                    return `${currencyPrefix}${num.toFixed(2)}`;
                   }
                   // Show decimals only if not a whole number
-                  return num % 1 === 0 ? `$${num.toFixed(0)}` : `$${num.toFixed(2)}`;
+                  return num % 1 === 0 ? `${currencyPrefix}${num.toFixed(0)}` : `${currencyPrefix}${num.toFixed(2)}`;
                 };
                 
                 // If dish has options, show price range (use fresh cached data)

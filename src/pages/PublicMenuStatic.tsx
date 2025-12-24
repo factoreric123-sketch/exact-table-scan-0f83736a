@@ -389,6 +389,7 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
                   showImage={restaurant.show_images !== false}
                   imageSize={restaurant.image_size || 'compact'}
                   forceTwoDecimals={restaurant.force_two_decimals === true}
+                  showCurrencySymbol={restaurant.show_currency_symbol !== false}
                   badgeColors={restaurant.badge_colors}
                 />
               </div>
@@ -412,6 +413,7 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
                 showImage={restaurant.show_images !== false}
                 imageSize={restaurant.image_size || 'compact'}
                 forceTwoDecimals={restaurant.force_two_decimals === true}
+                showCurrencySymbol={restaurant.show_currency_symbol !== false}
                 badgeColors={restaurant.badge_colors}
               />
             </div>

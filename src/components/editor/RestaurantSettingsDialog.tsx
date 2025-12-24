@@ -122,6 +122,23 @@ export const RestaurantSettingsDialog = ({
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
+                  <Label htmlFor="show-currency" className="text-base">
+                    Show Currency Symbol
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Display $ sign before prices (disable for cleaner look)
+                  </p>
+                </div>
+                <Switch
+                  id="show-currency"
+                  checked={restaurant.show_currency_symbol !== false}
+                  onCheckedChange={(checked) => updateSetting("show_currency_symbol", checked)}
+                  disabled={isUpdating}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
                   <Label htmlFor="show-images" className="text-base">
                     Show Images
                   </Label>
