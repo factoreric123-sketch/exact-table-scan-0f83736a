@@ -98,7 +98,7 @@ const SortableItem = memo(({ id, name, price, onUpdate, onDelete, type, forceTwo
       />
       
       <div className="flex items-center gap-2 w-28">
-        <span className="text-sm text-muted-foreground">$</span>
+        <span className="text-sm text-muted-foreground">{forceTwoDecimals ? "$" : "$"}</span>
         <Input
           type="text"
           placeholder={forceTwoDecimals ? "0.00" : "0"}

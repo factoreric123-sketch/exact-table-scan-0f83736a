@@ -31,6 +31,7 @@ interface DishDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   forceTwoDecimals?: boolean;
+  showCurrencySymbol?: boolean;
 }
 
 const allergenIconMap: Record<string, any> = {
@@ -46,7 +47,7 @@ const allergenIconMap: Record<string, any> = {
   poultry: Bird,
 };
 
-export const DishDetailDialog = ({ dish, open, onOpenChange, forceTwoDecimals = false }: DishDetailDialogProps) => {
+export const DishDetailDialog = ({ dish, open, onOpenChange, forceTwoDecimals = false, showCurrencySymbol = true }: DishDetailDialogProps) => {
   if (!dish) return null;
 
   // CRITICAL FIX: Use dataUpdatedAt to detect if cache has been set (even via setQueryData)
@@ -83,11 +84,12 @@ export const DishDetailDialog = ({ dish, open, onOpenChange, forceTwoDecimals = 
     }
   }, [options]);
 
-  const formatPrice = (num: number, prefix: string = "$") => {
+  const formatPrice = (num: number, prefix: string = "") => {
+    const currencySymbol = showCurrencySymbol ? "$" : "";
     if (forceTwoDecimals) {
-      return `${prefix}${num.toFixed(2)}`;
+      return `${prefix}${currencySymbol}${num.toFixed(2)}`;
     }
-    return Number.isInteger(num) ? `${prefix}${num}` : `${prefix}${num.toFixed(2)}`;
+    return Number.isInteger(num) ? `${prefix}${currencySymbol}${num}` : `${prefix}${currencySymbol}${num.toFixed(2)}`;
   };
 
   const calculateTotalPrice = () => {
@@ -241,7 +243,7 @@ export const DishDetailDialog = ({ dish, open, onOpenChange, forceTwoDecimals = 
                     <div className="space-y-2">
                       {modifiers.map((modifier) => {
                         const priceNum = parseFloat(modifier.price.replace(/[^0-9.]/g, ""));
-                        const formattedPrice = isNaN(priceNum) ? modifier.price : formatPrice(priceNum, "+$");
+                        const formattedPrice = isNaN(priceNum) ? modifier.price : formatPrice(priceNum, "+");
                         return (
                           <Label 
                             key={modifier.id} 

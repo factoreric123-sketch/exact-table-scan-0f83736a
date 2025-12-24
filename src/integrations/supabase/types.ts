@@ -529,6 +529,7 @@ export type Database = {
           owner_id: string
           published: boolean | null
           show_allergen_filter: boolean | null
+          show_currency_symbol: boolean | null
           show_images: boolean | null
           show_prices: boolean | null
           slug: string
@@ -554,6 +555,7 @@ export type Database = {
           owner_id: string
           published?: boolean | null
           show_allergen_filter?: boolean | null
+          show_currency_symbol?: boolean | null
           show_images?: boolean | null
           show_prices?: boolean | null
           slug: string
@@ -579,6 +581,7 @@ export type Database = {
           owner_id?: string
           published?: boolean | null
           show_allergen_filter?: boolean | null
+          show_currency_symbol?: boolean | null
           show_images?: boolean | null
           show_prices?: boolean | null
           slug?: string
