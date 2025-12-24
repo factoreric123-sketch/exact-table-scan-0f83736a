@@ -88,17 +88,17 @@ export const RestaurantSettingsDialog = ({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="show-prices" className="text-base">
-                    Show Prices
+                  <Label htmlFor="force-decimals" className="text-base">
+                    Force 2 Decimal Places
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Display prices on menu (hide for special events or wine lists)
+                    Always show prices with 2 decimals (e.g., $13.00 instead of $13)
                   </p>
                 </div>
                 <Switch
-                  id="show-prices"
-                  checked={restaurant.show_prices !== false}
-                  onCheckedChange={(checked) => updateSetting("show_prices", checked)}
+                  id="force-decimals"
+                  checked={restaurant.force_two_decimals === true}
+                  onCheckedChange={(checked) => updateSetting("force_two_decimals", checked)}
                   disabled={isUpdating}
                 />
               </div>
