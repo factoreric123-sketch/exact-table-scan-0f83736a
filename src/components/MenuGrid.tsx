@@ -63,11 +63,8 @@ const MenuGrid = memo(({
     );
   }
 
-  const gridColsClass = {
-    1: 'grid-cols-1',
-    2: 'grid-cols-1 sm:grid-cols-2',
-    3: 'grid-cols-2 md:grid-cols-3'
-  }[gridColumns];
+  // 2 columns on mobile, 4 columns on desktop
+  const gridColsClass = 'grid-cols-2 lg:grid-cols-4';
 
   const gapClass = layoutDensity === 'spacious' ? 'gap-6 md:gap-8' : 'gap-4';
   const paddingClass = layoutDensity === 'spacious' ? 'px-6 py-10' : 'px-6 py-8';
