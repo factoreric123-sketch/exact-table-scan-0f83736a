@@ -178,7 +178,7 @@ export const RestaurantSettingsDialog = ({
           
           <Separator />
 
-          {/* Layout Options */}
+          {/* Layout Options - COMMENTED OUT PER USER REQUEST
           <div>
             <h3 className="text-sm font-semibold mb-4">Layout Options</h3>
             <div className="space-y-4">
@@ -256,6 +256,7 @@ export const RestaurantSettingsDialog = ({
           </div>
           
           <Separator />
+          */}
 
           {/* Badge Colors */}
           <div>
