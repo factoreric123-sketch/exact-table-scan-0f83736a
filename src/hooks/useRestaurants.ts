@@ -29,6 +29,7 @@ export interface Restaurant {
   image_size?: 'compact' | 'large';
   force_two_decimals?: boolean;
   show_currency_symbol?: boolean;
+  layout_style?: 'generic' | 'fancy';
   badge_colors?: {
     new_addition: string;
     special: string;

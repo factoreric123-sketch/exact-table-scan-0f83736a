@@ -1149,6 +1149,11 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
                   dishes={transformedDishes} 
                   sectionTitle={subcategory.name}
                   forceTwoDecimals={restaurant?.force_two_decimals === true}
+                  showCurrencySymbol={restaurant?.show_currency_symbol !== false}
+                  showPrice={restaurant?.show_prices !== false}
+                  showImage={restaurant?.show_images !== false}
+                  layoutStyle={restaurant?.layout_style || 'generic'}
+                  badgeColors={restaurant?.badge_colors}
                 />
               </div>
             );
