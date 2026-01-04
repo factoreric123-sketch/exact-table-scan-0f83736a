@@ -13,6 +13,7 @@ interface MenuGridProps {
   imageSize?: 'compact' | 'large';
   forceTwoDecimals?: boolean;
   showCurrencySymbol?: boolean;
+  layoutStyle?: 'generic' | 'fancy';
   badgeColors?: {
     new_addition: string;
     special: string;
@@ -32,6 +33,7 @@ const MenuGrid = memo(({
   imageSize = 'compact',
   forceTwoDecimals = false,
   showCurrencySymbol = true,
+  layoutStyle = 'generic',
   badgeColors
 }: MenuGridProps) => {
   const [selectedDish, setSelectedDish] = useState<DishDetail | null>(null);
@@ -66,8 +68,10 @@ const MenuGrid = memo(({
   // 2 columns on mobile, 4 columns on desktop
   const gridColsClass = 'grid-cols-2 lg:grid-cols-4';
 
-  const gapClass = layoutDensity === 'spacious' ? 'gap-6 md:gap-8' : 'gap-4';
-  const paddingClass = layoutDensity === 'spacious' ? 'px-6 py-10' : 'px-6 py-8';
+  // Fancy layout uses more spacing
+  const isFancy = layoutStyle === 'fancy';
+  const gapClass = isFancy ? 'gap-5 md:gap-6' : (layoutDensity === 'spacious' ? 'gap-6 md:gap-8' : 'gap-4');
+  const paddingClass = isFancy ? 'px-4 py-8' : (layoutDensity === 'spacious' ? 'px-6 py-10' : 'px-6 py-8');
 
   const titleSizeClass = {
     small: 'text-2xl',
@@ -91,6 +95,7 @@ const MenuGrid = memo(({
               fontSize={fontSize}
               forceTwoDecimals={forceTwoDecimals}
               showCurrencySymbol={showCurrencySymbol}
+              layoutStyle={layoutStyle}
               badgeColors={badgeColors}
             />
           ))}

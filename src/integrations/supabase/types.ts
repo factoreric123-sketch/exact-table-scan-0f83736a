@@ -524,6 +524,7 @@ export type Database = {
           id: string
           image_size: string | null
           layout_density: string | null
+          layout_style: string | null
           menu_font_size: string | null
           name: string
           owner_id: string
@@ -550,6 +551,7 @@ export type Database = {
           id?: string
           image_size?: string | null
           layout_density?: string | null
+          layout_style?: string | null
           menu_font_size?: string | null
           name: string
           owner_id: string
@@ -576,6 +578,7 @@ export type Database = {
           id?: string
           image_size?: string | null
           layout_density?: string | null
+          layout_style?: string | null
           menu_font_size?: string | null
           name?: string
           owner_id?: string

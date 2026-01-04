@@ -52,6 +52,7 @@ interface DishCardProps {
   fontSize?: 'small' | 'medium' | 'large';
   forceTwoDecimals?: boolean;
   showCurrencySymbol?: boolean;
+  layoutStyle?: 'generic' | 'fancy';
   badgeColors?: {
     new_addition: string;
     special: string;
@@ -69,6 +70,7 @@ const DishCard = memo(({
   fontSize = 'medium',
   forceTwoDecimals = false,
   showCurrencySymbol = true,
+  layoutStyle = 'generic',
   badgeColors = {
     new_addition: "34, 197, 94",
     special: "249, 115, 22",
@@ -86,6 +88,10 @@ const DishCard = memo(({
   const options = optionsUpdatedAt > 0 ? (cachedOptions || []) : (dish.options || []);
   const modifiers = modifiersUpdatedAt > 0 ? (cachedModifiers || []) : (dish.modifiers || []);
   const hasActiveOptions = options.length > 0;
+
+  // Use fancy layout if specified
+  const isFancy = layoutStyle === 'fancy';
+
   const fontSizeClasses = {
     small: 'text-sm',
     medium: 'text-base',
@@ -104,8 +110,84 @@ const DishCard = memo(({
     large: 'text-base'
   };
 
-  const aspectClass = imageSize === 'large' ? 'aspect-[4/3]' : 'aspect-square';
+  // Fancy layout uses taller aspect ratio
+  const aspectClass = isFancy ? 'aspect-[3/4]' : (imageSize === 'large' ? 'aspect-[4/3]' : 'aspect-square');
 
+  // Fancy layout - larger images with overlaid dish name at bottom
+  if (isFancy) {
+    return (
+      <div 
+        className="group relative cursor-pointer" 
+        onClick={onClick}
+      >
+        {/* Badge in top right */}
+        <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 items-end">
+          {dish.isNew && (
+            <Badge 
+              className="text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg"
+              style={{ backgroundColor: `rgb(${badgeColors.new_addition})` }}
+            >
+              New Addition
+            </Badge>
+          )}
+          {dish.isSpecial && (
+            <Badge 
+              className="text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg"
+              style={{ backgroundColor: `rgb(${badgeColors.special})` }}
+            >
+              Special
+            </Badge>
+          )}
+          {dish.isPopular && (
+            <Badge 
+              className="text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg"
+              style={{ backgroundColor: `rgb(${badgeColors.popular})` }}
+            >
+              Popular
+            </Badge>
+          )}
+          {dish.isChefRecommendation && (
+            <Badge 
+              className="text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg"
+              style={{ backgroundColor: `rgb(${badgeColors.chef_recommendation})` }}
+            >
+              Chef's Pick
+            </Badge>
+          )}
+        </div>
+        
+        {/* Image card with overlaid title */}
+        {showImage && (
+          <div className={`bg-muted rounded-2xl overflow-hidden ${aspectClass} mb-3 relative shadow-lg`}>
+            <img 
+              src={dish.image} 
+              alt={`${dish.name} - ${dish.description}`}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              loading="lazy"
+              decoding="async"
+            />
+            {/* Gradient overlay for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+            {/* Dish name overlaid at bottom */}
+            <h3 className="absolute bottom-3 left-3 right-3 text-white font-semibold text-base md:text-lg drop-shadow-lg">
+              {dish.name}
+            </h3>
+          </div>
+        )}
+        
+        {/* Description and price below card */}
+        <div className="px-0.5 space-y-1">
+          <p className="text-sm text-muted-foreground line-clamp-2">{dish.description}</p>
+          <div className="flex items-center justify-between">
+            {showPrice && renderPrice()}
+            {dish.isSpicy && <Flame className="h-4 w-4 text-red-500 flex-shrink-0" />}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Generic layout - compact cards with separate text area
   return (
     <div 
       className="group relative cursor-pointer" 
@@ -189,65 +271,7 @@ const DishCard = memo(({
         </div>
         <p className={`${descFontSizeClasses[fontSize]} text-muted-foreground mb-1.5 line-clamp-2`}>{dish.description}</p>
         <div className="flex items-center justify-between">
-          {showPrice && (() => {
-            // Helper to format price based on settings
-            const currencyPrefix = showCurrencySymbol ? '$' : '';
-            const formatPrice = (num: number) => {
-              if (forceTwoDecimals) {
-                return `${currencyPrefix}${num.toFixed(2)}`;
-              }
-              // Show decimals only if not a whole number
-              return num % 1 === 0 ? `${currencyPrefix}${num.toFixed(0)}` : `${currencyPrefix}${num.toFixed(2)}`;
-            };
-            
-            // If dish has options, show price range (use fresh cached data)
-            if (hasActiveOptions) {
-              const prices = options
-                .map(opt => {
-                  const num = parseFloat(opt.price.replace(/[^0-9.]/g, ""));
-                  return isNaN(num) ? 0 : num;
-                })
-                .filter(p => p > 0)
-                .sort((a, b) => a - b);
-              
-              if (prices.length > 0) {
-                // Get unique prices
-                const uniquePrices = Array.from(new Set(prices));
-                const priceRange = uniquePrices.map(formatPrice).join(' / ');
-                const addOns = modifiers.length > 0 ? ' + Add-ons' : '';
-                return (
-                  <p className={`${priceFontSizeClasses[fontSize]} font-semibold text-foreground`}>
-                    {priceRange + addOns}
-                  </p>
-                );
-              }
-            }
-            
-            // If no options but has modifiers, show base price + Add-ons
-            if (modifiers.length > 0) {
-              const baseNum = parseFloat(dish.price.replace(/[^0-9.]/g, ""));
-              // Hide if base price is 0
-              if (!isNaN(baseNum) && baseNum > 0) {
-                return (
-                  <p className={`${priceFontSizeClasses[fontSize]} font-semibold text-foreground`}>
-                    {formatPrice(baseNum)} + Add-ons
-                  </p>
-                );
-              }
-              return null;
-            }
-            
-            // Default: format the base price, hide if 0
-            const baseNum = parseFloat(dish.price.replace(/[^0-9.]/g, ""));
-            if (isNaN(baseNum) || baseNum === 0) {
-              return null; // Don't show price if it's 0 or invalid
-            }
-            return (
-              <p className={`${priceFontSizeClasses[fontSize]} font-semibold text-foreground`}>
-                {formatPrice(baseNum)}
-              </p>
-            );
-          })()}
+          {showPrice && renderPrice()}
           {dish.calories && (
             <p className="text-xs text-muted-foreground">{dish.calories} cal</p>
           )}
@@ -255,6 +279,60 @@ const DishCard = memo(({
       </div>
     </div>
   );
+
+  // Price rendering helper
+  function renderPrice() {
+    const currencyPrefix = showCurrencySymbol ? '$' : '';
+    const formatPrice = (num: number) => {
+      if (forceTwoDecimals) {
+        return `${currencyPrefix}${num.toFixed(2)}`;
+      }
+      return num % 1 === 0 ? `${currencyPrefix}${num.toFixed(0)}` : `${currencyPrefix}${num.toFixed(2)}`;
+    };
+    
+    if (hasActiveOptions) {
+      const prices = options
+        .map(opt => {
+          const num = parseFloat(opt.price.replace(/[^0-9.]/g, ""));
+          return isNaN(num) ? 0 : num;
+        })
+        .filter(p => p > 0)
+        .sort((a, b) => a - b);
+      
+      if (prices.length > 0) {
+        const uniquePrices = Array.from(new Set(prices));
+        const priceRange = uniquePrices.map(formatPrice).join(' / ');
+        const addOns = modifiers.length > 0 ? ' + Add-ons' : '';
+        return (
+          <p className={`${priceFontSizeClasses[fontSize]} font-semibold text-foreground`}>
+            {priceRange + addOns}
+          </p>
+        );
+      }
+    }
+    
+    if (modifiers.length > 0) {
+      const baseNum = parseFloat(dish.price.replace(/[^0-9.]/g, ""));
+      if (!isNaN(baseNum) && baseNum > 0) {
+        return (
+          <p className={`${priceFontSizeClasses[fontSize]} font-semibold text-foreground`}>
+            {formatPrice(baseNum)} + Add-ons
+          </p>
+        );
+      }
+      return null;
+    }
+    
+    const baseNum = parseFloat(dish.price.replace(/[^0-9.]/g, ""));
+    if (isNaN(baseNum) || baseNum === 0) {
+      return null;
+    }
+    return (
+      <p className={`${priceFontSizeClasses[fontSize]} font-semibold text-foreground`}>
+        {formatPrice(baseNum)}
+      </p>
+    );
+  }
 });
 
 DishCard.displayName = 'DishCard';

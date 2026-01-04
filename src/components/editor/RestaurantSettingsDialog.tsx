@@ -178,6 +178,43 @@ export const RestaurantSettingsDialog = ({
           
           <Separator />
 
+          {/* Layout Style */}
+          <div>
+            <h3 className="text-sm font-semibold mb-4">Layout Style</h3>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground mb-3">
+                Choose how your menu items are displayed
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant={restaurant.layout_style !== 'fancy' ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateSetting("layout_style", "generic")}
+                  disabled={isUpdating}
+                  className="flex-1"
+                >
+                  Generic
+                </Button>
+                <Button
+                  variant={restaurant.layout_style === 'fancy' ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateSetting("layout_style", "fancy")}
+                  disabled={isUpdating}
+                  className="flex-1"
+                >
+                  Fancy
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {restaurant.layout_style === 'fancy' 
+                  ? "Elegant cards with larger images and overlaid text"
+                  : "Classic layout with compact images and standard spacing"}
+              </p>
+            </div>
+          </div>
+
+          <Separator />
+
           {/* Layout Options - COMMENTED OUT PER USER REQUEST
           <div>
             <h3 className="text-sm font-semibold mb-4">Layout Options</h3>
