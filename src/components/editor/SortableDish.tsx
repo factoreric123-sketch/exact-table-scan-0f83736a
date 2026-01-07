@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { useDebounce } from "use-debounce";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, Image as ImageIcon, ChevronDown, Flame, Sparkles, Star, TrendingUp, ChefHat, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Leaf, Salad, DollarSign } from "lucide-react";
+import { GripVertical, Trash2, Image as ImageIcon, ChevronDown, Flame, Sparkles, Star, TrendingUp, ChefHat, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Leaf, Salad, DollarSign, Crop } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -33,9 +33,10 @@ interface SortableDishProps {
   subcategoryId: string;
   restaurantId?: string;
   forceTwoDecimals?: boolean;
+  layoutStyle?: 'generic' | 'fancy';
 }
 
-const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals }: SortableDishProps) => {
+const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals, layoutStyle = 'generic' }: SortableDishProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: dish.id,
   });
@@ -263,6 +264,15 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
           >
             <GripVertical className="h-4 w-4" />
           </button>
+          <label className="bg-background/90 backdrop-blur p-1.5 rounded-md hover:bg-background transition-colors cursor-pointer">
+            <Crop className="h-4 w-4" />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelect}
+              className="hidden"
+            />
+          </label>
           <button
             onClick={() => setShowDeleteDialog(true)}
             className="bg-background/90 backdrop-blur p-1.5 rounded-md hover:bg-destructive hover:text-destructive-foreground transition-colors"
@@ -478,6 +488,7 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
           onOpenChange={setShowCropModal}
           imageFile={selectedImage}
           onCropComplete={handleImageCrop}
+          aspectRatio={layoutStyle === 'fancy' ? 3 / 4 : 1}
         />
       )}
 
@@ -513,5 +524,5 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
 
 // Memoize - only re-render when dish ID or restaurantId changes (local state handles everything else)
 export const SortableDish = React.memo(SortableDishInner, (prev, next) => {
-  return prev.dish.id === next.dish.id && prev.subcategoryId === next.subcategoryId && prev.restaurantId === next.restaurantId && prev.forceTwoDecimals === next.forceTwoDecimals;
+  return prev.dish.id === next.dish.id && prev.subcategoryId === next.subcategoryId && prev.restaurantId === next.restaurantId && prev.forceTwoDecimals === next.forceTwoDecimals && prev.layoutStyle === next.layoutStyle;
 });
