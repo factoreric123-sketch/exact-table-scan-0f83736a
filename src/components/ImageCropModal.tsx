@@ -11,6 +11,7 @@ interface ImageCropModalProps {
   onOpenChange: (open: boolean) => void;
   imageFile: File;
   onCropComplete: (file: File) => void;
+  aspectRatio?: number; // 1 for square (generic), 3/4 for rectangle (fancy)
 }
 
 export const ImageCropModal = ({
@@ -18,6 +19,7 @@ export const ImageCropModal = ({
   onOpenChange,
   imageFile,
   onCropComplete,
+  aspectRatio = 1, // Default to square
 }: ImageCropModalProps) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -76,7 +78,7 @@ export const ImageCropModal = ({
                 image={imageSrc}
                 crop={crop}
                 zoom={zoom}
-                aspect={1}
+                aspect={aspectRatio}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onCropComplete={onCropCompleteCallback}
