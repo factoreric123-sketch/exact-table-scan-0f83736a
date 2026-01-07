@@ -204,6 +204,21 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
     }
   };
 
+  const handleCropExisting = async () => {
+    if (!dish.image_url) return;
+    
+    try {
+      // Fetch the existing image and convert to File
+      const response = await fetch(dish.image_url);
+      const blob = await response.blob();
+      const file = new File([blob], `${dish.id}-recrop.jpg`, { type: blob.type || 'image/jpeg' });
+      setSelectedImage(file);
+      setShowCropModal(true);
+    } catch (error) {
+      toast.error("Failed to load image for cropping");
+    }
+  };
+
   const handleImageCrop = async (croppedFile: File) => {
     try {
       const imageUrl = await uploadImage.mutateAsync({
@@ -264,15 +279,24 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
           >
             <GripVertical className="h-4 w-4" />
           </button>
-          <label className="bg-background/90 backdrop-blur p-1.5 rounded-md hover:bg-background transition-colors cursor-pointer">
-            <Crop className="h-4 w-4" />
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageSelect}
-              className="hidden"
-            />
-          </label>
+          {dish.image_url ? (
+            <button
+              onClick={handleCropExisting}
+              className="bg-background/90 backdrop-blur p-1.5 rounded-md hover:bg-background transition-colors"
+            >
+              <Crop className="h-4 w-4" />
+            </button>
+          ) : (
+            <label className="bg-background/90 backdrop-blur p-1.5 rounded-md hover:bg-background transition-colors cursor-pointer">
+              <Crop className="h-4 w-4" />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="hidden"
+              />
+            </label>
+          )}
           <button
             onClick={() => setShowDeleteDialog(true)}
             className="bg-background/90 backdrop-blur p-1.5 rounded-md hover:bg-destructive hover:text-destructive-foreground transition-colors"
