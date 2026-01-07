@@ -169,7 +169,7 @@ const DishCard = memo(({
             {/* Gradient overlay for text readability */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
             {/* Dish name overlaid at bottom */}
-            <h3 className="absolute bottom-3 left-3 right-3 text-white font-semibold text-base md:text-lg drop-shadow-lg">
+            <h3 className="absolute bottom-3 left-3 right-3 text-white font-semibold text-base md:text-lg drop-shadow-lg font-arial-rounded">
               {dish.name}
             </h3>
           </div>
@@ -177,7 +177,7 @@ const DishCard = memo(({
         
         {/* Description and price below card */}
         <div className="px-0.5 space-y-1">
-          <p className="text-sm text-muted-foreground line-clamp-2">{dish.description}</p>
+          <p className="text-sm text-muted-foreground line-clamp-2 font-arial-rounded">{dish.description}</p>
           <div className="flex items-center justify-between">
             {showPrice && renderPrice()}
             {dish.isSpicy && <Flame className="h-4 w-4 text-red-500 flex-shrink-0" />}

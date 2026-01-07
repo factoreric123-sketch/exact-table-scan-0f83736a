@@ -35,6 +35,7 @@ export default {
         'quicksand': ['Quicksand', 'sans-serif'],
         'barlow': ['Barlow', 'sans-serif'],
         'dm-sans': ['DM Sans', 'sans-serif'],
+        'arial-rounded': ['"Arial Rounded MT Bold"', 'Arial', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
