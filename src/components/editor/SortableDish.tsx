@@ -305,7 +305,7 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
           </button>
         </div>
 
-        <div className="bg-dish-card rounded-2xl overflow-hidden aspect-square mb-2.5 relative shadow-md group/image">
+        <div className={`bg-dish-card rounded-2xl overflow-hidden ${layoutStyle === 'fancy' ? 'aspect-[3/4]' : 'aspect-square'} mb-2.5 relative shadow-md group/image`}>
           {dish.image_url ? (
             <img 
               src={dish.image_url} 
