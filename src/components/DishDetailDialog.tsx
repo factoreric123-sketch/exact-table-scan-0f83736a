@@ -225,9 +225,9 @@ export const DishDetailDialog = ({
           </div>
 
           {/* Dish info */}
-          <div>
-            <h2 className="text-3xl font-semibold text-foreground mb-2">{dish.name}</h2>
-            <p className="text-muted-foreground leading-relaxed">{dish.description}</p>
+          <div className="text-left">
+            <h2 className="text-3xl font-semibold text-foreground mb-2 text-left">{dish.name}</h2>
+            <p className="text-muted-foreground leading-relaxed text-left">{dish.description}</p>
           </div>
 
           {/* Price and Options */}
