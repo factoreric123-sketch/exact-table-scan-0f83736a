@@ -277,3 +277,10 @@ All colors MUST be HSL.
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* Font preview classes - use !important to override global styles */
+.font-preview-inter { font-family: 'Inter', sans-serif !important; }
+.font-preview-dm-sans { font-family: 'DM Sans', sans-serif !important; }
+.font-preview-lora { font-family: 'Lora', serif !important; }
+.font-preview-playfair { font-family: 'Playfair Display', serif !important; }
+.font-preview-cormorant { font-family: 'Cormorant Garamond', serif !important; }
