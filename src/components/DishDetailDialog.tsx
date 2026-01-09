@@ -147,7 +147,7 @@ export const DishDetailDialog = ({
         <DialogContent 
           className={`rounded-xl p-0 gap-0 bg-background overflow-hidden ${fontClass} ${
             isVertical 
-              ? 'max-w-sm sm:max-w-md md:max-w-lg md:flex md:flex-row md:max-h-[80vh]' 
+              ? 'max-w-sm sm:max-w-md md:max-w-3xl md:flex md:flex-row md:h-[75vh]' 
               : 'max-w-2xl'
           }`}
         >
@@ -163,7 +163,7 @@ export const DishDetailDialog = ({
         {/* Image Section - responsive based on shape */}
         <div className={`relative bg-dish-card ${
           isVertical 
-            ? 'w-full md:w-1/2 md:flex-shrink-0' 
+            ? 'w-full md:w-1/2 md:flex-shrink-0 md:h-full' 
             : 'w-full'
         }`}>
           <img
@@ -171,7 +171,7 @@ export const DishDetailDialog = ({
             alt={dish.name}
             className={`w-full object-cover ${
               isVertical 
-                ? 'h-[65vh] sm:h-[55vh] md:h-full md:min-h-[400px]' 
+                ? 'h-[65vh] sm:h-[55vh] md:h-full' 
                 : 'h-60 md:h-96'
             }`}
           />
