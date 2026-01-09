@@ -20,7 +20,7 @@ interface UseFullMenuOptions {
 }
 
 const CACHE_KEY_PREFIX = 'fullMenu:';
-const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
+const CACHE_TTL = 1000 * 30; // 30 seconds - fast updates on mobile and desktop
 
 interface CacheEntry {
   data: FullMenuData;
