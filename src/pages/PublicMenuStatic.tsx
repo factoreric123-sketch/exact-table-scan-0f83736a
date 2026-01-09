@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from 'react';
-import { Bookmark, Share2, Menu as MenuIcon, Filter } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import CategoryNav from '@/components/CategoryNav';
@@ -254,55 +254,45 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
 
   return (
     <div key={restaurant?.updated_at} className="min-h-screen bg-background">
-      {/* Top Action Bar */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
-          <Button variant="ghost" size="icon" className="h-9 w-9">
-            <MenuIcon className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <Bookmark className="h-5 w-5" />
+      {/* Floating Filter Button */}
+      {restaurant?.show_allergen_filter !== false && filtersReady && (
+        <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
+          <SheetTrigger asChild>
+            <Button 
+              size="icon" 
+              className="fixed bottom-6 right-6 z-50 h-12 w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90"
+            >
+              <Filter className="h-5 w-5" />
+              {(selectedAllergens.length > 0 ||
+                selectedDietary.length > 0 ||
+                selectedSpicy !== null ||
+                selectedBadges.length > 0) && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
+                  {selectedAllergens.length + selectedDietary.length + selectedBadges.length + (selectedSpicy !== null ? 1 : 0)}
+                </span>
+              )}
             </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <Share2 className="h-5 w-5" />
-            </Button>
-            {restaurant?.show_allergen_filter !== false && filtersReady && (
-              <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 relative">
-                    <Filter className="h-5 w-5" />
-                    {(selectedAllergens.length > 0 ||
-                      selectedDietary.length > 0 ||
-                      selectedSpicy !== null ||
-                      selectedBadges.length > 0) && (
-                      <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full" />
-                    )}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-                  <Suspense fallback={<div className="p-4">Loading filters...</div>}>
-                    <AllergenFilter
-                      selectedAllergens={selectedAllergens}
-                      selectedDietary={selectedDietary}
-                      selectedSpicy={selectedSpicy}
-                      selectedBadges={selectedBadges}
-                      onAllergenToggle={handleAllergenToggle}
-                      onDietaryToggle={handleDietaryToggle}
-                      onSpicyToggle={handleSpicyToggle}
-                      onBadgeToggle={handleBadgeToggle}
-                      onClear={handleClearFilters}
-                      allergenOrder={restaurant.allergen_filter_order as string[] | undefined}
-                      dietaryOrder={restaurant.dietary_filter_order as string[] | undefined}
-                      badgeOrder={restaurant.badge_display_order as string[] | undefined}
-                    />
-                  </Suspense>
-                </SheetContent>
-              </Sheet>
-            )}
-          </div>
-        </div>
-      </header>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+            <Suspense fallback={<div className="p-4">Loading filters...</div>}>
+              <AllergenFilter
+                selectedAllergens={selectedAllergens}
+                selectedDietary={selectedDietary}
+                selectedSpicy={selectedSpicy}
+                selectedBadges={selectedBadges}
+                onAllergenToggle={handleAllergenToggle}
+                onDietaryToggle={handleDietaryToggle}
+                onSpicyToggle={handleSpicyToggle}
+                onBadgeToggle={handleBadgeToggle}
+                onClear={handleClearFilters}
+                allergenOrder={restaurant.allergen_filter_order as string[] | undefined}
+                dietaryOrder={restaurant.dietary_filter_order as string[] | undefined}
+                badgeOrder={restaurant.badge_display_order as string[] | undefined}
+              />
+            </Suspense>
+          </SheetContent>
+        </Sheet>
+      )}
 
       {/* Restaurant Hero */}
       <RestaurantHeader
