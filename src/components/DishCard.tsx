@@ -121,10 +121,10 @@ const DishCard = memo(({
         onClick={onClick}
       >
         {/* Badge in top right */}
-        <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 items-end">
+        <div className="absolute top-2 right-2 z-10 flex flex-col gap-1 items-end">
           {dish.isNew && (
             <Badge 
-              className="text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg"
+              className="text-white px-2 py-0.5 rounded-full text-[10px] font-medium shadow-md"
               style={{ backgroundColor: `rgb(${badgeColors.new_addition})` }}
             >
               New Addition
@@ -132,7 +132,7 @@ const DishCard = memo(({
           )}
           {dish.isSpecial && (
             <Badge 
-              className="text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg"
+              className="text-white px-2 py-0.5 rounded-full text-[10px] font-medium shadow-md"
               style={{ backgroundColor: `rgb(${badgeColors.special})` }}
             >
               Special
@@ -140,7 +140,7 @@ const DishCard = memo(({
           )}
           {dish.isPopular && (
             <Badge 
-              className="text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg"
+              className="text-white px-2 py-0.5 rounded-full text-[10px] font-medium shadow-md"
               style={{ backgroundColor: `rgb(${badgeColors.popular})` }}
             >
               Popular
@@ -148,7 +148,7 @@ const DishCard = memo(({
           )}
           {dish.isChefRecommendation && (
             <Badge 
-              className="text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg"
+              className="text-white px-2 py-0.5 rounded-full text-[10px] font-medium shadow-md"
               style={{ backgroundColor: `rgb(${badgeColors.chef_recommendation})` }}
             >
               Chef's Pick
