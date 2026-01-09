@@ -23,23 +23,19 @@ export const fontMap: Record<string, string> = {
   'Quicksand': 'quicksand',
   'Barlow': 'barlow',
   'DM Sans': 'dm-sans',
-  // New fonts for menu customization
-  'Avenir Next': 'avenir',
   'EB Garamond': 'eb-garamond',
-  'Baskerville': 'baskerville',
-  'Caslon': 'caslon',
-  'Bodoni': 'bodoni',
+  'Bodoni Moda': 'bodoni',
 };
 
 // Menu font options for the settings dialog
 export const menuFontOptions = [
-  { value: 'Avenir Next', label: 'Avenir Next' },
+  { value: 'Nunito', label: 'Nunito' },
   { value: 'Inter', label: 'Inter' },
   { value: 'EB Garamond', label: 'EB Garamond' },
-  { value: 'Baskerville', label: 'Baskerville' },
-  { value: 'Caslon', label: 'Caslon' },
+  { value: 'Libre Baskerville', label: 'Libre Baskerville' },
+  { value: 'Lora', label: 'Lora' },
   { value: 'Playfair Display', label: 'Playfair Display' },
-  { value: 'Bodoni', label: 'Bodoni' },
+  { value: 'Bodoni Moda', label: 'Bodoni Moda' },
 ];
 
 /**
