@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { getCroppedImg, compressImage } from "@/utils/imageCompression";
 import { logger } from "@/lib/logger";
+import { Square, RectangleVertical } from "lucide-react";
 
 interface ImageCropModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   imageFile: File;
   onCropComplete: (file: File) => void;
-  aspectRatio?: number; // 1 for square (generic), 3/4 for rectangle (fancy)
+  aspectRatio?: number; // Initial aspect ratio: 1 for square, 3/4 for vertical
 }
 
 export const ImageCropModal = ({
@@ -19,13 +20,27 @@ export const ImageCropModal = ({
   onOpenChange,
   imageFile,
   onCropComplete,
-  aspectRatio = 1, // Default to square
+  aspectRatio: initialAspectRatio = 1,
 }: ImageCropModalProps) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
   const [imageSrc, setImageSrc] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [selectedShape, setSelectedShape] = useState<'square' | 'vertical'>(
+    initialAspectRatio === 1 ? 'square' : 'vertical'
+  );
+
+  const currentAspectRatio = selectedShape === 'square' ? 1 : 3 / 4;
+
+  // Reset shape when modal opens with new initial aspect ratio
+  useEffect(() => {
+    if (open) {
+      setSelectedShape(initialAspectRatio === 1 ? 'square' : 'vertical');
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+    }
+  }, [open, initialAspectRatio]);
 
   // Load image when file changes
   useEffect(() => {
@@ -72,13 +87,37 @@ export const ImageCropModal = ({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Shape Toggle */}
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              type="button"
+              variant={selectedShape === 'square' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedShape('square')}
+              className="flex items-center gap-2"
+            >
+              <Square className="h-4 w-4" />
+              Square
+            </Button>
+            <Button
+              type="button"
+              variant={selectedShape === 'vertical' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedShape('vertical')}
+              className="flex items-center gap-2"
+            >
+              <RectangleVertical className="h-4 w-4" />
+              Vertical
+            </Button>
+          </div>
+
           <div className="relative w-full h-96 bg-muted">
             {imageSrc && (
               <Cropper
                 image={imageSrc}
                 crop={crop}
                 zoom={zoom}
-                aspect={aspectRatio}
+                aspect={currentAspectRatio}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onCropComplete={onCropCompleteCallback}
