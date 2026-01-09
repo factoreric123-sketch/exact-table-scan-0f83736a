@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useDishOptions } from "@/hooks/useDishOptions";
 import { useDishModifiers } from "@/hooks/useDishModifiers";
+import { getFontClassName } from "@/lib/fontUtils";
 
 export interface DishDetail {
   id: string;
@@ -32,6 +33,7 @@ interface DishDetailDialogProps {
   onOpenChange: (open: boolean) => void;
   forceTwoDecimals?: boolean;
   showCurrencySymbol?: boolean;
+  menuFont?: string;
 }
 
 const allergenIconMap: Record<string, any> = {
@@ -47,8 +49,10 @@ const allergenIconMap: Record<string, any> = {
   poultry: Bird,
 };
 
-export const DishDetailDialog = ({ dish, open, onOpenChange, forceTwoDecimals = false, showCurrencySymbol = true }: DishDetailDialogProps) => {
+export const DishDetailDialog = ({ dish, open, onOpenChange, forceTwoDecimals = false, showCurrencySymbol = true, menuFont = 'Inter' }: DishDetailDialogProps) => {
   if (!dish) return null;
+  
+  const fontClass = getFontClassName(menuFont);
 
   // CRITICAL FIX: Use dataUpdatedAt to detect if cache has been set (even via setQueryData)
   // This ensures optimistic updates are reflected immediately
@@ -130,7 +134,7 @@ export const DishDetailDialog = ({ dish, open, onOpenChange, forceTwoDecimals = 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} >
-      <DialogContent className=" max-w-2xl rounded-xl p-0 gap-0 bg-background overflow-hidden">
+      <DialogContent className={`max-w-2xl rounded-xl p-0 gap-0 bg-background overflow-hidden ${fontClass}`}>
         <Button
           variant="ghost"
           size="icon"

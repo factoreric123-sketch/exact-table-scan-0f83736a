@@ -260,6 +260,7 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
         name={restaurant?.name || 'Restaurant Menu'}
         tagline={restaurant?.tagline || ''}
         heroImageUrl={restaurant?.hero_image_url}
+        menuFont={restaurant?.menu_font || 'Inter'}
       />
 
       {/* Category & Subcategory Navigation */}
@@ -277,6 +278,7 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
                     onCategoryChange?.(category.id);
                   }
                 }}
+                menuFont={restaurant?.menu_font || 'Inter'}
               />
             </div>
           )}
@@ -331,6 +333,7 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
               const subcategory = subcategories.find((s: any) => s.name === name);
               if (subcategory) handleSubcategoryClick(subcategory.id);
             }}
+            menuFont={restaurant?.menu_font || 'Inter'}
           />
         )}
       </div>

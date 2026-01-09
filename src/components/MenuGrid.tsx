@@ -122,6 +122,7 @@ const MenuGrid = memo(({
         onOpenChange={(open) => !open && setSelectedDish(null)}
         forceTwoDecimals={forceTwoDecimals}
         showCurrencySymbol={showCurrencySymbol}
+        menuFont={menuFont}
       />
     </>
   );

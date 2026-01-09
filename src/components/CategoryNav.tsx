@@ -1,15 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { memo } from "react";
+import { getFontClassName } from "@/lib/fontUtils";
 
 interface CategoryNavProps {
   categories: string[];
   activeCategory: string;
   onCategoryChange: (category: string) => void;
+  menuFont?: string;
 }
 
-const CategoryNav = memo(({ categories, activeCategory, onCategoryChange }: CategoryNavProps) => {
+const CategoryNav = memo(({ categories, activeCategory, onCategoryChange, menuFont = 'Inter' }: CategoryNavProps) => {
+  const fontClass = getFontClassName(menuFont);
+  
   return (
-    <nav className="flex gap-3 overflow-x-auto pb-3 pt-4 px-4 scrollbar-hide">
+    <nav className={`flex gap-3 overflow-x-auto pb-3 pt-4 px-4 scrollbar-hide ${fontClass}`}>
       {categories.map((category) => (
         <Button
           key={category}
