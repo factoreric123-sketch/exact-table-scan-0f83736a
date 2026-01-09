@@ -29,11 +29,11 @@ export const fontMap: Record<string, string> = {
 
 // Menu font options - 5 curated fonts perfect for restaurant menus
 export const menuFontOptions = [
-  { value: 'Inter', label: 'Inter' },                         // Clean modern sans
-  { value: 'DM Sans', label: 'DM Sans' },                     // Friendly geometric  
-  { value: 'Lora', label: 'Lora' },                           // Warm readable serif
-  { value: 'Playfair Display', label: 'Playfair Display' },   // Elegant upscale
-  { value: 'Cormorant Garamond', label: 'Cormorant Garamond' }, // Refined sophisticated
+  { value: 'Inter', label: 'Inter' },
+  { value: 'DM Sans', label: 'DM Sans' },
+  { value: 'Lora', label: 'Lora' },
+  { value: 'Playfair Display', label: 'Playfair Display' },
+  { value: 'Cormorant Garamond', label: 'Cormorant Garamond' },
 ];
 
 /**

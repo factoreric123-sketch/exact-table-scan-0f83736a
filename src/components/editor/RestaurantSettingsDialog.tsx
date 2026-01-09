@@ -247,15 +247,19 @@ export const RestaurantSettingsDialog = ({
                     <SelectValue placeholder="Select a font" />
                   </SelectTrigger>
                   <SelectContent>
-                    {menuFontOptions.map((font) => (
-                      <SelectItem 
-                        key={font.value} 
-                        value={font.value}
-                        className={getFontClassName(font.value)}
-                      >
-                        {font.label}
-                      </SelectItem>
-                    ))}
+                    {menuFontOptions.map((font) => {
+                      const fontClass = getFontClassName(font.value);
+                      return (
+                        <SelectItem 
+                          key={font.value} 
+                          value={font.value}
+                        >
+                          <span className={fontClass} style={{ fontFamily: font.value }}>
+                            {font.label}
+                          </span>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-2">
