@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import React from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { X, Flame, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Salad } from "lucide-react";
+import { ArrowLeft, Flame, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Salad } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -133,22 +133,24 @@ export const DishDetailDialog = ({ dish, open, onOpenChange, forceTwoDecimals = 
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} >
-      <DialogContent className={`max-w-2xl rounded-xl p-0 gap-0 bg-background overflow-hidden ${fontClass}`}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className={`fixed inset-0 w-full h-full max-w-none max-h-none rounded-none p-0 gap-0 bg-background overflow-y-auto border-none ${fontClass}`}>
+        {/* Back button */}
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-4 top-4 z-10 rounded-full bg-background/80 backdrop-blur-sm transition-all duration-150 active:scale-95"
+          className="fixed left-4 top-4 z-50 rounded-full bg-background/80 backdrop-blur-sm transition-all duration-150 active:scale-95 h-10 w-10"
           onClick={() => onOpenChange(false)}
         >
-          <X className="h-4 w-4" />
+          <ArrowLeft className="h-5 w-5" />
         </Button>
 
-        <div className="relative w-full  bg-dish-card">
+        {/* Full-width image - no cropping */}
+        <div className="relative w-full flex items-center justify-center bg-muted/30 min-h-[40vh]">
           <img
             src={dish.image}
             alt={dish.name}
-            className="w-full h-60 md:h-96 object-cover"
+            className="w-full h-auto max-h-[60vh] object-contain"
           />
         </div>
 
