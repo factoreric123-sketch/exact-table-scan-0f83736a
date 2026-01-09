@@ -171,7 +171,7 @@ export const DishDetailDialog = ({
             alt={dish.name}
             className={`w-full object-cover ${
               isVertical 
-                ? 'h-64 sm:h-80 md:h-full md:min-h-[400px]' 
+                ? 'h-[65vh] sm:h-[55vh] md:h-full md:min-h-[400px]' 
                 : 'h-60 md:h-96'
             }`}
           />
