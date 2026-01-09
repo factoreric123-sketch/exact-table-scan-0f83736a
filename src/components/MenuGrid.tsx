@@ -123,6 +123,7 @@ const MenuGrid = memo(({
         forceTwoDecimals={forceTwoDecimals}
         showCurrencySymbol={showCurrencySymbol}
         menuFont={menuFont}
+        cardImageShape={cardImageShape}
       />
     </>
   );

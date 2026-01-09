@@ -34,6 +34,7 @@ interface DishDetailDialogProps {
   forceTwoDecimals?: boolean;
   showCurrencySymbol?: boolean;
   menuFont?: string;
+  cardImageShape?: 'square' | 'vertical';
 }
 
 const allergenIconMap: Record<string, any> = {
@@ -49,10 +50,19 @@ const allergenIconMap: Record<string, any> = {
   poultry: Bird,
 };
 
-export const DishDetailDialog = ({ dish, open, onOpenChange, forceTwoDecimals = false, showCurrencySymbol = true, menuFont = 'Inter' }: DishDetailDialogProps) => {
+export const DishDetailDialog = ({ 
+  dish, 
+  open, 
+  onOpenChange, 
+  forceTwoDecimals = false, 
+  showCurrencySymbol = true, 
+  menuFont = 'Inter',
+  cardImageShape = 'square'
+}: DishDetailDialogProps) => {
   if (!dish) return null;
   
   const fontClass = getFontClassName(menuFont);
+  const isVertical = cardImageShape === 'vertical';
 
   // CRITICAL FIX: Use dataUpdatedAt to detect if cache has been set (even via setQueryData)
   // This ensures optimistic updates are reflected immediately
@@ -134,7 +144,13 @@ export const DishDetailDialog = ({ dish, open, onOpenChange, forceTwoDecimals = 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} >
-      <DialogContent className={`max-w-2xl rounded-xl p-0 gap-0 bg-background overflow-hidden ${fontClass}`}>
+        <DialogContent 
+          className={`rounded-xl p-0 gap-0 bg-background overflow-hidden ${fontClass} ${
+            isVertical 
+              ? 'max-w-sm sm:max-w-md md:max-w-lg md:flex md:flex-row md:max-h-[80vh]' 
+              : 'max-w-2xl'
+          }`}
+        >
         <Button
           variant="ghost"
           size="icon"
@@ -144,15 +160,29 @@ export const DishDetailDialog = ({ dish, open, onOpenChange, forceTwoDecimals = 
           <X className="h-4 w-4" />
         </Button>
 
-        <div className="relative w-full  bg-dish-card">
+        {/* Image Section - responsive based on shape */}
+        <div className={`relative bg-dish-card ${
+          isVertical 
+            ? 'w-full md:w-1/2 md:flex-shrink-0' 
+            : 'w-full'
+        }`}>
           <img
             src={dish.image}
             alt={dish.name}
-            className="w-full h-60 md:h-96 object-cover"
+            className={`w-full object-cover ${
+              isVertical 
+                ? 'h-64 sm:h-80 md:h-full md:min-h-[400px]' 
+                : 'h-60 md:h-96'
+            }`}
           />
         </div>
 
-        <div className="p-6 space-y-4">
+        {/* Content Section */}
+        <div className={`p-6 space-y-4 ${
+          isVertical 
+            ? 'md:w-1/2 md:overflow-y-auto' 
+            : ''
+        }`}>
           {/* Allergen badges */}
           {dish.allergens && dish.allergens.length > 0 && (
             <div className="flex flex-wrap gap-2">
