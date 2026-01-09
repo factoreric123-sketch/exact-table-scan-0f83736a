@@ -232,7 +232,7 @@ export const RestaurantSettingsDialog = ({
                 />
               </div>
 
-              {/* Menu Font */}
+              {/* Menu Font - COMMENTED OUT: Font preview not rendering correctly
               <div>
                 <Label className="text-base mb-2 block">Menu Font</Label>
                 <p className="text-sm text-muted-foreground mb-3">
@@ -262,6 +262,7 @@ export const RestaurantSettingsDialog = ({
                   Preview: <span className={`${getFontClassName(restaurant.menu_font || 'Inter')} font-bold`}>Bold Title</span> / <span className={getFontClassName(restaurant.menu_font || 'Inter')}>Description text</span>
                 </p>
               </div>
+              */}
             </div>
           </div>
 
