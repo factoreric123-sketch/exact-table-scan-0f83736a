@@ -515,6 +515,7 @@ export type Database = {
           allergen_filter_order: Json | null
           badge_colors: Json | null
           badge_display_order: Json | null
+          card_image_shape: string | null
           created_at: string | null
           dietary_filter_order: Json | null
           editor_view_mode: string | null
@@ -525,6 +526,7 @@ export type Database = {
           image_size: string | null
           layout_density: string | null
           layout_style: string | null
+          menu_font: string | null
           menu_font_size: string | null
           name: string
           owner_id: string
@@ -535,6 +537,7 @@ export type Database = {
           show_prices: boolean | null
           slug: string
           tagline: string | null
+          text_overlay: boolean | null
           theme: Json | null
           updated_at: string | null
         }
@@ -542,6 +545,7 @@ export type Database = {
           allergen_filter_order?: Json | null
           badge_colors?: Json | null
           badge_display_order?: Json | null
+          card_image_shape?: string | null
           created_at?: string | null
           dietary_filter_order?: Json | null
           editor_view_mode?: string | null
@@ -552,6 +556,7 @@ export type Database = {
           image_size?: string | null
           layout_density?: string | null
           layout_style?: string | null
+          menu_font?: string | null
           menu_font_size?: string | null
           name: string
           owner_id: string
@@ -562,6 +567,7 @@ export type Database = {
           show_prices?: boolean | null
           slug: string
           tagline?: string | null
+          text_overlay?: boolean | null
           theme?: Json | null
           updated_at?: string | null
         }
@@ -569,6 +575,7 @@ export type Database = {
           allergen_filter_order?: Json | null
           badge_colors?: Json | null
           badge_display_order?: Json | null
+          card_image_shape?: string | null
           created_at?: string | null
           dietary_filter_order?: Json | null
           editor_view_mode?: string | null
@@ -579,6 +586,7 @@ export type Database = {
           image_size?: string | null
           layout_density?: string | null
           layout_style?: string | null
+          menu_font?: string | null
           menu_font_size?: string | null
           name?: string
           owner_id?: string
@@ -589,6 +597,7 @@ export type Database = {
           show_prices?: boolean | null
           slug?: string
           tagline?: string | null
+          text_overlay?: boolean | null
           theme?: Json | null
           updated_at?: string | null
         }
