@@ -148,7 +148,7 @@ export const DishDetailDialog = ({
           className={`rounded-xl p-0 gap-0 bg-background overflow-hidden ${fontClass} ${
             isVertical 
               ? 'max-w-sm sm:max-w-md md:max-w-3xl md:flex md:flex-row md:h-[75vh]' 
-              : 'max-w-2xl'
+              : 'max-w-[95vw] sm:max-w-lg md:max-w-4xl md:flex md:flex-row md:h-[70vh]'
           }`}
         >
         <Button
@@ -164,7 +164,7 @@ export const DishDetailDialog = ({
         <div className={`relative bg-dish-card ${
           isVertical 
             ? 'w-full md:w-1/2 md:flex-shrink-0 md:h-full' 
-            : 'w-full'
+            : 'w-full md:w-1/2 md:flex-shrink-0 md:h-full'
         }`}>
           <img
             src={dish.image}
@@ -172,7 +172,7 @@ export const DishDetailDialog = ({
             className={`w-full object-cover ${
               isVertical 
                 ? 'h-[65vh] sm:h-[55vh] md:h-full' 
-                : 'h-60 md:h-96'
+                : 'h-[50vh] sm:h-[45vh] md:h-full'
             }`}
           />
         </div>
@@ -181,7 +181,7 @@ export const DishDetailDialog = ({
         <div className={`p-6 space-y-4 ${
           isVertical 
             ? 'md:w-1/2 md:overflow-y-auto' 
-            : ''
+            : 'md:w-1/2 md:overflow-y-auto'
         }`}>
           {/* Allergen badges */}
           {dish.allergens && dish.allergens.length > 0 && (
