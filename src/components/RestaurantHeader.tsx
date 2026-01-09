@@ -178,6 +178,7 @@ import { InlineEdit } from "./editor/InlineEdit";
 import { Camera } from "lucide-react";
 import { toast } from "sonner";
 import heroImage from "@/assets/restaurant-hero.jpg";
+import { getFontClassName } from "@/lib/fontUtils";
 
 interface RestaurantHeaderProps {
   name: string;
@@ -185,6 +186,7 @@ interface RestaurantHeaderProps {
   heroImageUrl?: string | null;
   editable?: boolean;
   restaurantId?: string;
+  menuFont?: string;
 }
 
 const RestaurantHeader = memo(({ 
@@ -192,8 +194,10 @@ const RestaurantHeader = memo(({
   tagline = "", 
   heroImageUrl, 
   editable = false, 
-  restaurantId 
+  restaurantId,
+  menuFont = 'Inter'
 }: RestaurantHeaderProps) => {
+  const fontClass = getFontClassName(menuFont);
   const uploadImage = useImageUpload();
   const updateRestaurant = useUpdateRestaurant();
   const [showCropModal, setShowCropModal] = useState(false);
@@ -287,7 +291,7 @@ const RestaurantHeader = memo(({
 
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent pointer-events-none" />
         
-        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 z-20">
+        <div className={`absolute bottom-0 left-0 right-0 p-4 sm:p-6 z-20 ${fontClass}`}>
           {editable ? (
             <>
               <InlineEdit

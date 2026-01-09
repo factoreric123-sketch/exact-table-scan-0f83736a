@@ -1,14 +1,18 @@
 import { memo } from "react";
+import { getFontClassName } from "@/lib/fontUtils";
 
 interface SubcategoryNavProps {
   subcategories: string[];
   activeSubcategory: string;
   onSubcategoryChange: (subcategory: string) => void;
+  menuFont?: string;
 }
 
-const SubcategoryNav = memo(({ subcategories, activeSubcategory, onSubcategoryChange }: SubcategoryNavProps) => {
+const SubcategoryNav = memo(({ subcategories, activeSubcategory, onSubcategoryChange, menuFont = 'Inter' }: SubcategoryNavProps) => {
+  const fontClass = getFontClassName(menuFont);
+  
   return (
-    <nav className="flex gap-8 overflow-x-auto px-4 pb-3">
+    <nav className={`flex gap-8 overflow-x-auto px-4 pb-3 ${fontClass}`}>
       {subcategories.map((subcategory) => (
         <button
           key={subcategory}
