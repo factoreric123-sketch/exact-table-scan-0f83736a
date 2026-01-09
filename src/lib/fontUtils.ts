@@ -27,15 +27,13 @@ export const fontMap: Record<string, string> = {
   'Bodoni Moda': 'bodoni',
 };
 
-// Menu font options for the settings dialog
+// Menu font options - 5 curated fonts perfect for restaurant menus
 export const menuFontOptions = [
-  { value: 'Nunito', label: 'Nunito' },
-  { value: 'Inter', label: 'Inter' },
-  { value: 'EB Garamond', label: 'EB Garamond' },
-  { value: 'Libre Baskerville', label: 'Libre Baskerville' },
-  { value: 'Lora', label: 'Lora' },
-  { value: 'Playfair Display', label: 'Playfair Display' },
-  { value: 'Bodoni Moda', label: 'Bodoni Moda' },
+  { value: 'Inter', label: 'Inter' },                         // Clean modern sans
+  { value: 'DM Sans', label: 'DM Sans' },                     // Friendly geometric  
+  { value: 'Lora', label: 'Lora' },                           // Warm readable serif
+  { value: 'Playfair Display', label: 'Playfair Display' },   // Elegant upscale
+  { value: 'Cormorant Garamond', label: 'Cormorant Garamond' }, // Refined sophisticated
 ];
 
 /**
