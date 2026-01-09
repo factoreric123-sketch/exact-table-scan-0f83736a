@@ -251,9 +251,10 @@ export const RestaurantSettingsDialog = ({
                       <SelectItem 
                         key={font.value} 
                         value={font.value}
-                        style={{ fontFamily: `"${font.value}", sans-serif` }}
                       >
-                        {font.label}
+                        <span style={{ fontFamily: `"${font.value}", sans-serif` }}>
+                          {font.label}
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
