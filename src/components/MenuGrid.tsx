@@ -1,6 +1,7 @@
 import { useState, memo, useCallback } from "react";
 import DishCard, { Dish } from "./DishCard";
 import { DishDetailDialog, DishDetail } from "./DishDetailDialog";
+import { getFontClassName } from "@/lib/fontUtils";
 
 interface MenuGridProps {
   dishes: Dish[];
@@ -20,6 +21,10 @@ interface MenuGridProps {
     popular: string;
     chef_recommendation: string;
   };
+  // New customization options
+  cardImageShape?: 'square' | 'vertical';
+  textOverlay?: boolean;
+  menuFont?: string;
 }
 
 const MenuGrid = memo(({ 
@@ -34,7 +39,10 @@ const MenuGrid = memo(({
   forceTwoDecimals = false,
   showCurrencySymbol = true,
   layoutStyle = 'generic',
-  badgeColors
+  badgeColors,
+  cardImageShape = 'square',
+  textOverlay = false,
+  menuFont = 'Inter',
 }: MenuGridProps) => {
   const [selectedDish, setSelectedDish] = useState<DishDetail | null>(null);
 
@@ -68,10 +76,10 @@ const MenuGrid = memo(({
   // 2 columns on mobile, 4 columns on desktop
   const gridColsClass = 'grid-cols-2 lg:grid-cols-4';
 
-  // Fancy layout uses more spacing
-  const isFancy = layoutStyle === 'fancy';
-  const gapClass = isFancy ? 'gap-5 md:gap-6' : (layoutDensity === 'spacious' ? 'gap-6 md:gap-8' : 'gap-4');
-  const paddingClass = isFancy ? 'px-4 py-8' : (layoutDensity === 'spacious' ? 'px-6 py-10' : 'px-6 py-8');
+  // Text overlay uses more spacing
+  const useOverlay = textOverlay || layoutStyle === 'fancy';
+  const gapClass = useOverlay ? 'gap-5 md:gap-6' : (layoutDensity === 'spacious' ? 'gap-6 md:gap-8' : 'gap-4');
+  const paddingClass = useOverlay ? 'px-4 py-8' : (layoutDensity === 'spacious' ? 'px-6 py-10' : 'px-6 py-8');
 
   const titleSizeClass = {
     small: 'text-2xl',
@@ -79,9 +87,12 @@ const MenuGrid = memo(({
     large: 'text-4xl'
   }[fontSize];
 
+  // Get font class for menu font
+  const fontClass = getFontClassName(menuFont);
+
   return (
     <>
-      <div className={paddingClass} style={{ contentVisibility: 'auto' }}>
+      <div className={`${paddingClass} ${fontClass}`} style={{ contentVisibility: 'auto' }}>
         <h2 className={`${titleSizeClass} font-bold text-foreground mb-6`}>{sectionTitle}</h2>
         <div className={`grid ${gridColsClass} ${gapClass}`}>
           {dishes.map((dish) => (
@@ -97,6 +108,9 @@ const MenuGrid = memo(({
               showCurrencySymbol={showCurrencySymbol}
               layoutStyle={layoutStyle}
               badgeColors={badgeColors}
+              cardImageShape={cardImageShape}
+              textOverlay={textOverlay}
+              menuFont={menuFont}
             />
           ))}
         </div>

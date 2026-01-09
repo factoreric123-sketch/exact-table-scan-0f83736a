@@ -4,12 +4,14 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Restaurant } from "@/hooks/useRestaurants";
 import { useUpdateRestaurant } from "@/hooks/useRestaurants";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { Loader2 } from "lucide-react";
+import { Loader2, Square, RectangleVertical } from "lucide-react";
+import { menuFontOptions, getFontClassName } from "@/lib/fontUtils";
 
 interface RestaurantSettingsDialogProps {
   open: boolean;
@@ -178,38 +180,88 @@ export const RestaurantSettingsDialog = ({
           
           <Separator />
 
-          {/* Layout Style */}
+          {/* Menu Customization */}
           <div>
-            <h3 className="text-sm font-semibold mb-4">Layout Style</h3>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground mb-3">
-                Choose how your menu items are displayed
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant={restaurant.layout_style !== 'fancy' ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => updateSetting("layout_style", "generic")}
-                  disabled={isUpdating}
-                  className="flex-1"
-                >
-                  Generic
-                </Button>
-                <Button
-                  variant={restaurant.layout_style === 'fancy' ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => updateSetting("layout_style", "fancy")}
-                  disabled={isUpdating}
-                  className="flex-1"
-                >
-                  Fancy
-                </Button>
+            <h3 className="text-sm font-semibold mb-4">Menu Customization</h3>
+            <div className="space-y-5">
+              {/* Image Shape */}
+              <div>
+                <Label className="text-base mb-2 block">Image Shape</Label>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Choose the aspect ratio for dish images
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant={restaurant.card_image_shape !== 'vertical' ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => updateSetting("card_image_shape", "square")}
+                    disabled={isUpdating}
+                    className="flex-1 gap-2"
+                  >
+                    <Square className="h-4 w-4" />
+                    Square
+                  </Button>
+                  <Button
+                    variant={restaurant.card_image_shape === 'vertical' ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => updateSetting("card_image_shape", "vertical")}
+                    disabled={isUpdating}
+                    className="flex-1 gap-2"
+                  >
+                    <RectangleVertical className="h-4 w-4" />
+                    Vertical
+                  </Button>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                {restaurant.layout_style === 'fancy' 
-                  ? "Elegant cards with larger images and overlaid text"
-                  : "Classic layout with compact images and standard spacing"}
-              </p>
+
+              {/* Text Overlay */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="text-overlay" className="text-base">
+                    Text Overlay
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Display dish name overlaid on the image
+                  </p>
+                </div>
+                <Switch
+                  id="text-overlay"
+                  checked={restaurant.text_overlay === true}
+                  onCheckedChange={(checked) => updateSetting("text_overlay", checked)}
+                  disabled={isUpdating}
+                />
+              </div>
+
+              {/* Menu Font */}
+              <div>
+                <Label className="text-base mb-2 block">Menu Font</Label>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Choose a font for all menu text
+                </p>
+                <Select
+                  value={restaurant.menu_font || 'Inter'}
+                  onValueChange={(value) => updateSetting("menu_font", value)}
+                  disabled={isUpdating}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a font" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {menuFontOptions.map((font) => (
+                      <SelectItem 
+                        key={font.value} 
+                        value={font.value}
+                        className={getFontClassName(font.value)}
+                      >
+                        {font.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Preview: <span className={`${getFontClassName(restaurant.menu_font || 'Inter')} font-bold`}>Bold Title</span> / <span className={getFontClassName(restaurant.menu_font || 'Inter')}>Description text</span>
+                </p>
+              </div>
             </div>
           </div>
 

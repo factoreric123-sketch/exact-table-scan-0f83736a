@@ -36,6 +36,10 @@ export interface Restaurant {
     popular: string;
     chef_recommendation: string;
   };
+  // New customization options
+  card_image_shape?: 'square' | 'vertical';
+  text_overlay?: boolean;
+  menu_font?: string;
 }
 
 export const useRestaurants = () => {

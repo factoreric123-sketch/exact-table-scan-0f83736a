@@ -388,6 +388,9 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
                   showCurrencySymbol={restaurant.show_currency_symbol !== false}
                   layoutStyle={restaurant.layout_style || 'generic'}
                   badgeColors={restaurant.badge_colors}
+                  cardImageShape={restaurant.card_image_shape || 'square'}
+                  textOverlay={restaurant.text_overlay === true}
+                  menuFont={restaurant.menu_font || 'Inter'}
                 />
               </div>
             );
@@ -413,6 +416,9 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
                 showCurrencySymbol={restaurant.show_currency_symbol !== false}
                 layoutStyle={restaurant.layout_style || 'generic'}
                 badgeColors={restaurant.badge_colors}
+                cardImageShape={restaurant.card_image_shape || 'square'}
+                textOverlay={restaurant.text_overlay === true}
+                menuFont={restaurant.menu_font || 'Inter'}
               />
             </div>
           );
