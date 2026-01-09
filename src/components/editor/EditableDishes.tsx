@@ -219,6 +219,7 @@ export const EditableDishes = ({
                 restaurantId={restaurant?.id}
                 forceTwoDecimals={restaurant?.force_two_decimals === true}
                 layoutStyle={restaurant?.layout_style || 'generic'}
+                cardImageShape={restaurant?.card_image_shape || 'square'}
               />
             ))}
           </div>

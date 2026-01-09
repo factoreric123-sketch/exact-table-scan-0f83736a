@@ -34,9 +34,10 @@ interface SortableDishProps {
   restaurantId?: string;
   forceTwoDecimals?: boolean;
   layoutStyle?: 'generic' | 'fancy';
+  cardImageShape?: 'square' | 'vertical';
 }
 
-const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals, layoutStyle = 'generic' }: SortableDishProps) => {
+const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals, layoutStyle = 'generic', cardImageShape = 'square' }: SortableDishProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: dish.id,
   });
@@ -512,7 +513,7 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
           onOpenChange={setShowCropModal}
           imageFile={selectedImage}
           onCropComplete={handleImageCrop}
-          aspectRatio={layoutStyle === 'fancy' ? 3 / 4 : 1}
+          aspectRatio={cardImageShape === 'vertical' ? 3 / 4 : 1}
         />
       )}
 
