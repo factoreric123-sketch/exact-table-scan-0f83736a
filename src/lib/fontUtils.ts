@@ -23,7 +23,24 @@ export const fontMap: Record<string, string> = {
   'Quicksand': 'quicksand',
   'Barlow': 'barlow',
   'DM Sans': 'dm-sans',
+  // New fonts for menu customization
+  'Avenir Next': 'avenir',
+  'EB Garamond': 'eb-garamond',
+  'Baskerville': 'baskerville',
+  'Caslon': 'caslon',
+  'Bodoni': 'bodoni',
 };
+
+// Menu font options for the settings dialog
+export const menuFontOptions = [
+  { value: 'Avenir Next', label: 'Avenir Next' },
+  { value: 'Inter', label: 'Inter' },
+  { value: 'EB Garamond', label: 'EB Garamond' },
+  { value: 'Baskerville', label: 'Baskerville' },
+  { value: 'Caslon', label: 'Caslon' },
+  { value: 'Playfair Display', label: 'Playfair Display' },
+  { value: 'Bodoni', label: 'Bodoni' },
+];
 
 /**
  * Convert font family name to Tailwind class name

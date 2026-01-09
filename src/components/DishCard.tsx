@@ -3,6 +3,7 @@ import { Flame, Sparkles, Star, TrendingUp, ChefHat, Wheat, Milk, Egg, Fish, She
 import React, { memo } from "react";
 import { useDishOptions } from "@/hooks/useDishOptions";
 import { useDishModifiers } from "@/hooks/useDishModifiers";
+import { getFontClassName } from "@/lib/fontUtils";
 
 // Capitalize helper
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
@@ -52,13 +53,17 @@ interface DishCardProps {
   fontSize?: 'small' | 'medium' | 'large';
   forceTwoDecimals?: boolean;
   showCurrencySymbol?: boolean;
-  layoutStyle?: 'generic' | 'fancy';
+  layoutStyle?: 'generic' | 'fancy'; // Keep for backwards compatibility
   badgeColors?: {
     new_addition: string;
     special: string;
     popular: string;
     chef_recommendation: string;
   };
+  // New customization options
+  cardImageShape?: 'square' | 'vertical';
+  textOverlay?: boolean;
+  menuFont?: string;
 }
 
 const DishCard = memo(({ 
@@ -76,7 +81,10 @@ const DishCard = memo(({
     special: "249, 115, 22",
     popular: "6, 182, 212",
     chef_recommendation: "59, 130, 246",
-  }
+  },
+  cardImageShape = 'square',
+  textOverlay = false,
+  menuFont = 'Inter',
 }: DishCardProps) => {
   // Use React Query cache for fresh options/modifiers data
   // CRITICAL: Use dataUpdatedAt to detect if cache has been set (even via setQueryData)
@@ -89,8 +97,12 @@ const DishCard = memo(({
   const modifiers = modifiersUpdatedAt > 0 ? (cachedModifiers || []) : (dish.modifiers || []);
   const hasActiveOptions = options.length > 0;
 
-  // Use fancy layout if specified
-  const isFancy = layoutStyle === 'fancy';
+  // Use new customization options (fallback to layoutStyle for backwards compatibility)
+  const useTextOverlay = textOverlay || layoutStyle === 'fancy';
+  const isVertical = cardImageShape === 'vertical' || layoutStyle === 'fancy';
+
+  // Get font class for the menu font
+  const fontClass = getFontClassName(menuFont);
 
   const fontSizeClasses = {
     small: 'text-sm',
@@ -110,14 +122,14 @@ const DishCard = memo(({
     large: 'text-base'
   };
 
-  // Fancy layout uses taller aspect ratio
-  const aspectClass = isFancy ? 'aspect-[3/4]' : (imageSize === 'large' ? 'aspect-[4/3]' : 'aspect-square');
+  // Aspect ratio based on image shape
+  const aspectClass = isVertical ? 'aspect-[3/4]' : 'aspect-square';
 
-  // Fancy layout - larger images with overlaid dish name at bottom
-  if (isFancy) {
+  // Text overlay layout - larger images with overlaid dish name at bottom
+  if (useTextOverlay) {
     return (
       <div 
-        className="group relative cursor-pointer" 
+        className={`group relative cursor-pointer ${fontClass}`} 
         onClick={onClick}
       >
         {/* Badge in top right */}
@@ -169,7 +181,7 @@ const DishCard = memo(({
             {/* Gradient overlay for text readability */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
             {/* Dish name overlaid at bottom */}
-            <h3 className="absolute bottom-3 left-3 right-3 text-white font-semibold text-base md:text-lg drop-shadow-lg font-arial-rounded">
+            <h3 className="absolute bottom-3 left-3 right-3 text-white font-bold text-base md:text-lg drop-shadow-lg">
               {dish.name}
             </h3>
           </div>
@@ -177,7 +189,7 @@ const DishCard = memo(({
         
         {/* Description and price below card */}
         <div className="px-0.5 space-y-1">
-          <p className="text-sm text-muted-foreground line-clamp-2 font-arial-rounded">{dish.description}</p>
+          <p className="text-sm text-muted-foreground line-clamp-2">{dish.description}</p>
           <div className="flex items-center justify-between">
             {showPrice && renderPrice()}
             {dish.isSpicy && <Flame className="h-4 w-4 text-red-500 flex-shrink-0" />}
@@ -187,16 +199,16 @@ const DishCard = memo(({
     );
   }
 
-  // Generic layout - compact cards with separate text area
+  // Standard layout - compact cards with separate text area
   return (
     <div 
-      className="group relative cursor-pointer" 
+      className={`group relative cursor-pointer ${fontClass}`} 
       onClick={onClick}
     >
       <div className="absolute top-2 right-2 z-10 flex flex-col gap-1 items-end">
         {dish.isNew && (
           <Badge 
-            className="text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg"
+            className="text-white px-2 py-0.5 rounded-full text-[10px] font-medium shadow-md"
             style={{ backgroundColor: `rgb(${badgeColors.new_addition})` }}
           >
             New Addition
@@ -204,7 +216,7 @@ const DishCard = memo(({
         )}
         {dish.isSpecial && (
           <Badge 
-            className="text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg"
+            className="text-white px-2 py-0.5 rounded-full text-[10px] font-medium shadow-md"
             style={{ backgroundColor: `rgb(${badgeColors.special})` }}
           >
             Special
@@ -212,7 +224,7 @@ const DishCard = memo(({
         )}
         {dish.isPopular && (
           <Badge 
-            className="text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg"
+            className="text-white px-2 py-0.5 rounded-full text-[10px] font-medium shadow-md"
             style={{ backgroundColor: `rgb(${badgeColors.popular})` }}
           >
             Popular
@@ -220,10 +232,10 @@ const DishCard = memo(({
         )}
         {dish.isChefRecommendation && (
           <Badge 
-            className="text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg"
+            className="text-white px-2 py-0.5 rounded-full text-[10px] font-medium shadow-md"
             style={{ backgroundColor: `rgb(${badgeColors.chef_recommendation})` }}
           >
-            Chef's Recommendation
+            Chef's Pick
           </Badge>
         )}
       </div>

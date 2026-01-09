@@ -36,6 +36,12 @@ export default {
         'barlow': ['Barlow', 'sans-serif'],
         'dm-sans': ['DM Sans', 'sans-serif'],
         'arial-rounded': ['"Arial Rounded MT Bold"', 'Arial', 'sans-serif'],
+        // New fonts for menu customization
+        'avenir': ['Avenir Next', 'Avenir', 'system-ui', 'sans-serif'],
+        'eb-garamond': ['EB Garamond', 'serif'],
+        'baskerville': ['Libre Baskerville', 'Baskerville', 'serif'],
+        'caslon': ['Cormorant Garamond', 'serif'], // Caslon substitute
+        'bodoni': ['Bodoni Moda', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
