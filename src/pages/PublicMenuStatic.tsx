@@ -6,6 +6,7 @@ import CategoryNav from '@/components/CategoryNav';
 import SubcategoryNav from '@/components/SubcategoryNav';
 import MenuGrid from '@/components/MenuGrid';
 import RestaurantHeader from '@/components/RestaurantHeader';
+import SyncStatusBanner from '@/components/SyncStatusBanner';
 
 // Lazy load filter - not needed for first paint
 const AllergenFilter = lazy(() => 
@@ -254,6 +255,8 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
 
   return (
     <div key={restaurant?.updated_at} className="min-h-screen bg-background">
+      {/* Show sync status banner when changes are syncing */}
+      <SyncStatusBanner />
 
       {/* Restaurant Hero */}
       <RestaurantHeader
