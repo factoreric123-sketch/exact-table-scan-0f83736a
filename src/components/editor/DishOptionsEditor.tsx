@@ -24,7 +24,7 @@ import {
   type MutationTask
 } from "@/hooks/useDishOptionsMutations";
 import { useQueryClient } from "@tanstack/react-query";
-import { generateTempId } from "@/lib/utils/uuid";
+import { generateUUID } from "@/lib/utils/uuid";
 import { toast } from "sonner";
 import type { DishOption } from "@/hooks/useDishOptions";
 import type { DishModifier } from "@/hooks/useDishModifiers";
@@ -94,7 +94,7 @@ const SortableItem = memo(({ id, name, price, onUpdate, onDelete, type, forceTwo
         value={name}
         onChange={(e) => onUpdate(id, "name", e.target.value)}
         className="flex-1"
-        autoFocus={id.startsWith("temp_")}
+        autoFocus={id.startsWith("new_")}
       />
       
       <div className="flex items-center gap-2 w-28">
@@ -281,8 +281,10 @@ export function DishOptionsEditor({
       return;
     }
     
+    // Use real UUID with "new_" prefix for autofocus detection
+    const realId = `new_${generateUUID()}`;
     setLocalOptions(prev => [...prev, {
-      id: generateTempId(),
+      id: realId,
       dish_id: dishId,
       name: "",
       price: "0.00",
@@ -300,8 +302,10 @@ export function DishOptionsEditor({
       return;
     }
     
+    // Use real UUID with "new_" prefix for autofocus detection
+    const realId = `new_${generateUUID()}`;
     setLocalModifiers(prev => [...prev, {
-      id: generateTempId(),
+      id: realId,
       dish_id: dishId,
       name: "",
       price: "0.00",

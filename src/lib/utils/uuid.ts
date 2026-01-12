@@ -17,10 +17,4 @@ export function generateUUID(): string {
   });
 }
 
-/**
- * Generates a robust unique ID for temporary optimistic updates
- * Uses crypto.randomUUID() for guaranteed uniqueness
- */
-export function generateTempId(): string {
-  return `temp_${generateUUID()}`;
-}
+// generateTempId has been removed - always use generateUUID for real database IDs
