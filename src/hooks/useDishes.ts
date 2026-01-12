@@ -321,8 +321,8 @@ export const useCreateDish = () => {
       if (context?.previous && context.subcategoryId) {
         queryClient.setQueryData(["dishes", context.subcategoryId], context.previous);
       }
-      const message = getErrorMessage(error);
-      toast.error(`Failed to create dish: ${message}`);
+      // User-friendly error message
+      toast.error("Couldn't create dish. Please try again.");
     },
   });
 };
@@ -412,6 +412,11 @@ export const useDeleteDish = () => {
 
   return useMutation({
     mutationFn: async ({ id, subcategoryId }: { id: string; subcategoryId: string }) => {
+      // Skip database delete for temporary IDs - they don't exist in DB yet
+      if (id.startsWith('temp_')) {
+        return subcategoryId;
+      }
+      
       const { error } = await supabase
         .from("dishes")
         .delete()
@@ -458,8 +463,8 @@ export const useDeleteDish = () => {
       if (context?.previous && context.subcategoryId) {
         queryClient.setQueryData(["dishes", context.subcategoryId], context.previous);
       }
-      const message = getErrorMessage(error);
-      toast.error(`Failed to delete dish: ${message}`);
+      // User-friendly error messages
+      toast.error("Couldn't delete this dish. Please try again.");
     },
   });
 };
