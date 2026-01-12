@@ -5,6 +5,7 @@ import { generateUUID } from "@/lib/utils/uuid";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { clearAllMenuCaches, invalidateMenuQueries } from "@/lib/cacheUtils";
 import { menuSyncEmitter } from "@/lib/menuSyncEmitter";
+import { syncStateManager } from "@/lib/syncStateManager";
 
 // Helper to get restaurant ID from subcategory ID (background operation)
 const getRestaurantIdFromSubcategory = async (subcategoryId: string): Promise<string | null> => {
@@ -255,6 +256,9 @@ export const useCreateDish = () => {
       // 2. Generate REAL UUID (same ID goes to DB) - NO MORE TEMP IDs!
       const realId = dish.id || generateUUID();
       
+      // 3. MARK DISH AS SYNCING - shows loading state in preview/live
+      syncStateManager.startDishSync(realId);
+      
       const newDish: Dish = {
         id: realId,
         subcategory_id: dish.subcategory_id,
@@ -279,18 +283,18 @@ export const useCreateDish = () => {
       // Mutate the dish object to include the real ID for the mutationFn
       dish.id = realId;
       
-      // 3. Cancel queries (sync - fire and forget)
+      // 4. Cancel queries (sync - fire and forget)
       queryClient.cancelQueries({ queryKey: ["dishes", dish.subcategory_id] });
       
-      // 4. Update dishes cache INSTANTLY (sync)
+      // 5. Update dishes cache INSTANTLY (sync)
       if (previous) {
         queryClient.setQueryData<Dish[]>(["dishes", dish.subcategory_id], [...previous, newDish]);
       }
       
-      // 5. Emit to full-menu cache INSTANTLY (sync) - SAME ID as DB!
+      // 6. Emit to full-menu cache INSTANTLY (sync) - SAME ID as DB!
       addDishToFullMenuCache(queryClient, dish.subcategory_id, newDish);
       
-      // 6. BACKGROUND: Clear localStorage (non-blocking)
+      // 7. BACKGROUND: Clear localStorage (non-blocking)
       getRestaurantIdFromSubcategory(dish.subcategory_id).then(restaurantId => {
         if (restaurantId) clearAllMenuCaches(restaurantId);
       });
@@ -298,8 +302,10 @@ export const useCreateDish = () => {
       return { previous, subcategoryId: dish.subcategory_id, dishId: realId };
     },
     onSuccess: (data) => {
-      // No replacement needed - the ID is already correct!
-      // Just clear localStorage so next load gets fresh data
+      // END SYNC - dish is now confirmed in database
+      syncStateManager.endDishSync(data.id);
+      
+      // Clear localStorage so next load gets fresh data
       getRestaurantIdFromSubcategory(data.subcategory_id).then(restaurantId => {
         if (restaurantId) {
           clearAllMenuCaches(restaurantId);
@@ -309,8 +315,9 @@ export const useCreateDish = () => {
       toast.success("Dish created");
     },
     onError: (error: Error, variables, context) => {
-      // Remove dish from all caches on error
+      // END SYNC on error too
       if (context?.dishId) {
+        syncStateManager.endDishSync(context.dishId);
         removeDishFromFullMenuCache(queryClient, context.dishId);
       }
       if (context?.previous && context.subcategoryId) {

@@ -1,5 +1,6 @@
 import { useState, memo, useCallback } from "react";
-import DishCard, { Dish } from "./DishCard";
+import DishCardWithSync from "./DishCardWithSync";
+import { Dish } from "./DishCard";
 import { DishDetailDialog, DishDetail } from "./DishDetailDialog";
 import { getFontClassName } from "@/lib/fontUtils";
 
@@ -96,7 +97,7 @@ const MenuGrid = memo(({
         <h2 className={`${titleSizeClass} font-bold text-foreground mb-6`}>{sectionTitle}</h2>
         <div className={`grid ${gridColsClass} ${gapClass}`}>
           {dishes.map((dish) => (
-            <DishCard 
+            <DishCardWithSync 
               key={dish.id} 
               dish={dish} 
               onClick={() => handleDishClick(dish)}
