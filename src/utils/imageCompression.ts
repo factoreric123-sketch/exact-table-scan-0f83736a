@@ -53,11 +53,11 @@ function createImage(url: string): Promise<HTMLImageElement> {
 
 export async function compressImage(file: File | Blob): Promise<File> {
   const options = {
-    maxSizeMB: 0.8, // Reduced from 1MB for faster loading
-    maxWidthOrHeight: 1200, // Increased for better quality on retina displays
+    maxSizeMB: 1, // Faster compression with acceptable size
+    maxWidthOrHeight: 1200, // Good quality for retina displays
     useWebWorker: true, // Use web worker for non-blocking compression
-    maxIteration: 10, // More iterations for better compression
-    initialQuality: 0.85, // Start with high quality
+    maxIteration: 5, // Reduced for faster processing (was 10)
+    initialQuality: 0.8, // Slightly lower for speed
     alwaysKeepResolution: false, // Allow resolution reduction if needed
     fileType: 'image/webp' as any, // Use WebP for better compression
   };

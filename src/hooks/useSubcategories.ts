@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { generateTempId } from "@/lib/utils/uuid";
+import { generateUUID } from "@/lib/utils/uuid";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { clearAllMenuCaches, invalidateMenuQueries } from "@/lib/cacheUtils";
 import { menuSyncEmitter } from "@/lib/menuSyncEmitter";
@@ -208,10 +208,16 @@ export const useCreateSubcategory = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (subcategory: Partial<Subcategory>) => {
+    mutationFn: async (subcategory: Partial<Subcategory> & { id?: string }) => {
+      // Use the pre-generated real UUID if provided
+      const subcategoryToInsert = {
+        ...subcategory,
+        id: subcategory.id || generateUUID(),
+      };
+      
       const { data, error } = await supabase
         .from("subcategories")
-        .insert([subcategory as any])
+        .insert([subcategoryToInsert as any])
         .select()
         .single();
 
@@ -224,34 +230,39 @@ export const useCreateSubcategory = () => {
       // 1. Get previous data (sync)
       const previous = queryClient.getQueryData<Subcategory[]>(["subcategories", subcategory.category_id]);
       
-      // 2. Create temp subcategory (sync)
-      const tempSub: Subcategory = {
-        id: generateTempId(),
+      // 2. Generate REAL UUID (not temp) - same ID will go to database
+      const realId = subcategory.id || generateUUID();
+      const newSubcategory: Subcategory = {
+        id: realId,
         category_id: subcategory.category_id,
         name: subcategory.name || "New Subcategory",
         order_index: subcategory.order_index ?? (previous?.length || 0),
         created_at: new Date().toISOString(),
       };
       
-      // 3. Cancel queries (sync)
+      // 3. Mutate the subcategory object so mutationFn uses the same ID
+      subcategory.id = realId;
+      
+      // 4. Cancel queries (sync)
       queryClient.cancelQueries({ queryKey: ["subcategories", subcategory.category_id] });
       
-      // 4. Update subcategories cache (sync)
+      // 5. Update subcategories cache (sync)
       if (previous) {
-        queryClient.setQueryData<Subcategory[]>(["subcategories", subcategory.category_id], [...previous, tempSub]);
+        queryClient.setQueryData<Subcategory[]>(["subcategories", subcategory.category_id], [...previous, newSubcategory]);
       }
       
-      // 5. INSTANT: Emit to full-menu cache (Phase 3)
-      addSubcategoryToFullMenuCache(queryClient, subcategory.category_id, tempSub);
+      // 6. INSTANT: Emit to full-menu cache
+      addSubcategoryToFullMenuCache(queryClient, subcategory.category_id, newSubcategory);
       
-      // 6. Background: get restaurantId and clear localStorage
+      // 7. Background: get restaurantId and clear localStorage
       getRestaurantIdFromCategory(subcategory.category_id).then(restaurantId => {
         if (restaurantId) clearAllMenuCaches(restaurantId);
       });
       
-      return { previous, categoryId: subcategory.category_id };
+      return { previous, categoryId: subcategory.category_id, subcategoryId: realId };
     },
     onSuccess: (data, _, context) => {
+      // No replacement needed - ID is already correct!
       getRestaurantIdFromCategory(data.category_id).then(restaurantId => {
         if (restaurantId) {
           invalidateMenuQueries(queryClient, restaurantId);
@@ -264,6 +275,10 @@ export const useCreateSubcategory = () => {
     onError: (error, _variables, context) => {
       if (context?.previous && context.categoryId) {
         queryClient.setQueryData(["subcategories", context.categoryId], context.previous);
+      }
+      // Also remove from full-menu cache on error
+      if (context?.subcategoryId) {
+        removeSubcategoryFromFullMenuCache(queryClient, context.subcategoryId);
       }
       toast.error("Couldn't create subcategory. Please try again.");
     },

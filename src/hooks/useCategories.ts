@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { generateTempId } from "@/lib/utils/uuid";
+import { generateUUID } from "@/lib/utils/uuid";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { clearAllMenuCaches, invalidateMenuQueries } from "@/lib/cacheUtils";
 import { menuSyncEmitter } from "@/lib/menuSyncEmitter";
@@ -150,10 +150,16 @@ export const useCreateCategory = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (category: Partial<Category>) => {
+    mutationFn: async (category: Partial<Category> & { id?: string }) => {
+      // Use the pre-generated real UUID if provided
+      const categoryToInsert = {
+        ...category,
+        id: category.id || generateUUID(),
+      };
+      
       const { data, error } = await supabase
         .from("categories")
-        .insert([category as any])
+        .insert([categoryToInsert as any])
         .select()
         .single();
 
@@ -166,32 +172,37 @@ export const useCreateCategory = () => {
       // 1. Get previous data (sync)
       const previous = queryClient.getQueryData<Category[]>(["categories", category.restaurant_id]);
       
-      // 2. Create temp category (sync)
-      const tempCategory: Category = {
-        id: generateTempId(),
+      // 2. Generate REAL UUID (not temp) - same ID will go to database
+      const realId = category.id || generateUUID();
+      const newCategory: Category = {
+        id: realId,
         restaurant_id: category.restaurant_id,
         name: category.name || "New Category",
         order_index: category.order_index ?? (previous?.length || 0),
         created_at: new Date().toISOString(),
       };
       
-      // 3. Cancel queries (sync)
+      // 3. Mutate the category object so mutationFn uses the same ID
+      category.id = realId;
+      
+      // 4. Cancel queries (sync)
       queryClient.cancelQueries({ queryKey: ["categories", category.restaurant_id] });
       
-      // 4. Update categories cache (sync)
+      // 5. Update categories cache (sync)
       if (previous) {
-        queryClient.setQueryData<Category[]>(["categories", category.restaurant_id], [...previous, tempCategory]);
+        queryClient.setQueryData<Category[]>(["categories", category.restaurant_id], [...previous, newCategory]);
       }
       
-      // 5. INSTANT: Emit to full-menu cache (Phase 3)
-      addCategoryToFullMenuCache(queryClient, tempCategory);
+      // 6. INSTANT: Emit to full-menu cache
+      addCategoryToFullMenuCache(queryClient, newCategory);
       
-      // 6. Background: clear localStorage
+      // 7. Background: clear localStorage
       clearAllMenuCaches(category.restaurant_id);
       
-      return { previous, restaurantId: category.restaurant_id };
+      return { previous, restaurantId: category.restaurant_id, categoryId: realId };
     },
     onSuccess: (data) => {
+      // No replacement needed - ID is already correct!
       invalidateMenuQueries(queryClient, data.restaurant_id);
       queryClient.invalidateQueries({ queryKey: ["categories", data.restaurant_id] });
       queryClient.invalidateQueries({ queryKey: ["subcategories"] });
@@ -199,6 +210,10 @@ export const useCreateCategory = () => {
     onError: (error, variables, context) => {
       if (context?.previous && context.restaurantId) {
         queryClient.setQueryData(["categories", context.restaurantId], context.previous);
+      }
+      // Also remove from full-menu cache on error
+      if (context?.categoryId) {
+        removeCategoryFromFullMenuCache(queryClient, context.categoryId);
       }
       toast.error("Couldn't create category. Please try again.");
     },
