@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Theme } from "@/lib/types/theme";
-import { generateTempId } from "@/lib/utils/uuid";
+import { generateUUID } from "@/lib/utils/uuid";
 import { logger } from "@/lib/logger";
 
 export interface Restaurant {
@@ -146,10 +146,13 @@ export const useCreateRestaurant = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (restaurant: Partial<Restaurant>) => {
+    mutationFn: async (restaurant: Partial<Restaurant> & { id?: string }) => {
+      // Use the ID passed from onMutate if available (real UUID)
+      const restaurantWithId = { ...restaurant };
+      
       const { data, error } = await supabase
         .from("restaurants")
-        .insert([restaurant as any])
+        .insert([restaurantWithId as any])
         .select()
         .single();
 
@@ -188,15 +191,17 @@ export const useCreateRestaurant = () => {
       return newRestaurant;
     },
     onMutate: async (restaurant) => {
-      // Optimistic update
+      // Generate real UUID for optimistic update
+      const realId = generateUUID();
+      
       const userId = restaurant.owner_id;
       await queryClient.cancelQueries({ queryKey: ["restaurants", userId] });
       const previous = queryClient.getQueryData<Restaurant[]>(["restaurants", userId]);
       
-      // Optimistically add new restaurant to the list
+      // Optimistically add new restaurant to the list with real UUID
       if (previous && restaurant.owner_id) {
-        const tempRestaurant: Restaurant = {
-          id: generateTempId(),
+        const newRestaurant: Restaurant = {
+          id: realId,
           owner_id: restaurant.owner_id,
           name: restaurant.name || "New Restaurant",
           slug: restaurant.slug || "new-restaurant",
@@ -207,16 +212,19 @@ export const useCreateRestaurant = () => {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
-        queryClient.setQueryData<Restaurant[]>(["restaurants", restaurant.owner_id], [tempRestaurant, ...previous]);
+        queryClient.setQueryData<Restaurant[]>(["restaurants", restaurant.owner_id], [newRestaurant, ...previous]);
       }
+      
+      // Mutate the restaurant object to include the real ID for mutationFn
+      (restaurant as any).id = realId;
       
       return { previous };
     },
-      onSuccess: (data) => {
-        // Only invalidate the current user's restaurants
-        queryClient.invalidateQueries({ queryKey: ["restaurants", data.owner_id] });
-        toast.success("Restaurant created");
-      },
+    onSuccess: (data) => {
+      // Only invalidate the current user's restaurants
+      queryClient.invalidateQueries({ queryKey: ["restaurants", data.owner_id] });
+      toast.success("Restaurant created");
+    },
     onError: (error: Error, _variables, context) => {
       // Rollback on error
       if (context?.previous && _variables.owner_id) {
