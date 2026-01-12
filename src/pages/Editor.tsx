@@ -21,7 +21,6 @@ import { useThemeHistory } from "@/hooks/useThemeHistory";
 import { getDefaultTheme } from "@/lib/presetThemes";
 import { Theme } from "@/lib/types/theme";
 import { useQueryClient } from "@tanstack/react-query";
-import SyncStatusBanner from "@/components/SyncStatusBanner";
 
 const Editor = () => {
   const { restaurantId } = useParams<{ restaurantId: string }>();
@@ -452,9 +451,6 @@ const Editor = () => {
         editable={!previewMode}
         restaurantId={restaurant.id}
       />
-
-      {/* Show sync status banner in preview mode */}
-      {previewMode && <SyncStatusBanner />}
 
       <div className=" mx-auto max-w-6xl">
         <Sheet>

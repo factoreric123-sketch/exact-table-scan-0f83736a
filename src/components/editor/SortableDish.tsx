@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { useDebounce } from "use-debounce";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, Image as ImageIcon, ChevronDown, Flame, Sparkles, Star, TrendingUp, ChefHat, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Leaf, Salad, DollarSign, Crop, Loader2 } from "lucide-react";
+import { GripVertical, Trash2, Image as ImageIcon, ChevronDown, Flame, Sparkles, Star, TrendingUp, ChefHat, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Leaf, Salad, DollarSign, Crop } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -16,8 +16,6 @@ import { useImageUpload } from "@/hooks/useImageUpload";
 import { ALLERGEN_OPTIONS } from "@/components/AllergenFilter";
 import { DishOptionsEditor } from "./DishOptionsEditor";
 import { useQueryClient } from "@tanstack/react-query";
-import { syncStateManager } from "@/lib/syncStateManager";
-import { useSyncState } from "@/hooks/useSyncState";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -236,10 +234,7 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
     setShowCropModal(false);
     setSelectedImage(null);
     
-    // 4. MARK IMAGE AS SYNCING - shows loading spinner in preview/live
-    syncStateManager.startImageSync(dish.id);
-    
-    // 5. Upload in background (fire-and-forget pattern)
+    // 4. Upload in background (fire-and-forget pattern)
     try {
       const imageUrl = await uploadImage.mutateAsync({
         file: croppedFile,
@@ -247,22 +242,18 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
         path: `${dish.id}/${croppedFile.name}`,
       });
       
-      // 6. Update database with real CDN URL (background)
+      // 5. Update database with real CDN URL (background)
       updateDish.mutate({
         id: dish.id,
         updates: { image_url: imageUrl },
       });
       
-      // 7. END IMAGE SYNC - image is now saved
-      syncStateManager.endImageSync(dish.id);
-      
-      // 8. Replace local blob with real URL and cleanup
+      // 6. Replace local blob with real URL and cleanup
       setLocalImageUrl(null);
       URL.revokeObjectURL(localPreviewUrl);
       toast.success("Image saved");
     } catch (error) {
-      // END SYNC and revert on failure
-      syncStateManager.endImageSync(dish.id);
+      // Revert on failure
       setLocalImageUrl(null);
       URL.revokeObjectURL(localPreviewUrl);
       toast.error("Failed to upload image");
@@ -347,17 +338,6 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-muted">
               <ImageIcon className="h-12 w-12 text-muted-foreground" />
-            </div>
-          )}
-          
-          {/* IMAGE UPLOAD LOADING SPINNER - Shows during upload */}
-          {uploadImage.isUploading && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/70 backdrop-blur-sm z-20">
-              <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-              <span className="text-sm font-medium text-foreground">Uploading...</span>
-              {uploadImage.progress > 0 && (
-                <span className="text-xs text-muted-foreground mt-1">{uploadImage.progress}%</span>
-              )}
             </div>
           )}
           
