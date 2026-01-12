@@ -91,6 +91,40 @@ const addDishToFullMenuCache = (queryClient: any, subcategoryId: string, newDish
 };
 
 /**
+ * INSTANT sync helper - replaces temp dish with real dish from DB
+ */
+const replaceTempDishInFullMenuCache = (queryClient: any, tempId: string, realDish: Dish) => {
+  const updater = (data: any) => {
+    if (!data?.categories) return null;
+    
+    return {
+      ...data,
+      categories: data.categories.map((category: any) => ({
+        ...category,
+        subcategories: category.subcategories?.map((subcategory: any) => ({
+          ...subcategory,
+          dishes: subcategory.dishes?.map((dish: any) => 
+            dish.id === tempId ? { ...realDish } : dish
+          )
+        }))
+      }))
+    };
+  };
+
+  // INSTANT emit to all listeners
+  menuSyncEmitter.emitAll(updater);
+  
+  // Also update React Query cache
+  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
+  fullMenuQueries.forEach(([key, data]: [any, any]) => {
+    if (data) {
+      const updated = updater(data);
+      if (updated) queryClient.setQueryData(key, updated);
+    }
+  });
+};
+
+/**
  * INSTANT sync helper - removes dish from full-menu cache
  */
 const removeDishFromFullMenuCache = (queryClient: any, dishId: string) => {
@@ -306,22 +340,38 @@ export const useCreateDish = () => {
       return { previous, subcategoryId: dish.subcategory_id, tempId: tempDish.id };
     },
     onSuccess: (data, _, context) => {
-      // Background: invalidate caches
+      // CRITICAL: Replace temp dish with real dish in ALL caches INSTANTLY
+      if (context?.tempId) {
+        // 1. Replace in full-menu cache (broadcasts to preview/live menu)
+        replaceTempDishInFullMenuCache(queryClient, context.tempId, data as Dish);
+        
+        // 2. Replace in dishes cache (for editor)
+        const currentDishes = queryClient.getQueryData<Dish[]>(["dishes", data.subcategory_id]);
+        if (currentDishes) {
+          queryClient.setQueryData<Dish[]>(
+            ["dishes", data.subcategory_id],
+            currentDishes.map(d => d.id === context.tempId ? (data as Dish) : d)
+          );
+        }
+      }
+      
+      // Background: Clear localStorage so next load gets fresh data
       getRestaurantIdFromSubcategory(data.subcategory_id).then(restaurantId => {
         if (restaurantId) {
-          invalidateMenuQueries(queryClient, restaurantId);
+          clearAllMenuCaches(restaurantId);
         }
       });
       
-      queryClient.invalidateQueries({ queryKey: ["dishes", data.subcategory_id] });
-      queryClient.invalidateQueries({ queryKey: ["dishes", "restaurant"] });
       toast.success("Dish created");
     },
     onError: (error: Error, variables, context) => {
+      // Remove temp dish from all caches on error
+      if (context?.tempId) {
+        removeDishFromFullMenuCache(queryClient, context.tempId);
+      }
       if (context?.previous && context.subcategoryId) {
         queryClient.setQueryData(["dishes", context.subcategoryId], context.previous);
       }
-      // User-friendly error message
       toast.error("Couldn't create dish. Please try again.");
     },
   });
