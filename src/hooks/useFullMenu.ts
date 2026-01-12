@@ -167,9 +167,12 @@ export const useFullMenu = (
           const updated = updater(currentData);
           if (updated) {
             console.log('[useFullMenu] Applied update instantly:', updateId);
+            // Update both state and React Query cache
             setData(updated);
             queryClient.setQueryData(['full-menu', restaurantId], updated);
             if (version) lastAppliedVersion.current = version;
+          } else {
+            console.log('[useFullMenu] Updater returned null (no change needed):', updateId);
           }
         } catch (err) {
           console.error('[useFullMenu] Failed to apply update:', err);
