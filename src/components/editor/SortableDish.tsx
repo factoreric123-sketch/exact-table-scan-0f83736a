@@ -350,17 +350,6 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
             </div>
           )}
           
-          {/* IMAGE UPLOAD LOADING SPINNER - Shows during upload */}
-          {uploadImage.isUploading && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/70 backdrop-blur-sm z-20">
-              <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-              <span className="text-sm font-medium text-foreground">Uploading...</span>
-              {uploadImage.progress > 0 && (
-                <span className="text-xs text-muted-foreground mt-1">{uploadImage.progress}%</span>
-              )}
-            </div>
-          )}
-          
           <label className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur opacity-0 group-hover/image:opacity-100 transition-opacity cursor-pointer">
             <div className="text-center">
               <ImageIcon className="h-8 w-8 mx-auto mb-2" />
