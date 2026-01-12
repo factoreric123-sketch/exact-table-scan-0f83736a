@@ -220,7 +220,21 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
     }
   };
 
+  // Track local image for instant preview
+  const [localImageUrl, setLocalImageUrl] = useState<string | null>(null);
+
   const handleImageCrop = async (croppedFile: File) => {
+    // 1. Create local blob URL for INSTANT preview
+    const localPreviewUrl = URL.createObjectURL(croppedFile);
+    
+    // 2. INSTANTLY update local state (UI shows image immediately)
+    setLocalImageUrl(localPreviewUrl);
+    
+    // 3. Close modal immediately for snappy UX
+    setShowCropModal(false);
+    setSelectedImage(null);
+    
+    // 4. Upload in background (fire-and-forget pattern)
     try {
       const imageUrl = await uploadImage.mutateAsync({
         file: croppedFile,
@@ -228,18 +242,26 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
         path: `${dish.id}/${croppedFile.name}`,
       });
       
+      // 5. Update database with real CDN URL (background)
       updateDish.mutate({
         id: dish.id,
         updates: { image_url: imageUrl },
       });
       
-      setShowCropModal(false);
-      setSelectedImage(null);
-      toast.success("Image updated");
+      // 6. Replace local blob with real URL and cleanup
+      setLocalImageUrl(null);
+      URL.revokeObjectURL(localPreviewUrl);
+      toast.success("Image saved");
     } catch (error) {
+      // Revert on failure
+      setLocalImageUrl(null);
+      URL.revokeObjectURL(localPreviewUrl);
       toast.error("Failed to upload image");
     }
   };
+
+  // Use local image if available, otherwise use dish image
+  const displayImageUrl = localImageUrl || dish.image_url;
 
   return (
     <>
@@ -307,9 +329,9 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
         </div>
 
         <div className={`bg-dish-card rounded-2xl overflow-hidden ${layoutStyle === 'fancy' ? 'aspect-[3/4]' : 'aspect-square'} mb-2.5 relative shadow-md group/image`}>
-          {dish.image_url ? (
+          {displayImageUrl ? (
             <img 
-              src={dish.image_url} 
+              src={displayImageUrl} 
               alt={dish.name}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
