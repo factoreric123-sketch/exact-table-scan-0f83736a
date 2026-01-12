@@ -20,7 +20,7 @@ const getRestaurantIdFromSubcategory = async (subcategoryId: string): Promise<st
 
 /**
  * INSTANT sync helper - updates dish in full-menu cache
- * Phase 2: No blocking operations before emit
+ * Uses ONLY menuSyncEmitter to avoid duplicate updates
  */
 const updateDishInFullMenuCache = (queryClient: any, dishId: string, updates: Partial<Dish>) => {
   const updater = (data: any) => {
@@ -40,25 +40,32 @@ const updateDishInFullMenuCache = (queryClient: any, dishId: string, updates: Pa
     };
   };
 
-  // INSTANT: Emit to all listeners (no await)
+  // INSTANT: Emit to all listeners - they handle cache updates
   menuSyncEmitter.emitAll(updater);
-  
-  // Also update React Query cache synchronously
-  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
-  fullMenuQueries.forEach(([key, data]: [any, any]) => {
-    if (data) {
-      const updated = updater(data);
-      if (updated) queryClient.setQueryData(key, updated);
-    }
-  });
 };
 
 /**
  * INSTANT sync helper - adds dish to full-menu cache
+ * Uses ONLY menuSyncEmitter to avoid duplicate updates
  */
 const addDishToFullMenuCache = (queryClient: any, subcategoryId: string, newDish: Dish) => {
   const updater = (data: any) => {
     if (!data?.categories) return null;
+    
+    // Check if dish already exists to prevent duplicates
+    let dishExists = false;
+    data.categories.forEach((category: any) => {
+      category.subcategories?.forEach((subcategory: any) => {
+        if (subcategory.dishes?.some((dish: any) => dish.id === newDish.id)) {
+          dishExists = true;
+        }
+      });
+    });
+    
+    if (dishExists) {
+      console.log('[addDishToFullMenuCache] Dish already exists, skipping:', newDish.id);
+      return null; // Return null to indicate no update needed
+    }
     
     return {
       ...data,
@@ -77,23 +84,15 @@ const addDishToFullMenuCache = (queryClient: any, subcategoryId: string, newDish
     };
   };
 
-  // INSTANT emit
+  // INSTANT emit - listeners handle cache updates
   menuSyncEmitter.emitAll(updater);
-  
-  // Also update React Query cache
-  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
-  fullMenuQueries.forEach(([key, data]: [any, any]) => {
-    if (data) {
-      const updated = updater(data);
-      if (updated) queryClient.setQueryData(key, updated);
-    }
-  });
 };
 
 // Removed: replaceTempDishInFullMenuCache - no longer needed with real UUIDs
 
 /**
  * INSTANT sync helper - removes dish from full-menu cache
+ * Uses ONLY menuSyncEmitter to avoid duplicate updates
  */
 const removeDishFromFullMenuCache = (queryClient: any, dishId: string) => {
   const updater = (data: any) => {
@@ -111,21 +110,13 @@ const removeDishFromFullMenuCache = (queryClient: any, dishId: string) => {
     };
   };
 
-  // INSTANT emit
+  // INSTANT emit - listeners handle cache updates
   menuSyncEmitter.emitAll(updater);
-  
-  // Also update React Query cache
-  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
-  fullMenuQueries.forEach(([key, data]: [any, any]) => {
-    if (data) {
-      const updated = updater(data);
-      if (updated) queryClient.setQueryData(key, updated);
-    }
-  });
 };
 
 /**
  * INSTANT sync helper - reorders dishes in full-menu cache
+ * Uses ONLY menuSyncEmitter to avoid duplicate updates
  */
 const reorderDishesInFullMenuCache = (queryClient: any, subcategoryId: string, orderedDishes: { id: string; order_index: number }[]) => {
   const updater = (data: any) => {
@@ -150,17 +141,8 @@ const reorderDishesInFullMenuCache = (queryClient: any, subcategoryId: string, o
     };
   };
 
-  // INSTANT emit
+  // INSTANT emit - listeners handle cache updates
   menuSyncEmitter.emitAll(updater);
-  
-  // Also update React Query cache
-  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
-  fullMenuQueries.forEach(([key, data]: [any, any]) => {
-    if (data) {
-      const updated = updater(data);
-      if (updated) queryClient.setQueryData(key, updated);
-    }
-  });
 };
 
 export interface Dish {
