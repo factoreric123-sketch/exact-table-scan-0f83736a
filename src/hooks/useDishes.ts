@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { generateTempId } from "@/lib/utils/uuid";
+import { generateUUID } from "@/lib/utils/uuid";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { clearAllMenuCaches, invalidateMenuQueries } from "@/lib/cacheUtils";
 import { menuSyncEmitter } from "@/lib/menuSyncEmitter";
@@ -90,39 +90,7 @@ const addDishToFullMenuCache = (queryClient: any, subcategoryId: string, newDish
   });
 };
 
-/**
- * INSTANT sync helper - replaces temp dish with real dish from DB
- */
-const replaceTempDishInFullMenuCache = (queryClient: any, tempId: string, realDish: Dish) => {
-  const updater = (data: any) => {
-    if (!data?.categories) return null;
-    
-    return {
-      ...data,
-      categories: data.categories.map((category: any) => ({
-        ...category,
-        subcategories: category.subcategories?.map((subcategory: any) => ({
-          ...subcategory,
-          dishes: subcategory.dishes?.map((dish: any) => 
-            dish.id === tempId ? { ...realDish } : dish
-          )
-        }))
-      }))
-    };
-  };
-
-  // INSTANT emit to all listeners
-  menuSyncEmitter.emitAll(updater);
-  
-  // Also update React Query cache
-  const fullMenuQueries = queryClient.getQueriesData({ queryKey: ["full-menu"] });
-  fullMenuQueries.forEach(([key, data]: [any, any]) => {
-    if (data) {
-      const updated = updater(data);
-      if (updated) queryClient.setQueryData(key, updated);
-    }
-  });
-};
+// Removed: replaceTempDishInFullMenuCache - no longer needed with real UUIDs
 
 /**
  * INSTANT sync helper - removes dish from full-menu cache
@@ -267,20 +235,23 @@ export const useDishesByRestaurant = (restaurantId: string) => {
 };
 
 /**
- * Phase 2: ZERO blocking operations before optimistic update
+ * Phase 3: Use REAL UUIDs instead of temp IDs for instant sync
+ * The same ID is used for optimistic update AND database insert
  */
 export const useCreateDish = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (dish: Partial<Dish>) => {
-      if (!dish.subcategory_id) {
-        throw new Error("Subcategory ID is required");
-      }
+    mutationFn: async (dish: Partial<Dish> & { id?: string; subcategory_id: string }) => {
+      // ID should already be set by onMutate, but generate if somehow missing
+      const dishWithId = {
+        ...dish,
+        id: dish.id || generateUUID(),
+      };
 
       const { data, error } = await supabase
         .from("dishes")
-        .insert([dish as any])
+        .insert([dishWithId as any])
         .select()
         .single();
 
@@ -293,15 +264,17 @@ export const useCreateDish = () => {
       return data as Dish;
     },
     onMutate: (dish) => {
-      // PHASE 2: ALL operations here are SYNCHRONOUS - no await!
+      // ALL operations here are SYNCHRONOUS - no await!
       if (!dish.subcategory_id) return;
       
       // 1. Get previous data (sync)
       const previous = queryClient.getQueryData<Dish[]>(["dishes", dish.subcategory_id]);
       
-      // 2. Create temp dish (sync)
-      const tempDish: Dish = {
-        id: generateTempId(),
+      // 2. Generate REAL UUID (same ID goes to DB) - NO MORE TEMP IDs!
+      const realId = dish.id || generateUUID();
+      
+      const newDish: Dish = {
+        id: realId,
         subcategory_id: dish.subcategory_id,
         name: dish.name || "New Dish",
         description: dish.description || null,
@@ -321,41 +294,30 @@ export const useCreateDish = () => {
         has_options: dish.has_options || false,
       };
       
+      // Mutate the dish object to include the real ID for the mutationFn
+      dish.id = realId;
+      
       // 3. Cancel queries (sync - fire and forget)
       queryClient.cancelQueries({ queryKey: ["dishes", dish.subcategory_id] });
       
       // 4. Update dishes cache INSTANTLY (sync)
       if (previous) {
-        queryClient.setQueryData<Dish[]>(["dishes", dish.subcategory_id], [...previous, tempDish]);
+        queryClient.setQueryData<Dish[]>(["dishes", dish.subcategory_id], [...previous, newDish]);
       }
       
-      // 5. Emit to full-menu cache INSTANTLY (sync)
-      addDishToFullMenuCache(queryClient, dish.subcategory_id, tempDish);
+      // 5. Emit to full-menu cache INSTANTLY (sync) - SAME ID as DB!
+      addDishToFullMenuCache(queryClient, dish.subcategory_id, newDish);
       
       // 6. BACKGROUND: Clear localStorage (non-blocking)
       getRestaurantIdFromSubcategory(dish.subcategory_id).then(restaurantId => {
         if (restaurantId) clearAllMenuCaches(restaurantId);
       });
       
-      return { previous, subcategoryId: dish.subcategory_id, tempId: tempDish.id };
+      return { previous, subcategoryId: dish.subcategory_id, dishId: realId };
     },
-    onSuccess: (data, _, context) => {
-      // CRITICAL: Replace temp dish with real dish in ALL caches INSTANTLY
-      if (context?.tempId) {
-        // 1. Replace in full-menu cache (broadcasts to preview/live menu)
-        replaceTempDishInFullMenuCache(queryClient, context.tempId, data as Dish);
-        
-        // 2. Replace in dishes cache (for editor)
-        const currentDishes = queryClient.getQueryData<Dish[]>(["dishes", data.subcategory_id]);
-        if (currentDishes) {
-          queryClient.setQueryData<Dish[]>(
-            ["dishes", data.subcategory_id],
-            currentDishes.map(d => d.id === context.tempId ? (data as Dish) : d)
-          );
-        }
-      }
-      
-      // Background: Clear localStorage so next load gets fresh data
+    onSuccess: (data) => {
+      // No replacement needed - the ID is already correct!
+      // Just clear localStorage so next load gets fresh data
       getRestaurantIdFromSubcategory(data.subcategory_id).then(restaurantId => {
         if (restaurantId) {
           clearAllMenuCaches(restaurantId);
@@ -365,9 +327,9 @@ export const useCreateDish = () => {
       toast.success("Dish created");
     },
     onError: (error: Error, variables, context) => {
-      // Remove temp dish from all caches on error
-      if (context?.tempId) {
-        removeDishFromFullMenuCache(queryClient, context.tempId);
+      // Remove dish from all caches on error
+      if (context?.dishId) {
+        removeDishFromFullMenuCache(queryClient, context.dishId);
       }
       if (context?.previous && context.subcategoryId) {
         queryClient.setQueryData(["dishes", context.subcategoryId], context.previous);
@@ -462,11 +424,6 @@ export const useDeleteDish = () => {
 
   return useMutation({
     mutationFn: async ({ id, subcategoryId }: { id: string; subcategoryId: string }) => {
-      // Skip database delete for temporary IDs - they don't exist in DB yet
-      if (id.startsWith('temp_')) {
-        return subcategoryId;
-      }
-      
       const { error } = await supabase
         .from("dishes")
         .delete()
