@@ -200,8 +200,7 @@ export const useCreateCategory = () => {
       if (context?.previous && context.restaurantId) {
         queryClient.setQueryData(["categories", context.restaurantId], context.previous);
       }
-      const message = getErrorMessage(error);
-      toast.error(`Failed to create category: ${message}`);
+      toast.error("Couldn't create category. Please try again.");
     },
   });
 };
@@ -350,8 +349,7 @@ export const useUpdateCategoriesOrder = () => {
       if (context?.previousCategories) {
         queryClient.setQueryData(["categories", context.restaurantId], context.previousCategories);
       }
-      const message = getErrorMessage(error);
-      toast.error(`Failed to reorder categories: ${message}`);
+      toast.error("Couldn't reorder categories. Please try again.");
     },
     onSettled: (_, __, variables) => {
       invalidateMenuQueries(queryClient, variables.restaurantId);

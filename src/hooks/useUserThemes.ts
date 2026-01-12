@@ -46,8 +46,8 @@ export const useCreateUserTheme = () => {
       queryClient.invalidateQueries({ queryKey: ['user-themes'] });
       toast.success('Theme saved successfully!');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to save theme');
+    onError: () => {
+      toast.error("Couldn't save theme. Please try again.");
     },
   });
 };
@@ -75,8 +75,8 @@ export const useUpdateUserTheme = () => {
       queryClient.invalidateQueries({ queryKey: ['user-themes'] });
       toast.success('Theme updated!');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to update theme');
+    onError: () => {
+      toast.error("Couldn't update theme. Please try again.");
     },
   });
 };
@@ -97,8 +97,8 @@ export const useDeleteUserTheme = () => {
       queryClient.invalidateQueries({ queryKey: ['user-themes'] });
       toast.success('Theme deleted!');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to delete theme');
+    onError: () => {
+      toast.error("Couldn't delete theme. Please try again.");
     },
   });
 };

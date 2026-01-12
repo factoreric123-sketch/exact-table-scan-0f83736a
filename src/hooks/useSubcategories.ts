@@ -265,8 +265,7 @@ export const useCreateSubcategory = () => {
       if (context?.previous && context.categoryId) {
         queryClient.setQueryData(["subcategories", context.categoryId], context.previous);
       }
-      const message = getErrorMessage(error);
-      toast.error(`Failed to create subcategory: ${message}`);
+      toast.error("Couldn't create subcategory. Please try again.");
     },
   });
 };
@@ -434,8 +433,7 @@ export const useUpdateSubcategoriesOrder = () => {
       if (context?.previousSubcategories) {
         queryClient.setQueryData(["subcategories", context.categoryId], context.previousSubcategories);
       }
-      const message = getErrorMessage(error);
-      toast.error(`Failed to reorder subcategories: ${message}`);
+      toast.error("Couldn't reorder subcategories. Please try again.");
     },
     onSettled: (_, __, variables) => {
       getRestaurantIdFromCategory(variables.categoryId).then(restaurantId => {

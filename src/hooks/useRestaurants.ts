@@ -222,7 +222,7 @@ export const useCreateRestaurant = () => {
       if (context?.previous && _variables.owner_id) {
         queryClient.setQueryData(["restaurants", _variables.owner_id], context.previous);
       }
-      toast.error(error.message || "Failed to create restaurant");
+      toast.error("Couldn't create restaurant. Please try again.");
     },
   });
 };
@@ -293,7 +293,7 @@ export const useUpdateRestaurant = () => {
         queryClient.setQueryData(["restaurant", id], context.previous);
       }
       logger.error('Failed to update restaurant', { error });
-      toast.error("Failed to update settings");
+      toast.error("Couldn't save changes. Please try again.");
     },
   });
 };
@@ -340,7 +340,7 @@ export const useDeleteRestaurant = () => {
           queryClient.setQueryData(queryKey, previous);
         }
       }
-      toast.error(error.message || "Failed to delete restaurant");
+      toast.error("Couldn't delete restaurant. Please try again.");
     },
   });
 };
