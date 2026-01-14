@@ -3,7 +3,6 @@ import { Theme } from '@/lib/types/theme';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useDebouncedCallback } from 'use-debounce';
@@ -16,12 +15,6 @@ interface AdvancedThemeEditorProps {
   onSaveCustom: (name: string) => void;
 }
 
-const fonts = [
-  'Playfair Display', 'Lora', 'Crimson Text', 'Merriweather', 'Cormorant Garamond',
-  'Libre Baskerville', 'Source Serif 4', 'Spectral', 'Inter', 'Montserrat',
-  'Raleway', 'Open Sans', 'Roboto', 'Lato', 'Nunito', 'Work Sans',
-  'Poppins', 'Quicksand', 'Barlow', 'DM Sans',
-];
 
 export const AdvancedThemeEditor = ({
   theme,
@@ -54,17 +47,6 @@ export const AdvancedThemeEditor = ({
     debouncedOnChange(updatedTheme);
   };
 
-  const handleFontChange = (fontType: 'heading' | 'body', fontFamily: string) => {
-    const updatedTheme = {
-      ...localTheme,
-      fonts: {
-        ...localTheme.fonts,
-        [fontType]: fontFamily,
-      },
-    };
-    setLocalTheme(updatedTheme);
-    debouncedOnChange(updatedTheme);
-  };
 
   const handleModeChange = (mode: 'light' | 'dark') => {
     const updatedTheme = {
@@ -203,49 +185,6 @@ export const AdvancedThemeEditor = ({
           </div>
         ))}
 
-        {/* Fonts */}
-        <div className="space-y-3">
-          <Label className="text-base font-semibold">Fonts</Label>
-          <div className="space-y-3">
-            <div>
-              <Label className="text-sm mb-2 block">Heading Font</Label>
-              <Select
-                value={localTheme.fonts.heading}
-                onValueChange={(value) => handleFontChange('heading', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {fonts.map((font) => (
-                    <SelectItem key={font} value={font} style={{ fontFamily: font }}>
-                      {font}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label className="text-sm mb-2 block">Body Font</Label>
-              <Select
-                value={localTheme.fonts.body}
-                onValueChange={(value) => handleFontChange('body', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {fonts.map((font) => (
-                    <SelectItem key={font} value={font} style={{ fontFamily: font }}>
-                      {font}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
 
         {/* Corner Radius */}
         <div className="space-y-3">
