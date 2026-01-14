@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Theme } from '@/lib/types/theme';
-import { camelToKebab, loadGoogleFont } from '@/lib/fontUtils';
+import { camelToKebab } from '@/lib/fontUtils';
 import { getDefaultTheme } from '@/lib/presetThemes';
 
 // Normalize legacy theme objects from DB into the current Theme shape
@@ -100,25 +100,6 @@ export const useThemePreview = (theme: Theme | any | null | undefined, enabled: 
         }
       }
 
-      // Load fonts safely
-      if (normalized.fonts) {
-        try {
-          if (normalized.fonts.heading) {
-            loadGoogleFont(normalized.fonts.heading);
-            if (root.style) {
-              root.style.setProperty('--font-heading', normalized.fonts.heading);
-            }
-          }
-          if (normalized.fonts.body) {
-            loadGoogleFont(normalized.fonts.body);
-            if (root.style) {
-              root.style.setProperty('--font-body', normalized.fonts.body);
-            }
-          }
-        } catch (err) {
-          console.warn('[useThemePreview] Failed to load fonts:', err);
-        }
-      }
     } catch (err) {
       console.error('[useThemePreview] Theme preview error:', err);
       // Don't rethrow - let the app continue without theme
