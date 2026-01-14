@@ -107,28 +107,11 @@ export const RestaurantSettingsDialog = ({
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="force-decimals" className="text-base">
-                    Force 2 Decimal Places
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Always show prices with 2 decimals (e.g., $13.00 instead of $13)
-                  </p>
-                </div>
-                <Switch
-                  id="force-decimals"
-                  checked={restaurant.force_two_decimals === true}
-                  onCheckedChange={(checked) => updateSetting("force_two_decimals", checked)}
-                  disabled={isUpdating}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
                   <Label htmlFor="show-currency" className="text-base">
                     Show Currency Symbol
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Display $ sign before prices (disable for cleaner look)
+                    Display $ sign before prices
                   </p>
                 </div>
                 <Switch
