@@ -205,19 +205,19 @@ export const DishDetailDialog = ({
           {/* Dietary badges */}
           <div className="flex flex-wrap gap-2">
             {dish.isVegan && (
-              <Badge variant="outline" className="bg-ios-green/10 text-ios-green border-ios-green/20 flex items-center gap-1.5">
+              <Badge variant="outline" className="px-3 py-1 text-sm bg-ios-green/10 text-ios-green border-ios-green/20 flex items-center gap-1.5">
                 <Sprout className="h-3.5 w-3.5" />
                 Vegan
               </Badge>
             )}
             {dish.isVegetarian && !dish.isVegan && (
-              <Badge variant="outline" className="bg-ios-green/10 text-ios-green border-ios-green/20 flex items-center gap-1.5">
+              <Badge variant="outline" className="px-3 py-1 text-sm bg-ios-green/10 text-ios-green border-ios-green/20 flex items-center gap-1.5">
                 <Salad className="h-3.5 w-3.5" />
                 Vegetarian
               </Badge>
             )}
             {dish.isSpicy && (
-              <Badge variant="outline" className="bg-ios-red/10 text-ios-red border-ios-red/20 flex items-center gap-1.5">
+              <Badge variant="outline" className="px-3 py-1 text-sm bg-ios-red/10 text-ios-red border-ios-red/20 flex items-center gap-1.5">
                 <Flame className="h-3.5 w-3.5" />
                 Spicy
               </Badge>
