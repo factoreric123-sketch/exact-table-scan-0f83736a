@@ -69,7 +69,7 @@ export const SortableSubcategory = ({
           role="button"
           aria-pressed={isActive}
           className={`
-            text-xs font-bold uppercase tracking-wider whitespace-nowrap pb-3 transition-all relative flex items-center gap-2
+            text-xs font-semibold tracking-wide whitespace-nowrap pb-3 transition-all relative flex items-center gap-2
             cursor-grab active:cursor-grabbing select-none
             min-w-[100px]
             ${isActive 
@@ -88,7 +88,7 @@ export const SortableSubcategory = ({
             <InlineEdit
               value={subcategory.name}
               onSave={handleNameUpdate}
-              className="bg-transparent border-none focus:outline-none focus:ring-0 text-xs font-bold uppercase tracking-wider"
+              className="bg-transparent border-none focus:outline-none focus:ring-0 text-xs font-semibold tracking-wide"
             />
           </div>
           <button

@@ -21,6 +21,7 @@ import { useThemeHistory } from "@/hooks/useThemeHistory";
 import { getDefaultTheme } from "@/lib/presetThemes";
 import { Theme } from "@/lib/types/theme";
 import { useQueryClient } from "@tanstack/react-query";
+import { MenuThemeWrapper } from "@/components/MenuThemeWrapper";
 
 const Editor = () => {
   const { restaurantId } = useParams<{ restaurantId: string }>();
@@ -414,43 +415,46 @@ const Editor = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* EditorTopBar stays OUTSIDE the theme wrapper - uses app styling */}
       <EditorTopBar
-          restaurant={restaurant}
-          previewMode={previewMode}
-          viewMode={viewMode}
-          onViewModeChange={handleViewModeChange}
+        restaurant={restaurant}
+        previewMode={previewMode}
+        viewMode={viewMode}
+        onViewModeChange={handleViewModeChange}
         onPreviewToggle={() => {
-            const newPreviewMode = !previewMode;
-            if (newPreviewMode) {
-              // Force refresh when entering preview mode
-              if (restaurantId) {
-                localStorage.removeItem(`fullMenu:${restaurantId}`);
-              }
-              refetchFullMenu();
-              if (viewMode === 'table') {
-                setViewMode('grid');
-              }
+          const newPreviewMode = !previewMode;
+          if (newPreviewMode) {
+            // Force refresh when entering preview mode
+            if (restaurantId) {
+              localStorage.removeItem(`fullMenu:${restaurantId}`);
             }
-            setPreviewMode(newPreviewMode);
-          }}
-          onPublishToggle={handlePublishToggle}
-          onUndo={handleUndo}
-          onRedo={handleRedo}
-          canUndo={canUndo}
-          canRedo={canRedo}
-          onThemeChange={handleThemeChange}
-          onFilterToggle={handleFilterToggle}
-          onRefresh={refetchRestaurant}
-          onUpdate={handleUpdate}
-        />
-
-      <RestaurantHeader
-        name={restaurant.name}
-        tagline={restaurant.tagline || ""}
-        heroImageUrl={restaurant.hero_image_url}
-        editable={!previewMode}
-        restaurantId={restaurant.id}
+            refetchFullMenu();
+            if (viewMode === 'table') {
+              setViewMode('grid');
+            }
+          }
+          setPreviewMode(newPreviewMode);
+        }}
+        onPublishToggle={handlePublishToggle}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onThemeChange={handleThemeChange}
+        onFilterToggle={handleFilterToggle}
+        onRefresh={refetchRestaurant}
+        onUpdate={handleUpdate}
       />
+
+      {/* Menu content wrapped in theme - each restaurant gets its own theme */}
+      <MenuThemeWrapper theme={restaurant.theme} className="min-h-[calc(100vh-64px)]">
+        <RestaurantHeader
+          name={restaurant.name}
+          tagline={restaurant.tagline || ""}
+          heroImageUrl={restaurant.hero_image_url}
+          editable={!previewMode}
+          restaurantId={restaurant.id}
+        />
 
       <div className=" mx-auto max-w-6xl">
         <Sheet>
@@ -517,6 +521,7 @@ const Editor = () => {
                 subcategoryId={subcategory.id}
                 previewMode={previewMode}
                 restaurant={restaurant}
+                sectionTitle={subcategory.name}
               />
             </div>
           );
@@ -540,7 +545,8 @@ const Editor = () => {
             activeSubcategoryId={activeSubcategory}
           />
         )}
-      </div>
+        </div>
+      </MenuThemeWrapper>
     </div>
   );
 };
