@@ -149,38 +149,48 @@ export const executeBackgroundMutations = (
 
   // FIRE AND FORGET - Execute in background, don't await
   // This function returns immediately, mutations happen async
-  setTimeout(() => {
-    Promise.allSettled(
-      tasks.map(task => task.execute())
-    ).then(results => {
-      const failed = results.filter(r => r.status === 'rejected');
+  setTimeout(async () => {
+    const results = await Promise.allSettled(tasks.map(task => task.execute()));
+    const failed = results.filter(r => r.status === 'rejected');
+    
+    if (failed.length > 0) {
+      // Retry failed ones once
+      const failedTasks = tasks.filter((_, i) => results[i].status === 'rejected');
+      const retryResults = await Promise.allSettled(failedTasks.map(t => t.execute()));
+      const stillFailed = retryResults.filter(r => r.status === 'rejected');
       
-      if (failed.length > 0) {
-        // Retry failed ones once
-        const failedTasks = tasks.filter((_, i) => results[i].status === 'rejected');
+      if (stillFailed.length > 0) {
+        const failedNames = failedTasks
+          .filter((_, i) => retryResults[i].status === 'rejected')
+          .map(t => t.name)
+          .slice(0, 2);
         
-        Promise.allSettled(failedTasks.map(t => t.execute())).then(retryResults => {
-          const stillFailed = retryResults.filter(r => r.status === 'rejected');
-          
-          if (stillFailed.length > 0) {
-            const failedNames = failedTasks
-              .filter((_, i) => retryResults[i].status === 'rejected')
-              .map(t => t.name)
-              .slice(0, 2);
-            
-            toast.error(`Failed to save: ${failedNames.join(", ")}`, {
-              action: {
-                label: "Refresh",
-                onClick: () => {
-                  queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
-                  queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
-                }
+        toast.error(`Failed to save: ${failedNames.join(", ")}`, {
+          action: {
+            label: "Refresh",
+            onClick: () => {
+              queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
+              queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
+              queryClient.invalidateQueries({ queryKey: ["dishes"] });
+              if (restaurantId) {
+                queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
               }
-            });
+            }
           }
         });
+        return; // Don't invalidate caches on failure
       }
-    });
+    }
+    
+    // CRITICAL: After ALL background mutations succeed, invalidate caches
+    // This ensures the next dialog open fetches fresh data from DB
+    queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
+    queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
+    queryClient.invalidateQueries({ queryKey: ["dishes"] });
+    if (restaurantId) {
+      queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
+      try { localStorage.removeItem(`fullMenu:${restaurantId}`); } catch {}
+    }
   }, 0);
 };
 
