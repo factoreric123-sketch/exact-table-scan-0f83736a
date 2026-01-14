@@ -189,24 +189,28 @@ export function DishOptionsEditor({
   onOpenChange,
 }: DishOptionsEditorProps) {
   const queryClient = useQueryClient();
-  const { data: options = [], isLoading: optionsLoading, isError: optionsError } = useDishOptions(dishId);
-  const { data: modifiers = [], isLoading: modifiersLoading, isError: modifiersError } = useDishModifiers(dishId);
+  const { data: options = [], isLoading: optionsLoading, isError: optionsError, isFetched: optionsFetched } = useDishOptions(dishId);
+  const { data: modifiers = [], isLoading: modifiersLoading, isError: modifiersError, isFetched: modifiersFetched } = useDishModifiers(dishId);
   const updateDish = useUpdateDish();
 
   // Loading timeout protection - never show loading for more than 2 seconds
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
-  const isLoading = (optionsLoading || modifiersLoading) && !loadingTimedOut;
-  // Only show error if there's an actual query error OR still loading after timeout (not just timeout with no data yet)
-  const hasDataError = (optionsError || modifiersError) || (loadingTimedOut && (optionsLoading || modifiersLoading));
+  
+  // Data is ready when both queries have finished fetching (successfully or with empty results)
+  const dataReady = optionsFetched && modifiersFetched;
+  const isLoading = !dataReady && !loadingTimedOut;
+  
+  // Only show error if there's an actual query error
+  const hasDataError = optionsError || modifiersError;
 
   useEffect(() => {
-    if (open && (optionsLoading || modifiersLoading)) {
+    if (open && !dataReady) {
       setLoadingTimedOut(false);
       const timer = setTimeout(() => setLoadingTimedOut(true), 2000);
       return () => clearTimeout(timer);
     }
     if (!open) setLoadingTimedOut(false);
-  }, [open, optionsLoading, modifiersLoading]);
+  }, [open, dataReady]);
 
   const createOption = useCreateDishOptionSilent();
   const updateOption = useUpdateDishOptionSilent();
@@ -222,6 +226,7 @@ export function DishOptionsEditor({
   
   const initialOptionsRef = useRef<EditableDishOption[]>([]);
   const initialModifiersRef = useRef<EditableDishModifier[]>([]);
+  const initialHasOptionsRef = useRef<boolean>(false); // Track initial has_options after data loads
   const saveInProgressRef = useRef(false);
   // Track if we've initialized for this session to prevent background refetches from overwriting edits
   const isInitializedRef = useRef(false);
@@ -243,9 +248,10 @@ export function DishOptionsEditor({
     [localModifiers]
   );
 
-  // Initialize ONLY once when dialog opens - prevent background refetches from overwriting user edits
+  // Initialize when dialog opens AND data is ready
+  // CRITICAL: Wait for data to be fetched before initializing to prevent empty state
   useEffect(() => {
-    if (open && !isInitializedRef.current) {
+    if (open && dataReady && !isInitializedRef.current) {
       isInitializedRef.current = true;
       
       const editableOptions: EditableDishOption[] = options.map(opt => ({
@@ -262,7 +268,12 @@ export function DishOptionsEditor({
 
       setLocalOptions(editableOptions);
       setLocalModifiers(editableModifiers);
-      setLocalHasOptions(initialHasOptions);
+      // CRITICAL: Use initialHasOptions from prop, but also check if we have actual data
+      // If there are options in the database, the toggle should reflect that
+      const hasExistingData = options.length > 0 || modifiers.length > 0;
+      const computedHasOptions = initialHasOptions || hasExistingData;
+      setLocalHasOptions(computedHasOptions);
+      initialHasOptionsRef.current = computedHasOptions; // Store initial value for comparison
       setIsDirty(false);
 
       initialOptionsRef.current = editableOptions.map(o => ({ ...o }));
@@ -273,7 +284,7 @@ export function DishOptionsEditor({
     if (!open) {
       isInitializedRef.current = false;
     }
-  }, [open, options, modifiers, initialHasOptions]);
+  }, [open, dataReady, options, modifiers, initialHasOptions]);
 
   const handleAddOption = useCallback(() => {
     if (localOptions.length >= MAX_OPTIONS) {
@@ -424,9 +435,10 @@ export function DishOptionsEditor({
     const { toCreate: newModifiers, toUpdate: updatedModifiers, toDelete: deletedModifiers } = 
       diffModifiers(initialModifiersRef.current, localModifiers);
     
+    const hasOptionsChanged = localHasOptions !== initialHasOptionsRef.current;
     const hasChanges = newOptions.length > 0 || updatedOptions.length > 0 || deletedOptions.length > 0 ||
                        newModifiers.length > 0 || updatedModifiers.length > 0 || deletedModifiers.length > 0 ||
-                       localHasOptions !== initialHasOptions;
+                       hasOptionsChanged;
 
     // NO CHANGES = INSTANT CLOSE
     if (!hasChanges) {
@@ -537,7 +549,8 @@ export function DishOptionsEditor({
       });
     });
 
-    if (localHasOptions !== initialHasOptions) {
+    // Update has_options flag if it changed from initial state
+    if (hasOptionsChanged) {
       tasks.push({
         type: 'update-dish',
         name: 'has_options',
@@ -550,7 +563,7 @@ export function DishOptionsEditor({
 
   }, [
     visibleOptions, visibleModifiers, localOptions, localModifiers, dishId, restaurantId,
-    localHasOptions, initialHasOptions, queryClient, onOpenChange,
+    localHasOptions, queryClient, onOpenChange,
     createOption, updateOption, deleteOption, createModifier, updateModifier, deleteModifier, updateDish
   ]);
 
