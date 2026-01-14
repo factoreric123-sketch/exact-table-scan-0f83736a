@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Restaurant } from "@/hooks/useRestaurants";
 import { useUpdateRestaurant } from "@/hooks/useRestaurants";
@@ -221,22 +222,28 @@ export const RestaurantSettingsDialog = ({
                 <p className="text-sm text-muted-foreground mb-3">
                   Adjust the roundness of cards and buttons
                 </p>
-                <div className="flex gap-2">
-                  {[
+                {(() => {
+                  const theme = restaurant.theme as any;
+                  const currentRadius = theme?.visual?.cornerRadius || '0.5rem';
+                  const radiusOptions = [
                     { value: '0rem', label: 'Sharp' },
                     { value: '0.5rem', label: 'Subtle' },
                     { value: '0.75rem', label: 'Medium' },
                     { value: '1rem', label: 'Rounded' },
                     { value: '1.5rem', label: 'Pill' },
-                  ].map((option) => {
-                    const theme = restaurant.theme as any;
-                    const currentRadius = theme?.visual?.cornerRadius || '0.5rem';
-                    return (
-                      <Button
-                        key={option.value}
-                        variant={currentRadius === option.value ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => {
+                  ];
+                  const currentIndex = radiusOptions.findIndex(o => o.value === currentRadius);
+                  const sliderValue = currentIndex >= 0 ? currentIndex : 1;
+                  
+                  return (
+                    <div className="space-y-3">
+                      <Slider
+                        value={[sliderValue]}
+                        min={0}
+                        max={4}
+                        step={1}
+                        onValueChange={([val]) => {
+                          const option = radiusOptions[val];
                           const currentTheme = (restaurant.theme || {}) as any;
                           const updatedTheme = {
                             ...currentTheme,
@@ -248,14 +255,16 @@ export const RestaurantSettingsDialog = ({
                           updateSetting("theme", updatedTheme);
                         }}
                         disabled={isUpdating}
-                        className="flex-1"
-                        style={{ borderRadius: option.value }}
-                      >
-                        {option.label}
-                      </Button>
-                    );
-                  })}
-                </div>
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        {radiusOptions.map((option) => (
+                          <span key={option.value}>{option.label}</span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Menu Font - COMMENTED OUT: Font preview not rendering correctly
