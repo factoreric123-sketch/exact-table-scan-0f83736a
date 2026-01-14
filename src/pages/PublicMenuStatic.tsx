@@ -6,7 +6,6 @@ import CategoryNav from '@/components/CategoryNav';
 import SubcategoryNav from '@/components/SubcategoryNav';
 import MenuGrid from '@/components/MenuGrid';
 import RestaurantHeader from '@/components/RestaurantHeader';
-import { MenuThemeWrapper } from '@/components/MenuThemeWrapper';
 
 // Lazy load filter - not needed for first paint
 const AllergenFilter = lazy(() => 
@@ -254,7 +253,7 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
   const activeCategoryName = categories?.find((c) => c.id === activeCategory)?.name || '';
 
   return (
-    <MenuThemeWrapper theme={restaurant?.theme} className="min-h-screen bg-background">
+    <div key={restaurant?.updated_at} className="min-h-screen bg-background">
 
       {/* Restaurant Hero */}
       <RestaurantHeader
@@ -436,7 +435,7 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
           <span className="font-semibold text-foreground">TAPTAB</span>
         </p>
       </footer>
-    </MenuThemeWrapper>
+    </div>
   );
 };
 

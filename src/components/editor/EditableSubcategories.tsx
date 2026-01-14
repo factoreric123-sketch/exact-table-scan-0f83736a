@@ -115,7 +115,7 @@ export const EditableSubcategories = ({
             key={subcategory.id}
             onClick={() => onSubcategoryChange(subcategory.id)}
             className={`
-              text-xs font-semibold tracking-wide whitespace-nowrap pb-3 transition-all relative
+              text-xs font-bold uppercase tracking-wider whitespace-nowrap pb-3 transition-all relative
               ${activeSubcategory === subcategory.id 
                 ? 'text-foreground' 
                 : 'text-muted-foreground hover:text-foreground'
@@ -171,7 +171,7 @@ export const EditableSubcategories = ({
             variant="ghost"
             size="sm"
             className="
-              text-xs font-semibold tracking-wide
+              text-xs font-bold uppercase tracking-wider
               whitespace-nowrap gap-2 shrink-0
               snap-start
             "

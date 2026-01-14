@@ -59,6 +59,16 @@ export const ThemePreviewCard = ({
           />
         </div>
 
+        {/* Font preview */}
+        <div className="text-left space-y-1">
+          <p className="text-xs text-muted-foreground">Fonts</p>
+          <p className="text-sm" style={{ fontFamily: theme.fonts.heading }}>
+            {theme.fonts.heading}
+          </p>
+          <p className="text-xs text-muted-foreground" style={{ fontFamily: theme.fonts.body }}>
+            {theme.fonts.body}
+          </p>
+        </div>
 
         {/* Mode indicator */}
         <div className="flex items-center gap-2">

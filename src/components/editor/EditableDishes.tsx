@@ -29,7 +29,6 @@ interface EditableDishesProps {
   subcategoryId: string;
   previewMode: boolean;
   restaurant?: any;
-  sectionTitle?: string;
 }
 
 export const EditableDishes = ({
@@ -37,7 +36,6 @@ export const EditableDishes = ({
   subcategoryId,
   previewMode,
   restaurant,
-  sectionTitle = "",
 }: EditableDishesProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
@@ -170,7 +168,7 @@ export const EditableDishes = ({
       <MenuGrid
         key={restaurant?.updated_at} // Force re-render when settings change
         dishes={dishCards}
-        sectionTitle={sectionTitle}
+        sectionTitle=""
         showPrice={restaurant?.show_prices !== false}
         showImage={restaurant?.show_images !== false}
         gridColumns={restaurant?.grid_columns || 2}

@@ -4,7 +4,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Restaurant } from "@/hooks/useRestaurants";
 import { useUpdateRestaurant } from "@/hooks/useRestaurants";
@@ -214,57 +213,6 @@ export const RestaurantSettingsDialog = ({
                   onCheckedChange={(checked) => updateSetting("text_overlay", checked)}
                   disabled={isUpdating}
                 />
-              </div>
-
-              {/* Corner Roundness */}
-              <div>
-                <Label className="text-base mb-2 block">Corner Roundness</Label>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Adjust the roundness of cards and buttons (0 - 1 rem)
-                </p>
-                {(() => {
-                  const theme = restaurant.theme as any;
-                  const currentRadius = theme?.visual?.cornerRadius || '0.5rem';
-                  const numericValue = parseFloat(currentRadius) || 0.5;
-                  
-                  const handleRadiusChange = (value: number) => {
-                    const clampedValue = Math.min(1, Math.max(0, value));
-                    const roundedValue = Math.round(clampedValue * 10) / 10;
-                    const currentTheme = (restaurant.theme || {}) as any;
-                    const updatedTheme = {
-                      ...currentTheme,
-                      visual: {
-                        ...currentTheme.visual,
-                        cornerRadius: `${roundedValue}rem`,
-                      },
-                    };
-                    updateSetting("theme", updatedTheme);
-                  };
-                  
-                  return (
-                    <div className="flex items-center gap-4">
-                      <Slider
-                        value={[numericValue]}
-                        min={0}
-                        max={1}
-                        step={0.1}
-                        onValueChange={([val]) => handleRadiusChange(val)}
-                        disabled={isUpdating}
-                        className="flex-1"
-                      />
-                      <Input
-                        type="number"
-                        min={0}
-                        max={1}
-                        step={0.1}
-                        value={numericValue}
-                        onChange={(e) => handleRadiusChange(parseFloat(e.target.value) || 0)}
-                        disabled={isUpdating}
-                        className="w-20 text-center"
-                      />
-                    </div>
-                  );
-                })()}
               </div>
 
               {/* Menu Font - COMMENTED OUT: Font preview not rendering correctly

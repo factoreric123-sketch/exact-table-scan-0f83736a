@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageCropModal } from "@/components/ImageCropModal";
 import { toast } from "sonner";
-import { presetThemes } from "@/lib/presetThemes";
 
 interface CreateRestaurantModalProps {
   open: boolean;
@@ -102,9 +101,6 @@ export const CreateRestaurantModal = ({ open, onOpenChange }: CreateRestaurantMo
         return;
       }
 
-      // Get the Classic theme as default
-      const classicTheme = presetThemes.find(t => t.id === 'classic') || presetThemes[0];
-
       const newRestaurant = await createRestaurant.mutateAsync({
         owner_id: user.id,
         name: name.trim(),
@@ -112,7 +108,6 @@ export const CreateRestaurantModal = ({ open, onOpenChange }: CreateRestaurantMo
         tagline: tagline.trim() || null,
         hero_image_url: heroImageUrl,
         published: false,
-        theme: classicTheme,
       });
 
       toast.success("Restaurant created!");
