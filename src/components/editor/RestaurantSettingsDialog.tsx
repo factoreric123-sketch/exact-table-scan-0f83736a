@@ -220,48 +220,48 @@ export const RestaurantSettingsDialog = ({
               <div>
                 <Label className="text-base mb-2 block">Corner Roundness</Label>
                 <p className="text-sm text-muted-foreground mb-3">
-                  Adjust the roundness of cards and buttons
+                  Adjust the roundness of cards and buttons (0 - 1 rem)
                 </p>
                 {(() => {
                   const theme = restaurant.theme as any;
                   const currentRadius = theme?.visual?.cornerRadius || '0.5rem';
-                  const radiusOptions = [
-                    { value: '0rem', label: 'Sharp' },
-                    { value: '0.5rem', label: 'Subtle' },
-                    { value: '0.75rem', label: 'Medium' },
-                    { value: '1rem', label: 'Rounded' },
-                    { value: '1.5rem', label: 'Pill' },
-                  ];
-                  const currentIndex = radiusOptions.findIndex(o => o.value === currentRadius);
-                  const sliderValue = currentIndex >= 0 ? currentIndex : 1;
+                  const numericValue = parseFloat(currentRadius) || 0.5;
+                  
+                  const handleRadiusChange = (value: number) => {
+                    const clampedValue = Math.min(1, Math.max(0, value));
+                    const roundedValue = Math.round(clampedValue * 10) / 10;
+                    const currentTheme = (restaurant.theme || {}) as any;
+                    const updatedTheme = {
+                      ...currentTheme,
+                      visual: {
+                        ...currentTheme.visual,
+                        cornerRadius: `${roundedValue}rem`,
+                      },
+                    };
+                    updateSetting("theme", updatedTheme);
+                  };
                   
                   return (
-                    <div className="space-y-3">
+                    <div className="flex items-center gap-4">
                       <Slider
-                        value={[sliderValue]}
+                        value={[numericValue]}
                         min={0}
-                        max={4}
-                        step={1}
-                        onValueChange={([val]) => {
-                          const option = radiusOptions[val];
-                          const currentTheme = (restaurant.theme || {}) as any;
-                          const updatedTheme = {
-                            ...currentTheme,
-                            visual: {
-                              ...currentTheme.visual,
-                              cornerRadius: option.value,
-                            },
-                          };
-                          updateSetting("theme", updatedTheme);
-                        }}
+                        max={1}
+                        step={0.1}
+                        onValueChange={([val]) => handleRadiusChange(val)}
                         disabled={isUpdating}
-                        className="w-full"
+                        className="flex-1"
                       />
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        {radiusOptions.map((option) => (
-                          <span key={option.value}>{option.label}</span>
-                        ))}
-                      </div>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={1}
+                        step={0.1}
+                        value={numericValue}
+                        onChange={(e) => handleRadiusChange(parseFloat(e.target.value) || 0)}
+                        disabled={isUpdating}
+                        className="w-20 text-center"
+                      />
                     </div>
                   );
                 })()}
