@@ -13,7 +13,9 @@ const MenuShortDisplay = () => {
   const { restaurantHash, menuId } = useParams<{ restaurantHash: string; menuId: string }>();
   const [status, setStatus] = useState<"resolving" | "found" | "not-found" | "unpublished">("resolving");
   const [restaurantId, setRestaurantId] = useState<string>("");
-  const { data: fullMenu, isLoading: menuLoading } = useFullMenu(restaurantId);
+  const { data: fullMenu, isLoading: menuLoading } = useFullMenu(restaurantId, { 
+    useLocalStorageCache: false 
+  });
 
   useEffect(() => {
     const resolveLink = async () => {
