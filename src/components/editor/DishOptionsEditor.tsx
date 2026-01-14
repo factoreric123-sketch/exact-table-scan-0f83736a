@@ -436,10 +436,14 @@ export function DishOptionsEditor({
     onOpenChange(false);
   }, [isDirty, onOpenChange]);
 
-  // ============= ULTRA-FAST OPTIMISTIC SAVE =============
-  const handleSaveAndClose = useCallback(() => {
-    if (saveInProgressRef.current) return;
+  // State to track saving in progress
+  const [isSaving, setIsSaving] = useState(false);
+
+  // ============= RELIABLE SAVE - AWAITS MUTATIONS =============
+  const handleSaveAndClose = useCallback(async () => {
+    if (saveInProgressRef.current || isSaving) return;
     saveInProgressRef.current = true;
+    setIsSaving(true);
 
     // INSTANT validation
     const invalidOptions = visibleOptions.filter(o => !o.name.trim());
@@ -448,6 +452,7 @@ export function DishOptionsEditor({
     if (invalidOptions.length > 0 || invalidModifiers.length > 0) {
       toast.error("Please fill in all names");
       saveInProgressRef.current = false;
+      setIsSaving(false);
       return;
     }
 
@@ -466,126 +471,138 @@ export function DishOptionsEditor({
     if (!hasChanges) {
       onOpenChange(false);
       saveInProgressRef.current = false;
+      setIsSaving(false);
       return;
     }
 
-    // Build optimistic data
-    const finalOptions: DishOption[] = visibleOptions.map((opt, idx) => ({
-      id: opt._temp ? `pending_${idx}` : opt.id,
-      dish_id: dishId,
-      name: opt.name,
-      price: normalizePrice(opt.price),
-      order_index: idx,
-      created_at: opt.created_at,
-    }));
+    try {
+      // Execute ALL mutations and await them
+      const mutationPromises: Promise<any>[] = [];
 
-    const finalModifiers: DishModifier[] = visibleModifiers.map((mod, idx) => ({
-      id: mod._temp ? `pending_${idx}` : mod.id,
-      dish_id: dishId,
-      name: mod.name,
-      price: normalizePrice(mod.price),
-      order_index: idx,
-      created_at: mod.created_at,
-    }));
+      // Create new options
+      for (const opt of newOptions) {
+        mutationPromises.push(
+          createOption.mutateAsync({
+            dish_id: dishId,
+            name: opt.name,
+            price: normalizePrice(opt.price),
+            order_index: opt.order_index,
+          })
+        );
+      }
 
-    // ⚡ INSTANT: Apply optimistic update + close dialog + show toast
-    // CRITICAL: When hasOptions is FALSE, pass EMPTY arrays so preview doesn't show options
-    // This is the key to instant enable/disable toggle sync
-    const optionsForCache = localHasOptions ? finalOptions : [];
-    const modifiersForCache = localHasOptions ? finalModifiers : [];
-    
-    if (restaurantId) {
-      applyOptimisticOptionsUpdate(queryClient, dishId, restaurantId, optionsForCache, modifiersForCache, localHasOptions);
-    } else {
-      queryClient.setQueryData(["dish-options", dishId], optionsForCache);
-      queryClient.setQueryData(["dish-modifiers", dishId], modifiersForCache);
-    }
-    
-    toast.success("Saved", { icon: <Check className="h-4 w-4" /> });
-    onOpenChange(false);
+      // Create new modifiers
+      for (const mod of newModifiers) {
+        mutationPromises.push(
+          createModifier.mutateAsync({
+            dish_id: dishId,
+            name: mod.name,
+            price: normalizePrice(mod.price),
+            order_index: mod.order_index,
+          })
+        );
+      }
 
-    // ⚡ BACKGROUND: Execute mutations
-    const tasks: MutationTask[] = [];
+      // Update existing options
+      for (const opt of updatedOptions) {
+        mutationPromises.push(
+          updateOption.mutateAsync({
+            id: opt.id,
+            updates: { name: opt.name, price: normalizePrice(opt.price), order_index: opt.order_index }
+          })
+        );
+      }
 
-    newOptions.forEach(opt => {
-      tasks.push({
-        type: 'create-option',
-        name: opt.name || 'Option',
-        execute: () => createOption.mutateAsync({
-          dish_id: dishId,
-          name: opt.name,
-          price: normalizePrice(opt.price),
-          order_index: opt.order_index,
-        })
-      });
-    });
+      // Update existing modifiers
+      for (const mod of updatedModifiers) {
+        mutationPromises.push(
+          updateModifier.mutateAsync({
+            id: mod.id,
+            updates: { name: mod.name, price: normalizePrice(mod.price), order_index: mod.order_index }
+          })
+        );
+      }
 
-    newModifiers.forEach(mod => {
-      tasks.push({
-        type: 'create-modifier',
-        name: mod.name || 'Modifier',
-        execute: () => createModifier.mutateAsync({
-          dish_id: dishId,
-          name: mod.name,
-          price: normalizePrice(mod.price),
-          order_index: mod.order_index,
-        })
-      });
-    });
+      // DELETE options - CRITICAL for removing items
+      for (const opt of deletedOptions) {
+        console.log('[DishOptionsEditor] Deleting option:', opt.id, opt.name);
+        mutationPromises.push(
+          deleteOption.mutateAsync({ id: opt.id, dishId })
+        );
+      }
 
-    updatedOptions.forEach(opt => {
-      tasks.push({
-        type: 'update-option',
+      // DELETE modifiers - CRITICAL for removing items
+      for (const mod of deletedModifiers) {
+        console.log('[DishOptionsEditor] Deleting modifier:', mod.id, mod.name);
+        mutationPromises.push(
+          deleteModifier.mutateAsync({ id: mod.id, dishId })
+        );
+      }
+
+      // Update has_options flag if changed
+      if (hasOptionsChanged) {
+        mutationPromises.push(
+          updateDish.mutateAsync({ id: dishId, updates: { has_options: localHasOptions } })
+        );
+      }
+
+      // AWAIT ALL MUTATIONS - This ensures data is persisted before showing success
+      await Promise.all(mutationPromises);
+      console.log('[DishOptionsEditor] All mutations completed successfully');
+
+      // Build final data for cache update
+      const finalOptions: DishOption[] = visibleOptions.map((opt, idx) => ({
+        id: opt._temp ? `pending_${idx}` : opt.id,
+        dish_id: dishId,
         name: opt.name,
-        execute: () => updateOption.mutateAsync({
-          id: opt.id,
-          updates: { name: opt.name, price: opt.price, order_index: opt.order_index }
-        })
-      });
-    });
+        price: normalizePrice(opt.price),
+        order_index: idx,
+        created_at: opt.created_at,
+      }));
 
-    updatedModifiers.forEach(mod => {
-      tasks.push({
-        type: 'update-modifier',
+      const finalModifiers: DishModifier[] = visibleModifiers.map((mod, idx) => ({
+        id: mod._temp ? `pending_${idx}` : mod.id,
+        dish_id: dishId,
         name: mod.name,
-        execute: () => updateModifier.mutateAsync({
-          id: mod.id,
-          updates: { name: mod.name, price: mod.price, order_index: mod.order_index }
-        })
-      });
-    });
+        price: normalizePrice(mod.price),
+        order_index: idx,
+        created_at: mod.created_at,
+      }));
 
-    deletedOptions.forEach(opt => {
-      tasks.push({
-        type: 'delete-option',
-        name: opt.name,
-        execute: () => deleteOption.mutateAsync({ id: opt.id, dishId })
-      });
-    });
+      // Update caches with persisted data
+      const optionsForCache = localHasOptions ? finalOptions : [];
+      const modifiersForCache = localHasOptions ? finalModifiers : [];
+      
+      if (restaurantId) {
+        applyOptimisticOptionsUpdate(queryClient, dishId, restaurantId, optionsForCache, modifiersForCache, localHasOptions);
+      } else {
+        queryClient.setQueryData(["dish-options", dishId], optionsForCache);
+        queryClient.setQueryData(["dish-modifiers", dishId], modifiersForCache);
+      }
 
-    deletedModifiers.forEach(mod => {
-      tasks.push({
-        type: 'delete-modifier',
-        name: mod.name,
-        execute: () => deleteModifier.mutateAsync({ id: mod.id, dishId })
-      });
-    });
+      // CRITICAL: Invalidate all related caches to ensure fresh data everywhere
+      queryClient.removeQueries({ queryKey: ["dish-options", dishId] });
+      queryClient.removeQueries({ queryKey: ["dish-modifiers", dishId] });
+      queryClient.invalidateQueries({ queryKey: ["dishes"] });
+      if (restaurantId) {
+        queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
+        // Clear localStorage cache so live menu fetches fresh data
+        try { localStorage.removeItem(`fullMenu:${restaurantId}`); } catch {}
+      }
 
-    // Update has_options flag if it changed from initial state
-    if (hasOptionsChanged) {
-      tasks.push({
-        type: 'update-dish',
-        name: 'has_options',
-        execute: () => updateDish.mutateAsync({ id: dishId, updates: { has_options: localHasOptions } })
-      });
+      toast.success("Saved", { icon: <Check className="h-4 w-4" /> });
+      onOpenChange(false);
+
+    } catch (error) {
+      console.error('[DishOptionsEditor] Save failed:', error);
+      toast.error("Failed to save changes. Please try again.");
+    } finally {
+      saveInProgressRef.current = false;
+      setIsSaving(false);
     }
-
-    executeBackgroundMutations(tasks, dishId, restaurantId || '', queryClient);
-    saveInProgressRef.current = false;
-
   }, [
     visibleOptions, visibleModifiers, localOptions, localModifiers, dishId, restaurantId,
-    localHasOptions, queryClient, onOpenChange,
+    localHasOptions, queryClient, onOpenChange, isSaving,
     createOption, updateOption, deleteOption, createModifier, updateModifier, deleteModifier, updateDish
   ]);
 
@@ -729,8 +746,10 @@ export function DishOptionsEditor({
           </div>
 
           <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-            <Button onClick={handleSaveAndClose}>Save</Button>
+            <Button variant="outline" onClick={handleCancel} disabled={isSaving}>Cancel</Button>
+            <Button onClick={handleSaveAndClose} disabled={isSaving}>
+              {isSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</> : "Save"}
+            </Button>
           </div>
         </div>
       </DialogContent>
