@@ -64,26 +64,21 @@ export const DishDetailDialog = ({
   const fontClass = getFontClassName(menuFont);
   const isVertical = cardImageShape === 'vertical';
 
-  // CRITICAL FIX: Use dataUpdatedAt to detect if cache has been set (even via setQueryData)
-  // This ensures optimistic updates are reflected immediately
-  const { data: fetchedOptions, dataUpdatedAt: optionsUpdatedAt } = useDishOptions(dish.id);
-  const { data: fetchedModifiers, dataUpdatedAt: modifiersUpdatedAt } = useDishModifiers(dish.id);
+  // CRITICAL FIX: Always use fresh data from database, NEVER fall back to stale dish.options/modifiers
+  // This ensures Live Menu shows the same data as Editor Preview
+  const { data: fetchedOptions, isFetching: optionsFetching } = useDishOptions(dish.id);
+  const { data: fetchedModifiers, isFetching: modifiersFetching } = useDishModifiers(dish.id);
   
-  // Prioritize cached data if it exists (dataUpdatedAt > 0 means cache has data)
-  // When hasOptions is toggled OFF, we set cache to [] (empty) via setQueryData
-  // dataUpdatedAt will be > 0, so we use [] instead of falling back to stale dish.options
-  const options = optionsUpdatedAt > 0 ? (fetchedOptions || []) : (dish.options || []);
-  const modifiers = modifiersUpdatedAt > 0 ? (fetchedModifiers || []) : (dish.modifiers || []);
+  // ALWAYS use fetched data - never fall back to potentially stale dish.options/modifiers
+  const options = fetchedOptions || [];
+  const modifiers = fetchedModifiers || [];
   
-  // CRITICAL FIX: Determine if options should be shown based on ACTUAL data in React Query cache
-  // When user disables "Enable Pricing Options" toggle:
-  // 1. DishOptionsEditor passes EMPTY arrays to applyOptimisticOptionsUpdate
-  // 2. This empties the dish-options React Query cache
-  // 3. fetchedOptions becomes empty [], optionsFetched is true
-  // 4. options = [] (not falling back to stale dish.options!)
-  // 5. showOptionsSection becomes false, hiding the options UI
+  // Show options section based on ACTUAL data from database
   const hasAnyOptions = options.length > 0 || modifiers.length > 0;
   const showOptionsSection = hasAnyOptions;
+  
+  // Loading state while fetching fresh data
+  const isLoadingOptions = optionsFetching || modifiersFetching;
   
   const [selectedOption, setSelectedOption] = useState("");
   const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
