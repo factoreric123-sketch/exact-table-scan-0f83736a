@@ -19,13 +19,12 @@ import {
   useUpdateDishModifierSilent,
   useDeleteDishModifierSilent,
   applyOptimisticOptionsUpdate,
-  executeBackgroundMutations,
   normalizePrice,
-  type MutationTask
 } from "@/hooks/useDishOptionsMutations";
 import { useQueryClient } from "@tanstack/react-query";
 import { generateUUID } from "@/lib/utils/uuid";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import type { DishOption } from "@/hooks/useDishOptions";
 import type { DishModifier } from "@/hooks/useDishModifiers";
 
@@ -216,14 +215,9 @@ export function DishOptionsEditor({
   // Only show error if there's an actual query error
   const hasDataError = optionsError || modifiersError;
 
-  // CRITICAL: Remove stale queries when dialog opens to force fresh fetch
-  useEffect(() => {
-    if (open && !isInitializedRef.current) {
-      // Remove cached queries to ensure we get fresh data from database
-      queryClient.removeQueries({ queryKey: ['dish-options', dishId] });
-      queryClient.removeQueries({ queryKey: ['dish-modifiers', dishId] });
-    }
-  }, [open, dishId, queryClient]);
+  // NOTE: We no longer remove queries when dialog opens
+  // The query hooks have staleTime: 0 and refetchOnMount: 'always' which ensures fresh data
+  // Removing queries here would destroy cached data before the new fetch completes
 
   useEffect(() => {
     if (open && !dataReady) {
@@ -550,44 +544,46 @@ export function DishOptionsEditor({
       await Promise.all(mutationPromises);
       console.log('[DishOptionsEditor] All mutations completed successfully');
 
-      // Build final data for cache update
-      const finalOptions: DishOption[] = visibleOptions.map((opt, idx) => ({
-        id: opt._temp ? `pending_${idx}` : opt.id,
-        dish_id: dishId,
-        name: opt.name,
-        price: normalizePrice(opt.price),
-        order_index: idx,
-        created_at: opt.created_at,
-      }));
+      // CRITICAL: VERIFY data by fetching directly from database
+      // This ensures what we display matches what's actually persisted
+      const [optionsResult, modifiersResult] = await Promise.all([
+        supabase.from("dish_options").select("*").eq("dish_id", dishId).order("order_index"),
+        supabase.from("dish_modifiers").select("*").eq("dish_id", dishId).order("order_index")
+      ]);
 
-      const finalModifiers: DishModifier[] = visibleModifiers.map((mod, idx) => ({
-        id: mod._temp ? `pending_${idx}` : mod.id,
-        dish_id: dishId,
-        name: mod.name,
-        price: normalizePrice(mod.price),
-        order_index: idx,
-        created_at: mod.created_at,
-      }));
-
-      // Update caches with persisted data
-      const optionsForCache = localHasOptions ? finalOptions : [];
-      const modifiersForCache = localHasOptions ? finalModifiers : [];
-      
-      if (restaurantId) {
-        applyOptimisticOptionsUpdate(queryClient, dishId, restaurantId, optionsForCache, modifiersForCache, localHasOptions);
-      } else {
-        queryClient.setQueryData(["dish-options", dishId], optionsForCache);
-        queryClient.setQueryData(["dish-modifiers", dishId], modifiersForCache);
+      if (optionsResult.error) {
+        console.error('[DishOptionsEditor] Failed to verify options:', optionsResult.error);
+        throw new Error("Failed to verify saved options");
+      }
+      if (modifiersResult.error) {
+        console.error('[DishOptionsEditor] Failed to verify modifiers:', modifiersResult.error);
+        throw new Error("Failed to verify saved modifiers");
       }
 
-      // CRITICAL: Invalidate all related caches to ensure fresh data everywhere
-      queryClient.removeQueries({ queryKey: ["dish-options", dishId] });
-      queryClient.removeQueries({ queryKey: ["dish-modifiers", dishId] });
+      const verifiedOptions = optionsResult.data || [];
+      const verifiedModifiers = modifiersResult.data || [];
+      
+      console.log('[DishOptionsEditor] Verified from DB - options:', verifiedOptions.length, 'modifiers:', verifiedModifiers.length);
+
+      // Update caches with VERIFIED data from database (not local state)
+      const optionsForCache = localHasOptions ? verifiedOptions : [];
+      const modifiersForCache = localHasOptions ? verifiedModifiers : [];
+      
+      // Set the query data with verified data
+      queryClient.setQueryData(["dish-options", dishId], optionsForCache);
+      queryClient.setQueryData(["dish-modifiers", dishId], modifiersForCache);
+      
+      // Update full-menu cache for live preview
+      if (restaurantId) {
+        applyOptimisticOptionsUpdate(queryClient, dishId, restaurantId, optionsForCache, modifiersForCache, localHasOptions);
+        // Clear localStorage cache so live menu fetches fresh data
+        try { localStorage.removeItem(`fullMenu:${restaurantId}`); } catch {}
+      }
+
+      // Invalidate related caches to trigger refetch (but our cache is already correct)
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
       if (restaurantId) {
         queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
-        // Clear localStorage cache so live menu fetches fresh data
-        try { localStorage.removeItem(`fullMenu:${restaurantId}`); } catch {}
       }
 
       toast.success("Saved", { icon: <Check className="h-4 w-4" /> });
@@ -596,6 +592,7 @@ export function DishOptionsEditor({
     } catch (error) {
       console.error('[DishOptionsEditor] Save failed:', error);
       toast.error("Failed to save changes. Please try again.");
+      // DON'T close dialog on failure - let user retry
     } finally {
       saveInProgressRef.current = false;
       setIsSaving(false);
