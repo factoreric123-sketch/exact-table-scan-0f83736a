@@ -185,16 +185,16 @@ export const DishDetailDialog = ({
         }`}>
           {/* Allergen badges */}
           {dish.allergens && dish.allergens.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {dish.allergens.map((allergen) => {
                 const Icon = allergenIconMap[allergen.toLowerCase()] || Sprout;
                 return (
                   <Badge
                     key={allergen}
                     variant="secondary"
-                    className="px-3 py-1 text-sm flex items-center gap-1.5"
+                    className="px-2 py-0.5 text-xs flex items-center gap-1"
                   >
-                    <Icon className="h-3.5 w-3.5" />
+                    <Icon className="h-3 w-3" />
                     {allergen.charAt(0).toUpperCase() + allergen.slice(1)}
                   </Badge>
                 );
@@ -203,22 +203,22 @@ export const DishDetailDialog = ({
           )}
 
           {/* Dietary badges */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {dish.isVegan && (
-              <Badge variant="outline" className="px-3 py-1 text-sm bg-ios-green/10 text-ios-green border-ios-green/20 flex items-center gap-1.5">
-                <Sprout className="h-3.5 w-3.5" />
+              <Badge variant="outline" className="px-2 py-0.5 text-xs bg-ios-green/10 text-ios-green border-ios-green/20 flex items-center gap-1">
+                <Sprout className="h-3 w-3" />
                 Vegan
               </Badge>
             )}
             {dish.isVegetarian && !dish.isVegan && (
-              <Badge variant="outline" className="px-3 py-1 text-sm bg-ios-green/10 text-ios-green border-ios-green/20 flex items-center gap-1.5">
-                <Salad className="h-3.5 w-3.5" />
+              <Badge variant="outline" className="px-2 py-0.5 text-xs bg-ios-green/10 text-ios-green border-ios-green/20 flex items-center gap-1">
+                <Salad className="h-3 w-3" />
                 Vegetarian
               </Badge>
             )}
             {dish.isSpicy && (
-              <Badge variant="outline" className="px-3 py-1 text-sm bg-ios-red/10 text-ios-red border-ios-red/20 flex items-center gap-1.5">
-                <Flame className="h-3.5 w-3.5" />
+              <Badge variant="outline" className="px-2 py-0.5 text-xs bg-ios-red/10 text-ios-red border-ios-red/20 flex items-center gap-1">
+                <Flame className="h-3 w-3" />
                 Spicy
               </Badge>
             )}
