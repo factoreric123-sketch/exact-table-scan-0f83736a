@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Theme } from '@/lib/types/theme';
 import { camelToKebab } from '@/lib/fontUtils';
 import { getDefaultTheme } from '@/lib/presetThemes';
@@ -46,63 +46,78 @@ function normalizeTheme(raw: any): Theme | null {
 }
 
 /**
- * Hook to apply theme preview safely with legacy support
+ * Hook to apply theme preview to a SCOPED container element
+ * This version applies to a specific element, not the document root
+ * Used for live preview in the Theme Gallery Modal
+ * 
+ * @param theme - Theme to preview
+ * @param enabled - Whether to apply the preview
+ * @param containerRef - Optional ref to a container element (defaults to .menu-theme-scope)
  */
-export const useThemePreview = (theme: Theme | any | null | undefined, enabled: boolean = true) => {
+export const useThemePreview = (
+  theme: Theme | any | null | undefined, 
+  enabled: boolean = true,
+  containerRef?: React.RefObject<HTMLElement>
+) => {
+  const previousStyles = useRef<Map<string, string>>(new Map());
+
   useEffect(() => {
     if (!enabled) return;
     
-    // Wrap everything in try-catch to prevent errors from crashing the app
     try {
       const normalized = normalizeTheme(theme);
       if (!normalized) return;
 
-      // Check if document exists (for SSR safety)
       if (typeof document === 'undefined') return;
 
-      const root = document.documentElement;
-      if (!root) return;
+      // Find the menu theme scope container(s)
+      const containers = containerRef?.current 
+        ? [containerRef.current]
+        : document.querySelectorAll('.menu-theme-scope');
 
-      // Apply colors safely
-      if (normalized.colors && typeof normalized.colors === 'object') {
-        Object.entries(normalized.colors).forEach(([key, value]) => {
-          try {
-            if (value && root.style) {
-              root.style.setProperty(`--${camelToKebab(key)}`, value as string);
+      if (containers.length === 0) return;
+
+      containers.forEach((container) => {
+        if (!(container instanceof HTMLElement)) return;
+
+        // Apply colors
+        if (normalized.colors && typeof normalized.colors === 'object') {
+          Object.entries(normalized.colors).forEach(([key, value]) => {
+            try {
+              if (value) {
+                container.style.setProperty(`--${camelToKebab(key)}`, value as string);
+              }
+            } catch (err) {
+              console.warn(`[useThemePreview] Failed to set color ${key}:`, err);
             }
-          } catch (err) {
-            console.warn(`[useThemePreview] Failed to set color ${key}:`, err);
-          }
-        });
-      }
-
-      // Apply corner radius safely
-      if (normalized.visual?.cornerRadius && root.style) {
-        try {
-          root.style.setProperty('--radius', normalized.visual.cornerRadius);
-        } catch (err) {
-          console.warn('[useThemePreview] Failed to set corner radius:', err);
+          });
         }
-      }
 
-      // Apply mode class safely
-      if (root.classList) {
+        // Apply corner radius
+        if (normalized.visual?.cornerRadius) {
+          try {
+            container.style.setProperty('--radius', normalized.visual.cornerRadius);
+          } catch (err) {
+            console.warn('[useThemePreview] Failed to set corner radius:', err);
+          }
+        }
+
+        // Apply mode class
         try {
           if (normalized.visual?.mode === 'dark') {
-            root.classList.add('dark');
-            root.classList.remove('light');
+            container.classList.add('dark');
+            container.classList.remove('light');
           } else {
-            root.classList.add('light');
-            root.classList.remove('dark');
+            container.classList.add('light');
+            container.classList.remove('dark');
           }
         } catch (err) {
           console.warn('[useThemePreview] Failed to set mode class:', err);
         }
-      }
+      });
 
     } catch (err) {
       console.error('[useThemePreview] Theme preview error:', err);
-      // Don't rethrow - let the app continue without theme
     }
-  }, [theme, enabled]);
+  }, [theme, enabled, containerRef]);
 };

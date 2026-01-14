@@ -30,6 +30,7 @@ export const ThemeGalleryModal = ({
 
   const updateRestaurant = useUpdateRestaurant();
 
+  // Apply theme preview to scoped menu containers only (not the whole app)
   useThemePreview(previewTheme, open && previewTheme !== null);
 
   useEffect(() => {
@@ -72,7 +73,7 @@ export const ThemeGalleryModal = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl h-[80vh] p-0">
         <DialogHeader className="p-6 pb-4">
-          <DialogTitle>Choose a Theme</DialogTitle>
+          <DialogTitle>Choose a Theme for This Menu</DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="h-[calc(80vh-6rem)]">
