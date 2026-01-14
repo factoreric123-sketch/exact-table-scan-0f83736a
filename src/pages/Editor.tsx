@@ -521,6 +521,7 @@ const Editor = () => {
                 subcategoryId={subcategory.id}
                 previewMode={previewMode}
                 restaurant={restaurant}
+                sectionTitle={subcategory.name}
               />
             </div>
           );
