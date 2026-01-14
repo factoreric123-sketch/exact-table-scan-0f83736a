@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { useUpdateRestaurant, type Restaurant } from "@/hooks/useRestaurants";
 import { toast } from "sonner";
 
@@ -19,11 +20,16 @@ export const ThemeSettingsDialog = ({
   const updateRestaurant = useUpdateRestaurant();
   const [mode, setMode] = useState<"dark" | "light">("dark");
   const [primaryColor, setPrimaryColor] = useState("#ffffff");
+  const [cornerRadius, setCornerRadius] = useState(0.5);
 
   useEffect(() => {
     if (restaurant.theme) {
       setMode(restaurant.theme.visual?.mode || "dark");
       setPrimaryColor(restaurant.theme.colors?.primary ? `hsl(${restaurant.theme.colors.primary})` : "#ffffff");
+      // Parse cornerRadius from theme (e.g., "0.5rem" -> 0.5)
+      const radiusStr = restaurant.theme.visual?.cornerRadius || "0.5rem";
+      const radiusValue = parseFloat(radiusStr) || 0.5;
+      setCornerRadius(radiusValue);
     }
   }, [restaurant.theme]);
 
@@ -41,6 +47,7 @@ export const ThemeSettingsDialog = ({
             visual: {
               ...restaurant.theme?.visual,
               mode,
+              cornerRadius: `${cornerRadius}rem`,
             },
             colors: {
               ...restaurant.theme?.colors,
@@ -101,6 +108,19 @@ export const ThemeSettingsDialog = ({
                 {primaryColor}
               </div>
             </div>
+          </div>
+
+          <div className="space-y-3">
+            <Label>Corner Radius</Label>
+            <Slider
+              value={[cornerRadius]}
+              onValueChange={([value]) => setCornerRadius(value)}
+              min={0}
+              max={2}
+              step={0.1}
+              className="w-full"
+            />
+            <p className="text-sm text-muted-foreground">{cornerRadius}rem</p>
           </div>
 
           <div className="flex gap-2">
