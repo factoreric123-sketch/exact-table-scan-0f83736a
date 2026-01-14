@@ -189,19 +189,41 @@ export function DishOptionsEditor({
   onOpenChange,
 }: DishOptionsEditorProps) {
   const queryClient = useQueryClient();
-  const { data: options = [], isLoading: optionsLoading, isError: optionsError, isFetched: optionsFetched } = useDishOptions(dishId);
-  const { data: modifiers = [], isLoading: modifiersLoading, isError: modifiersError, isFetched: modifiersFetched } = useDishModifiers(dishId);
+  const { 
+    data: options = [], 
+    isLoading: optionsLoading, 
+    isError: optionsError, 
+    isSuccess: optionsSuccess,
+    isFetching: optionsFetching 
+  } = useDishOptions(dishId);
+  const { 
+    data: modifiers = [], 
+    isLoading: modifiersLoading, 
+    isError: modifiersError, 
+    isSuccess: modifiersSuccess,
+    isFetching: modifiersFetching 
+  } = useDishModifiers(dishId);
   const updateDish = useUpdateDish();
 
   // Loading timeout protection - never show loading for more than 2 seconds
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
   
-  // Data is ready when both queries have finished fetching (successfully or with empty results)
-  const dataReady = optionsFetched && modifiersFetched;
+  // CRITICAL: Data is ready when queries have successfully fetched AND are not currently refetching
+  // Using isSuccess + !isFetching instead of isFetched to ensure we have current data
+  const dataReady = (optionsSuccess && !optionsFetching) && (modifiersSuccess && !modifiersFetching);
   const isLoading = !dataReady && !loadingTimedOut;
   
   // Only show error if there's an actual query error
   const hasDataError = optionsError || modifiersError;
+
+  // CRITICAL: Remove stale queries when dialog opens to force fresh fetch
+  useEffect(() => {
+    if (open && !isInitializedRef.current) {
+      // Remove cached queries to ensure we get fresh data from database
+      queryClient.removeQueries({ queryKey: ['dish-options', dishId] });
+      queryClient.removeQueries({ queryKey: ['dish-modifiers', dishId] });
+    }
+  }, [open, dishId, queryClient]);
 
   useEffect(() => {
     if (open && !dataReady) {

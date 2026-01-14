@@ -182,10 +182,11 @@ export const executeBackgroundMutations = (
       }
     }
     
-    // CRITICAL: After ALL background mutations succeed, invalidate caches
-    // This ensures the next dialog open fetches fresh data from DB
-    queryClient.invalidateQueries({ queryKey: ["dish-options", dishId] });
-    queryClient.invalidateQueries({ queryKey: ["dish-modifiers", dishId] });
+    // CRITICAL: After ALL background mutations succeed, REMOVE cached queries
+    // Using removeQueries instead of invalidateQueries to force fresh fetch on next dialog open
+    // This prevents stale cached data from being used before refetch completes
+    queryClient.removeQueries({ queryKey: ["dish-options", dishId] });
+    queryClient.removeQueries({ queryKey: ["dish-modifiers", dishId] });
     queryClient.invalidateQueries({ queryKey: ["dishes"] });
     if (restaurantId) {
       queryClient.invalidateQueries({ queryKey: ["full-menu", restaurantId] });
