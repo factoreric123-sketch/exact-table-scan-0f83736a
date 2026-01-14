@@ -284,27 +284,3 @@ All colors MUST be HSL.
 .font-preview-lora { font-family: 'Lora', serif !important; }
 .font-preview-playfair { font-family: 'Playfair Display', serif !important; }
 .font-preview-cormorant { font-family: 'Cormorant Garamond', serif !important; }
-
-/* ============================= */
-/* SCOPED MENU THEMING */
-/* ============================= */
-
-/* 
- * MenuThemeWrapper scoped theming
- * Themes only apply to .menu-theme-scope containers
- * Dashboard, toolbar, and header remain unaffected
- */
-.menu-theme-scope {
-  /* Inherit CSS variables applied via inline styles */
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-}
-
-/* Dark/light mode scoping for menu theme containers */
-.menu-theme-scope.dark {
-  color-scheme: dark;
-}
-
-.menu-theme-scope.light {
-  color-scheme: light;
-}
