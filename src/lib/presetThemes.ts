@@ -2,6 +2,38 @@ import { Theme } from './types/theme';
 
 export const presetThemes: Theme[] = [
   {
+    id: 'classic',
+    name: 'Classic',
+    isCustom: false,
+    colors: {
+      background: '0 0% 100%',
+      foreground: '0 0% 9%',
+      card: '0 0% 100%',
+      cardForeground: '0 0% 9%',
+      primary: '0 0% 9%',
+      primaryForeground: '0 0% 98%',
+      secondary: '0 0% 96%',
+      secondaryForeground: '0 0% 9%',
+      accent: '0 0% 14%',
+      accentForeground: '0 0% 98%',
+      muted: '0 0% 96%',
+      mutedForeground: '0 0% 45%',
+      border: '0 0% 90%',
+      input: '0 0% 90%',
+      ring: '0 0% 9%',
+      destructive: '0 84% 60%',
+      destructiveForeground: '0 0% 98%',
+    },
+    fonts: {
+      heading: 'Inter',
+      body: 'Inter',
+    },
+    visual: {
+      mode: 'light',
+      cornerRadius: '0.5rem',
+    },
+  },
+  {
     id: 'dark-elegance',
     name: 'Dark Elegance',
     isCustom: false,
