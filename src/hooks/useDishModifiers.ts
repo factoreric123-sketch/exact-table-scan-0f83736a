@@ -51,12 +51,11 @@ export const useDishModifiers = (dishId: string) => {
       return data as DishModifier[];
     },
     enabled: !!dishId && isUuid(dishId),
-    staleTime: 5 * 60 * 1000, // 5 minutes for better performance
+    staleTime: 0, // CRITICAL: Always consider stale to force refetch after invalidation
     gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false, // Don't refetch on window focus
-    // CRITICAL: Allow refetch on mount to ensure React Query properly subscribes
-    // This is needed for setQueryData updates to trigger re-renders
-    refetchOnMount: true,
+    // CRITICAL: Always refetch on mount to ensure fresh data when dialog opens
+    refetchOnMount: 'always',
   });
 };
 
