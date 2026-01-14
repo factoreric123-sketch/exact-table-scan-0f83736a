@@ -241,7 +241,7 @@ export const DishDetailDialog = ({
               <div className="space-y-4 pt-2">
                 {options.length > 0 && (
                   <div className="space-y-3">
-                    <Label className="text-base font-semibold text-foreground">Choose Size</Label>
+                    <Label className="text-base font-semibold text-foreground">Size</Label>
                     <RadioGroup value={selectedOption} onValueChange={setSelectedOption} className="space-y-2">
                       {options.map((option) => {
                         const priceNum = parseFloat(option.price.replace(/[^0-9.]/g, ""));
@@ -268,7 +268,7 @@ export const DishDetailDialog = ({
 
                 {modifiers.length > 0 && (
                   <div className="space-y-3">
-                    <Label className="text-base font-semibold text-foreground">Add Extras</Label>
+                    <Label className="text-base font-semibold text-foreground">Extras</Label>
                     <div className="space-y-2">
                       {modifiers.map((modifier) => {
                         const priceNum = parseFloat(modifier.price.replace(/[^0-9.]/g, ""));
