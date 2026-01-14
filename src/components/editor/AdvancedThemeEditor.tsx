@@ -3,7 +3,6 @@ import { Theme } from '@/lib/types/theme';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useDebouncedCallback } from 'use-debounce';
 import { getDefaultTheme } from '@/lib/presetThemes';
 
@@ -35,16 +34,13 @@ export const AdvancedThemeEditor = ({
     let updatedColors = { ...localTheme.colors };
     
     if (type === 'main') {
-      // Main color affects primary and accent
       updatedColors.primary = hslValue;
       updatedColors.accent = hslValue;
       updatedColors.ring = hslValue;
     } else if (type === 'secondary') {
-      // Secondary color affects secondary, muted, and card backgrounds
       updatedColors.secondary = hslValue;
       updatedColors.muted = hslValue;
     } else if (type === 'font') {
-      // Font color affects all foreground colors
       updatedColors.foreground = hslValue;
       updatedColors.cardForeground = hslValue;
       updatedColors.primaryForeground = adjustForContrast(hslValue);
@@ -61,7 +57,6 @@ export const AdvancedThemeEditor = ({
   const adjustForContrast = (hsl: string): string => {
     const parts = hsl.split(' ');
     const l = parseInt(parts[2]);
-    // If font is dark, primary foreground should be light, and vice versa
     return l > 50 ? '0 0% 10%' : '0 0% 98%';
   };
 
@@ -70,17 +65,7 @@ export const AdvancedThemeEditor = ({
     const h = parts[0];
     const s = parseInt(parts[1]);
     const l = parseInt(parts[2]);
-    // Make muted foreground slightly faded
     return `${h} ${Math.max(s - 20, 0)}% ${l > 50 ? Math.max(l - 25, 40) : Math.min(l + 25, 60)}%`;
-  };
-
-  const handleModeChange = (mode: 'light' | 'dark') => {
-    const updatedTheme = {
-      ...localTheme,
-      visual: { ...localTheme.visual, mode },
-    };
-    setLocalTheme(updatedTheme);
-    debouncedOnChange(updatedTheme);
   };
 
   const hslToHex = (hsl: string): string => {
@@ -150,25 +135,6 @@ export const AdvancedThemeEditor = ({
 
   return (
     <div className="space-y-6 p-6">
-      {/* Mode Selection */}
-      <div className="space-y-3">
-        <Label>Mode</Label>
-        <RadioGroup
-          value={localTheme.visual.mode}
-          onValueChange={(value) => handleModeChange(value as 'light' | 'dark')}
-          className="flex gap-4"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="light" id="light" />
-            <Label htmlFor="light">Light</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="dark" id="dark" />
-            <Label htmlFor="dark">Dark</Label>
-          </div>
-        </RadioGroup>
-      </div>
-
       {/* Simple Color Pickers */}
       <div className="space-y-4">
         {simpleColors.map((color) => (
