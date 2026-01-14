@@ -66,11 +66,7 @@ const MenuGrid = memo(({
   }, []);
 
   if (dishes.length === 0) {
-    return (
-      <div className="px-6 py-12 text-center">
-        <p className="text-muted-foreground">No dishes available in this category.</p>
-      </div>
-    );
+    return null;
   }
 
   // 2 columns on mobile, 4 columns on desktop
