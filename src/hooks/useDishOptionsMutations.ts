@@ -208,9 +208,16 @@ export const useCreateDishOptionSilent = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[CreateDishOption] DB error:', error);
+        throw error;
+      }
+      console.log('[CreateDishOption] Success:', data.id, data.name);
       return data;
     },
+    onError: (error) => {
+      console.error('[CreateDishOption] Mutation failed:', error);
+    }
   });
 };
 
@@ -238,13 +245,21 @@ export const useUpdateDishOptionSilent = () => {
 export const useDeleteDishOptionSilent = () => {
   return useMutation({
     mutationFn: async ({ id }: { id: string; dishId: string }) => {
+      console.log('[DeleteDishOption] Deleting:', id);
       const { error } = await supabase
         .from("dish_options")
         .delete()
         .eq("id", id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('[DeleteDishOption] DB error:', error);
+        throw error;
+      }
+      console.log('[DeleteDishOption] Success:', id);
     },
+    onError: (error, variables) => {
+      console.error('[DeleteDishOption] Mutation failed for id:', variables.id, error);
+    }
   });
 };
 
@@ -289,13 +304,21 @@ export const useUpdateDishModifierSilent = () => {
 export const useDeleteDishModifierSilent = () => {
   return useMutation({
     mutationFn: async ({ id }: { id: string; dishId: string }) => {
+      console.log('[DeleteDishModifier] Deleting:', id);
       const { error } = await supabase
         .from("dish_modifiers")
         .delete()
         .eq("id", id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('[DeleteDishModifier] DB error:', error);
+        throw error;
+      }
+      console.log('[DeleteDishModifier] Success:', id);
     },
+    onError: (error, variables) => {
+      console.error('[DeleteDishModifier] Mutation failed for id:', variables.id, error);
+    }
   });
 };
 
