@@ -215,48 +215,6 @@ export const RestaurantSettingsDialog = ({
                 />
               </div>
 
-              {/* Corner Roundness */}
-              <div>
-                <Label className="text-base mb-2 block">Corner Roundness</Label>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Adjust the roundness of cards and buttons
-                </p>
-                <div className="flex gap-2">
-                  {[
-                    { value: '0rem', label: 'Sharp' },
-                    { value: '0.5rem', label: 'Subtle' },
-                    { value: '0.75rem', label: 'Medium' },
-                    { value: '1rem', label: 'Rounded' },
-                    { value: '1.5rem', label: 'Pill' },
-                  ].map((option) => {
-                    const theme = restaurant.theme as any;
-                    const currentRadius = theme?.visual?.cornerRadius || '0.5rem';
-                    return (
-                      <Button
-                        key={option.value}
-                        variant={currentRadius === option.value ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => {
-                          const currentTheme = (restaurant.theme || {}) as any;
-                          const updatedTheme = {
-                            ...currentTheme,
-                            visual: {
-                              ...currentTheme.visual,
-                              cornerRadius: option.value,
-                            },
-                          };
-                          updateSetting("theme", updatedTheme);
-                        }}
-                        disabled={isUpdating}
-                        className="flex-1"
-                        style={{ borderRadius: option.value }}
-                      >
-                        {option.label}
-                      </Button>
-                    );
-                  })}
-                </div>
-              </div>
 
               {/* Menu Font - COMMENTED OUT: Font preview not rendering correctly
               <div>
