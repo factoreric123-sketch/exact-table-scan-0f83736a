@@ -99,20 +99,16 @@ export const EditableDishes = ({
     });
   };
 
-  const handleAddDish = async () => {
-    try {
-      await createDish.mutateAsync({
-        subcategory_id: subcategoryId,
-        name: "New Dish",
-        description: "Add description",
-        price: "0.00",
-        order_index: dishes.length,
-        is_new: false,
-      });
-      toast.success("Dish added");
-    } catch (error) {
-      toast.error("Failed to add dish");
-    }
+  const handleAddDish = () => {
+    // Just trigger the mutation - the hook handles success/error toasts
+    createDish.mutate({
+      subcategory_id: subcategoryId,
+      name: "New Dish",
+      description: "Add description",
+      price: "0.00",
+      order_index: dishes.length,
+      is_new: false,
+    });
   };
 
   if (!isReady) {
