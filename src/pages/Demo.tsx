@@ -96,7 +96,7 @@ const Index = () => {
               key={subcategory}
               ref={(el) => subcategoryRefs.current[subcategory] = el}
             >
-              <MenuGrid dishes={subcategoryDishes} sectionTitle={subcategory} />
+              <MenuGrid dishes={subcategoryDishes} sectionTitle={subcategory} cardImageShape="vertical" />
             </div>
           );
         })}
