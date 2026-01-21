@@ -320,7 +320,12 @@ export const DishDetailDialog = ({
           
           <div 
             ref={scrollContainerRef}
-            className="flex flex-col-reverse overflow-y-auto max-h-[90vh]"
+            className="flex flex-col-reverse overflow-y-auto max-h-[90vh] overscroll-contain"
+            style={{
+              WebkitOverflowScrolling: 'touch',
+              scrollBehavior: 'smooth',
+              touchAction: 'pan-y',
+            }}
           >
             {/* Content section - appears at bottom visually but renders first for scroll position */}
             <div className="p-6 space-y-4 bg-background">
