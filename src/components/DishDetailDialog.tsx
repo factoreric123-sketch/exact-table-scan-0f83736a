@@ -67,36 +67,29 @@ export const DishDetailDialog = ({
   const isMobile = useIsMobile();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
-  if (!dish) return null;
+  // All hooks must be called BEFORE any conditional returns (Rules of Hooks)
+  const [selectedOption, setSelectedOption] = useState("");
+  const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
   
-  const fontClass = getFontClassName(menuFont);
-  const isVertical = cardImageShape === 'vertical';
-
   // For demo page: use static options from dish data
   // For live menu: fetch from database
-  const { data: fetchedOptions, isFetching: optionsFetching } = useDishOptions(
-    useStaticOptions ? '' : dish.id // Disable fetch if using static options
+  const { data: fetchedOptions } = useDishOptions(
+    useStaticOptions || !dish ? '' : dish.id // Disable fetch if using static options or no dish
   );
-  const { data: fetchedModifiers, isFetching: modifiersFetching } = useDishModifiers(
-    useStaticOptions ? '' : dish.id // Disable fetch if using static options
+  const { data: fetchedModifiers } = useDishModifiers(
+    useStaticOptions || !dish ? '' : dish.id // Disable fetch if using static options or no dish
   );
   
   // Use static options from dish prop if useStaticOptions is true, otherwise use fetched data
-  const options = useStaticOptions ? (dish.options || []) : (fetchedOptions || []);
-  const modifiers = useStaticOptions ? (dish.modifiers || []) : (fetchedModifiers || []);
+  const options = dish ? (useStaticOptions ? (dish.options || []) : (fetchedOptions || [])) : [];
+  const modifiers = dish ? (useStaticOptions ? (dish.modifiers || []) : (fetchedModifiers || [])) : [];
   
   // Show options section based on actual data
   const hasAnyOptions = options.length > 0 || modifiers.length > 0;
   const showOptionsSection = hasAnyOptions;
-  
-  // Loading state while fetching fresh data
-  const isLoadingOptions = optionsFetching || modifiersFetching;
-  
-  const [selectedOption, setSelectedOption] = useState("");
-  const [selectedModifiers, setSelectedModifiers] = useState<string[]>([]);
 
   // Sync selectedOption when options change
-  React.useEffect(() => {
+  useEffect(() => {
     if (options.length > 0) {
       // Reset selection when options change (e.g., after edit)
       const firstOptionId = options[0].id;
@@ -116,6 +109,12 @@ export const DishDetailDialog = ({
       return () => clearTimeout(timer);
     }
   }, [open, isMobile]);
+  
+  // Early return AFTER all hooks
+  if (!dish) return null;
+  
+  const fontClass = getFontClassName(menuFont);
+  const isVertical = cardImageShape === 'vertical';
 
   const formatPrice = (num: number, prefix: string = "") => {
     const currencySymbol = showCurrencySymbol ? "$" : "";
