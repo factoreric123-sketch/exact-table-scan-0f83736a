@@ -287,16 +287,36 @@ export const DishDetailDialog = ({
     </>
   );
 
-  // Mobile/Tablet: Use Drawer that shows content at bottom, scroll up for image
+  // Mobile/Tablet: Use Drawer - X button is the ONLY way to close
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className={`max-h-[95vh] ${fontClass}`}>
+      <Drawer 
+        open={open} 
+        onOpenChange={onOpenChange}
+        dismissible={false}
+        modal={true}
+      >
+        <DrawerContent 
+          className={`max-h-[95vh] ${fontClass}`}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           {/* Accessibility: Hidden title and description for screen readers */}
           <VisuallyHidden>
             <DrawerTitle>{dish.name}</DrawerTitle>
             <DrawerDescription>{dish.description}</DrawerDescription>
           </VisuallyHidden>
+          
+          {/* X button - the ONLY way to close on mobile/tablet */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-4 top-4 z-20 rounded-full bg-background/80 backdrop-blur-sm transition-all duration-150 active:scale-95"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-5 w-5" />
+          </Button>
+          
           <div 
             ref={scrollContainerRef}
             className="flex flex-col-reverse overflow-y-auto max-h-[90vh]"
