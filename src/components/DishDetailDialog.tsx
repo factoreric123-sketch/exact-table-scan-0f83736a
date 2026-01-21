@@ -298,6 +298,7 @@ export const DishDetailDialog = ({
       >
         <DrawerContent 
           className={`max-h-[95vh] ${fontClass}`}
+          hideHandle
           onPointerDownOutside={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
         >
