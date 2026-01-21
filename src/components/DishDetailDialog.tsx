@@ -98,15 +98,17 @@ export const DishDetailDialog = ({
     }
   }, [options]);
 
-  // Scroll to bottom on mobile when drawer opens (so content is visible first)
+  // Scroll to show content on mobile when drawer opens
   useEffect(() => {
     if (open && isMobile && scrollContainerRef.current) {
-      // Small delay to ensure drawer animation completes
+      // Small delay to ensure drawer animation completes, then scroll to show content
       const timer = setTimeout(() => {
         if (scrollContainerRef.current) {
-          scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+          // Scroll past the image to show content area
+          const imageHeight = scrollContainerRef.current.querySelector('img')?.offsetHeight || 0;
+          scrollContainerRef.current.scrollTop = Math.max(0, imageHeight - 100);
         }
-      }, 100);
+      }, 150);
       return () => clearTimeout(timer);
     }
   }, [open, isMobile]);
@@ -320,25 +322,24 @@ export const DishDetailDialog = ({
           
           <div 
             ref={scrollContainerRef}
-            className="flex flex-col-reverse overflow-y-auto max-h-[90vh] overscroll-contain"
+            className="flex-1 overflow-y-scroll overscroll-y-contain"
             style={{
               WebkitOverflowScrolling: 'touch',
-              scrollBehavior: 'smooth',
-              touchAction: 'pan-y',
+              overscrollBehavior: 'contain',
             }}
           >
-            {/* Content section - appears at bottom visually but renders first for scroll position */}
-            <div className="p-6 space-y-4 bg-background">
-              {renderContent()}
-            </div>
-            
-            {/* Image section - above content, user scrolls up to see */}
+            {/* Image section */}
             <div className="relative bg-dish-card flex-shrink-0">
               <img
                 src={dish.image}
                 alt={dish.name}
-                className="w-full h-[60vh] object-cover"
+                className="w-full h-[55vh] object-cover"
               />
+            </div>
+            
+            {/* Content section - easy scrollable area with extra padding for options */}
+            <div className="p-6 pb-12 space-y-4 bg-background">
+              {renderContent()}
             </div>
           </div>
         </DrawerContent>
