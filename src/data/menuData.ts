@@ -49,8 +49,7 @@ export const menuData: Dish[] = [
     subcategory: "SIDES",
     allergens: ["Shellfish", "Dairy", "Gluten"],
     calories: 650,
-    isNew: true,
-    isPopular: true,
+    isNew: true, // Badge: New
   },
   {
     id: "2",
@@ -63,6 +62,7 @@ export const menuData: Dish[] = [
     allergens: ["Dairy"],
     calories: 520,
     isVegetarian: true,
+    // No badge
     hasOptions: true,
     options: [
       { id: "truffle-small", name: "Small", price: "8.00", order_index: 0 },
@@ -83,6 +83,7 @@ export const menuData: Dish[] = [
     allergens: ["Dairy", "Gluten", "Eggs"],
     calories: 320,
     isVegetarian: true,
+    isPopular: true, // Badge: Popular
     hasOptions: true,
     modifiers: [
       { id: "caesar-mod-1", name: "Add Grilled Chicken", price: "6.00", order_index: 0 },
@@ -100,7 +101,7 @@ export const menuData: Dish[] = [
     subcategory: "SALADS",
     allergens: ["Dairy"],
     calories: 420,
-    isChefRecommendation: true,
+    // No badge
   },
 
   // HOT APPETIZERS (3 items)
@@ -114,8 +115,8 @@ export const menuData: Dish[] = [
     subcategory: "HOT APPETIZERS",
     allergens: ["Gluten", "Soy"],
     calories: 580,
-    isPopular: true,
     isSpicy: true,
+    isChefRecommendation: true, // Badge: Chef's Pick
     hasOptions: true,
     options: [
       { id: "mambo-small", name: "6 Wings", price: "12.00", order_index: 0 },
@@ -133,8 +134,7 @@ export const menuData: Dish[] = [
     subcategory: "HOT APPETIZERS",
     allergens: ["Shellfish", "Dairy"],
     calories: 720,
-    isNew: true,
-    isPopular: true,
+    isSpecial: true, // Badge: Special
   },
   {
     id: "7",
@@ -146,8 +146,8 @@ export const menuData: Dish[] = [
     subcategory: "HOT APPETIZERS",
     allergens: ["Gluten", "Soy", "Eggs"],
     calories: 420,
-    isChefRecommendation: true,
     isSpicy: true,
+    // No badge
   },
 
   // ENTRÉES (5 items)
@@ -161,7 +161,7 @@ export const menuData: Dish[] = [
     subcategory: "ENTRÉES",
     allergens: ["Allium"],
     calories: 680,
-    isChefRecommendation: true,
+    isChefRecommendation: true, // Badge: Chef's Pick
   },
   {
     id: "9",
@@ -173,7 +173,7 @@ export const menuData: Dish[] = [
     subcategory: "ENTRÉES",
     allergens: ["Dairy", "Allium"],
     calories: 520,
-    isChefRecommendation: true,
+    // No badge
   },
   {
     id: "10",
@@ -185,7 +185,7 @@ export const menuData: Dish[] = [
     subcategory: "ENTRÉES",
     allergens: ["Dairy", "Allium"],
     calories: 920,
-    isPopular: true,
+    isPopular: true, // Badge: Popular
     hasOptions: true,
     options: [
       { id: "ribeye-12", name: "12oz", price: "38.00", order_index: 0 },
@@ -203,7 +203,7 @@ export const menuData: Dish[] = [
     subcategory: "ENTRÉES",
     allergens: ["Shellfish", "Dairy", "Allium"],
     calories: 740,
-    isNew: true,
+    isNew: true, // Badge: New
   },
   {
     id: "12",
@@ -215,6 +215,7 @@ export const menuData: Dish[] = [
     subcategory: "ENTRÉES",
     allergens: ["Soy", "Allium"],
     calories: 840,
+    // No badge
     hasOptions: true,
     options: [
       { id: "ribs-half", name: "Half Rack", price: "24.00", order_index: 0 },
@@ -233,7 +234,7 @@ export const menuData: Dish[] = [
     subcategory: "DESSERTS",
     allergens: ["Dairy", "Gluten", "Eggs"],
     calories: 620,
-    isPopular: true,
+    isPopular: true, // Badge: Popular
   },
   {
     id: "14",
@@ -245,6 +246,7 @@ export const menuData: Dish[] = [
     subcategory: "DESSERTS",
     allergens: ["Dairy", "Gluten", "Eggs"],
     calories: 540,
+    // No badge
   },
 
   // SANGRIA (2 items)
@@ -257,6 +259,7 @@ export const menuData: Dish[] = [
     category: "Cocktails",
     subcategory: "SANGRIA",
     calories: 180,
+    // No badge
   },
   {
     id: "16",
@@ -267,7 +270,7 @@ export const menuData: Dish[] = [
     category: "Cocktails",
     subcategory: "SANGRIA",
     calories: 200,
-    isNew: true,
+    isNew: true, // Badge: New
   },
 
   // SPECIALTY COCKTAILS (3 items)
@@ -280,7 +283,7 @@ export const menuData: Dish[] = [
     category: "Cocktails",
     subcategory: "SPECIALTY",
     calories: 220,
-    isChefRecommendation: true,
+    isChefRecommendation: true, // Badge: Chef's Pick
   },
   {
     id: "18",
@@ -291,7 +294,7 @@ export const menuData: Dish[] = [
     category: "Cocktails",
     subcategory: "SPECIALTY",
     calories: 240,
-    isPopular: true,
+    // No badge
   },
   {
     id: "19",
@@ -303,6 +306,7 @@ export const menuData: Dish[] = [
     subcategory: "SPECIALTY",
     calories: 190,
     isSpicy: true,
+    isSpecial: true, // Badge: Special
   },
 
   // MOCKTAILS (2 items)
@@ -316,6 +320,7 @@ export const menuData: Dish[] = [
     subcategory: "MOCKTAILS",
     calories: 120,
     isVegan: true,
+    // No badge
   },
   {
     id: "21",
@@ -327,6 +332,7 @@ export const menuData: Dish[] = [
     subcategory: "MOCKTAILS",
     calories: 110,
     isVegan: true,
+    isPopular: true, // Badge: Popular
   },
 ];
 
