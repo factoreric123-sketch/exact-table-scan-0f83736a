@@ -51,18 +51,39 @@ export const menuData: Dish[] = [
     calories: 650,
     isNew: true,
     isPopular: true,
+    hasOptions: true,
+    options: [
+      { id: "lobster-small", name: "Side", price: "12.00", order_index: 0 },
+      { id: "lobster-regular", name: "Regular", price: "18.00", order_index: 1 },
+      { id: "lobster-large", name: "Entrée", price: "26.00", order_index: 2 },
+    ],
+    modifiers: [
+      { id: "lobster-mod-1", name: "Extra Lobster", price: "8.00", order_index: 0 },
+      { id: "lobster-mod-2", name: "Bacon Bits", price: "3.00", order_index: 1 },
+    ],
   },
   {
     id: "2",
     name: "Truffle Parmesan Fries",
     description: "Hand-cut fries tossed in truffle oil and parmesan",
-    price: "$14",
+    price: "$10",
     image: truffleFries,
     category: "Dinner",
     subcategory: "SIDES",
     allergens: ["Dairy"],
     calories: 520,
     isVegetarian: true,
+    hasOptions: true,
+    options: [
+      { id: "truffle-small", name: "Small", price: "8.00", order_index: 0 },
+      { id: "truffle-medium", name: "Medium", price: "12.00", order_index: 1 },
+      { id: "truffle-large", name: "Large", price: "16.00", order_index: 2 },
+    ],
+    modifiers: [
+      { id: "truffle-mod-1", name: "Bacon Crumbles", price: "3.00", order_index: 0 },
+      { id: "truffle-mod-2", name: "Extra Truffle Drizzle", price: "2.00", order_index: 1 },
+      { id: "truffle-mod-3", name: "Garlic Aioli", price: "1.50", order_index: 2 },
+    ],
   },
 
   // SALADS (2 items)
@@ -77,6 +98,17 @@ export const menuData: Dish[] = [
     allergens: ["Dairy", "Gluten", "Eggs"],
     calories: 320,
     isVegetarian: true,
+    hasOptions: true,
+    options: [
+      { id: "caesar-side", name: "Side", price: "8.00", order_index: 0 },
+      { id: "caesar-full", name: "Full", price: "14.00", order_index: 1 },
+    ],
+    modifiers: [
+      { id: "caesar-mod-1", name: "Add Grilled Chicken", price: "6.00", order_index: 0 },
+      { id: "caesar-mod-2", name: "Add Grilled Shrimp", price: "8.00", order_index: 1 },
+      { id: "caesar-mod-3", name: "Add Salmon", price: "10.00", order_index: 2 },
+      { id: "caesar-mod-4", name: "Extra Parmesan", price: "1.50", order_index: 3 },
+    ],
   },
   {
     id: "4",
@@ -89,6 +121,12 @@ export const menuData: Dish[] = [
     allergens: ["Dairy"],
     calories: 420,
     isChefRecommendation: true,
+    hasOptions: true,
+    modifiers: [
+      { id: "chicken-salad-mod-1", name: "Add Avocado", price: "3.00", order_index: 0 },
+      { id: "chicken-salad-mod-2", name: "Add Bacon", price: "3.00", order_index: 1 },
+      { id: "chicken-salad-mod-3", name: "Substitute Shrimp", price: "4.00", order_index: 2 },
+    ],
   },
 
   // HOT APPETIZERS (3 items)
@@ -106,13 +144,14 @@ export const menuData: Dish[] = [
     isSpicy: true,
     hasOptions: true,
     options: [
-      { id: "mambo-small", name: "Small", price: "12.00", order_index: 0 },
-      { id: "mambo-medium", name: "Medium", price: "16.00", order_index: 1 },
-      { id: "mambo-large", name: "Large", price: "20.00", order_index: 2 },
+      { id: "mambo-small", name: "6 Wings", price: "12.00", order_index: 0 },
+      { id: "mambo-medium", name: "12 Wings", price: "20.00", order_index: 1 },
+      { id: "mambo-large", name: "24 Wings", price: "36.00", order_index: 2 },
     ],
     modifiers: [
       { id: "mambo-mod-1", name: "Extra Mambo Sauce", price: "1.50", order_index: 0 },
       { id: "mambo-mod-2", name: "Blue Cheese Dip", price: "2.00", order_index: 1 },
+      { id: "mambo-mod-3", name: "Ranch Dip", price: "1.50", order_index: 2 },
     ],
   },
   {
@@ -140,6 +179,11 @@ export const menuData: Dish[] = [
     calories: 420,
     isChefRecommendation: true,
     isSpicy: true,
+    hasOptions: true,
+    modifiers: [
+      { id: "jerk-mod-1", name: "Mango Salsa", price: "2.00", order_index: 0 },
+      { id: "jerk-mod-2", name: "Jerk Aioli", price: "1.50", order_index: 1 },
+    ],
   },
 
   // ENTRÉES (5 items)
@@ -154,6 +198,15 @@ export const menuData: Dish[] = [
     allergens: ["Allium"],
     calories: 680,
     isChefRecommendation: true,
+    hasOptions: true,
+    options: [
+      { id: "lamb-double", name: "Double (4 Chops)", price: "42.00", order_index: 0 },
+      { id: "lamb-triple", name: "Triple (6 Chops)", price: "58.00", order_index: 1 },
+    ],
+    modifiers: [
+      { id: "lamb-mod-1", name: "Add Truffle Mashed Potatoes", price: "6.00", order_index: 0 },
+      { id: "lamb-mod-2", name: "Extra Demi-Glace", price: "3.00", order_index: 1 },
+    ],
   },
   {
     id: "9",
@@ -166,18 +219,36 @@ export const menuData: Dish[] = [
     allergens: ["Dairy", "Allium"],
     calories: 520,
     isChefRecommendation: true,
+    hasOptions: true,
+    modifiers: [
+      { id: "salmon-mod-1", name: "Cajun Blackened", price: "0.00", order_index: 0 },
+      { id: "salmon-mod-2", name: "Teriyaki Glaze", price: "2.00", order_index: 1 },
+      { id: "salmon-mod-3", name: "Add Shrimp (3pc)", price: "8.00", order_index: 2 },
+    ],
   },
   {
     id: "10",
     name: "Ribeye Steak",
-    description: "16oz prime ribeye with garlic butter and mashed potatoes",
-    price: "$48",
+    description: "Prime ribeye with garlic butter and mashed potatoes",
+    price: "$38",
     image: ribeyeSteak,
     category: "Dinner",
     subcategory: "ENTRÉES",
     allergens: ["Dairy", "Allium"],
     calories: 920,
     isPopular: true,
+    hasOptions: true,
+    options: [
+      { id: "ribeye-12", name: "12oz", price: "38.00", order_index: 0 },
+      { id: "ribeye-16", name: "16oz", price: "48.00", order_index: 1 },
+      { id: "ribeye-24", name: "24oz Tomahawk", price: "72.00", order_index: 2 },
+    ],
+    modifiers: [
+      { id: "ribeye-mod-1", name: "Add Lobster Tail", price: "18.00", order_index: 0 },
+      { id: "ribeye-mod-2", name: "Add Shrimp (5pc)", price: "12.00", order_index: 1 },
+      { id: "ribeye-mod-3", name: "Blue Cheese Crust", price: "4.00", order_index: 2 },
+      { id: "ribeye-mod-4", name: "Peppercorn Sauce", price: "3.00", order_index: 3 },
+    ],
   },
   {
     id: "11",
@@ -195,12 +266,22 @@ export const menuData: Dish[] = [
     id: "12",
     name: "BBQ Ribs",
     description: "Fall-off-the-bone baby back ribs with house BBQ sauce",
-    price: "$32",
+    price: "$24",
     image: bbqRibs,
     category: "Dinner",
     subcategory: "ENTRÉES",
     allergens: ["Soy", "Allium"],
     calories: 840,
+    hasOptions: true,
+    options: [
+      { id: "ribs-half", name: "Half Rack", price: "24.00", order_index: 0 },
+      { id: "ribs-full", name: "Full Rack", price: "38.00", order_index: 1 },
+    ],
+    modifiers: [
+      { id: "ribs-mod-1", name: "Extra BBQ Sauce", price: "1.50", order_index: 0 },
+      { id: "ribs-mod-2", name: "Add Coleslaw", price: "3.00", order_index: 1 },
+      { id: "ribs-mod-3", name: "Add Cornbread", price: "3.00", order_index: 2 },
+    ],
   },
 
   // DESSERTS (2 items)
@@ -215,6 +296,12 @@ export const menuData: Dish[] = [
     allergens: ["Dairy", "Gluten", "Eggs"],
     calories: 620,
     isPopular: true,
+    hasOptions: true,
+    modifiers: [
+      { id: "lava-mod-1", name: "Extra Ice Cream Scoop", price: "3.00", order_index: 0 },
+      { id: "lava-mod-2", name: "Raspberry Drizzle", price: "1.50", order_index: 1 },
+      { id: "lava-mod-3", name: "Whipped Cream", price: "1.00", order_index: 2 },
+    ],
   },
   {
     id: "14",
@@ -233,22 +320,34 @@ export const menuData: Dish[] = [
     id: "15",
     name: "Red Sangria",
     description: "Red wine with fresh fruit and brandy",
-    price: "$12",
+    price: "$10",
     image: redSangria,
     category: "Cocktails",
     subcategory: "SANGRIA",
     calories: 180,
+    hasOptions: true,
+    options: [
+      { id: "red-sangria-glass", name: "Glass", price: "10.00", order_index: 0 },
+      { id: "red-sangria-carafe", name: "Carafe", price: "28.00", order_index: 1 },
+      { id: "red-sangria-pitcher", name: "Pitcher", price: "42.00", order_index: 2 },
+    ],
   },
   {
     id: "16",
     name: "Tropical Sangria",
     description: "White wine with mango, pineapple, and coconut rum",
-    price: "$14",
+    price: "$12",
     image: tropicalSangria,
     category: "Cocktails",
     subcategory: "SANGRIA",
     calories: 200,
     isNew: true,
+    hasOptions: true,
+    options: [
+      { id: "tropical-sangria-glass", name: "Glass", price: "12.00", order_index: 0 },
+      { id: "tropical-sangria-carafe", name: "Carafe", price: "32.00", order_index: 1 },
+      { id: "tropical-sangria-pitcher", name: "Pitcher", price: "48.00", order_index: 2 },
+    ],
   },
 
   // SPECIALTY COCKTAILS (3 items)
@@ -262,6 +361,11 @@ export const menuData: Dish[] = [
     subcategory: "SPECIALTY",
     calories: 220,
     isChefRecommendation: true,
+    hasOptions: true,
+    modifiers: [
+      { id: "topnotch-mod-1", name: "Make it a Double", price: "6.00", order_index: 0 },
+      { id: "topnotch-mod-2", name: "Premium Champagne Upgrade", price: "8.00", order_index: 1 },
+    ],
   },
   {
     id: "18",
@@ -273,6 +377,10 @@ export const menuData: Dish[] = [
     subcategory: "SPECIALTY",
     calories: 240,
     isPopular: true,
+    hasOptions: true,
+    modifiers: [
+      { id: "panty-mod-1", name: "Make it a Double", price: "5.00", order_index: 0 },
+    ],
   },
   {
     id: "19",
@@ -284,6 +392,11 @@ export const menuData: Dish[] = [
     subcategory: "SPECIALTY",
     calories: 190,
     isSpicy: true,
+    hasOptions: true,
+    modifiers: [
+      { id: "sneaky-mod-1", name: "Make it a Double", price: "6.00", order_index: 0 },
+      { id: "sneaky-mod-2", name: "Extra Spicy", price: "0.00", order_index: 1 },
+    ],
   },
 
   // MOCKTAILS (2 items)
@@ -296,6 +409,12 @@ export const menuData: Dish[] = [
     category: "Cocktails",
     subcategory: "MOCKTAILS",
     calories: 120,
+    isVegan: true,
+    hasOptions: true,
+    modifiers: [
+      { id: "mojito-mod-1", name: "Add Strawberry", price: "1.50", order_index: 0 },
+      { id: "mojito-mod-2", name: "Add Mango", price: "1.50", order_index: 1 },
+    ],
   },
   {
     id: "21",
@@ -306,6 +425,7 @@ export const menuData: Dish[] = [
     category: "Cocktails",
     subcategory: "MOCKTAILS",
     calories: 110,
+    isVegan: true,
   },
 ];
 
