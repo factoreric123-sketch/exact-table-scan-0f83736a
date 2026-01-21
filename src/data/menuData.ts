@@ -104,7 +104,7 @@ export const menuData: Dish[] = [
     // No badge
   },
 
-  // HOT APPETIZERS (3 items)
+  // Appetizer (3 items)
   {
     id: "5",
     name: "Mambo Wings",
@@ -112,7 +112,7 @@ export const menuData: Dish[] = [
     price: "$12",
     image: mamboWings,
     category: "Dinner",
-    subcategory: "HOT APPETIZERS",
+    subcategory: "Appetizer",
     allergens: ["Gluten", "Soy"],
     calories: 580,
     isSpicy: true,
@@ -131,7 +131,7 @@ export const menuData: Dish[] = [
     price: "$20",
     image: crabFries,
     category: "Dinner",
-    subcategory: "HOT APPETIZERS",
+    subcategory: "Appetizer",
     allergens: ["Shellfish", "Dairy"],
     calories: 720,
     isSpecial: true, // Badge: Special
@@ -143,7 +143,7 @@ export const menuData: Dish[] = [
     price: "$14",
     image: jerkChickenEggrolls,
     category: "Dinner",
-    subcategory: "HOT APPETIZERS",
+    subcategory: "Appetizer",
     allergens: ["Gluten", "Soy", "Eggs"],
     calories: 420,
     isSpicy: true,
@@ -339,6 +339,6 @@ export const menuData: Dish[] = [
 export const categories = ["Dinner", "Cocktails"];
 
 export const subcategories = {
-  Dinner: ["SIDES", "SALADS", "HOT APPETIZERS", "ENTRÉES", "DESSERTS"],
+  Dinner: ["SIDES", "SALADS", "Appetizer", "ENTRÉES", "DESSERTS"],
   Cocktails: ["SANGRIA", "SPECIALTY", "MOCKTAILS"],
 };
