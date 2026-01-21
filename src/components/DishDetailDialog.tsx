@@ -308,14 +308,14 @@ export const DishDetailDialog = ({
             <DrawerDescription>{dish.description}</DrawerDescription>
           </VisuallyHidden>
           
-          {/* X button - the ONLY way to close on mobile/tablet */}
+          {/* X button - the ONLY way to close on mobile/tablet - positioned lower for easy thumb access */}
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-4 top-4 z-20 rounded-full bg-background/80 backdrop-blur-sm transition-all duration-150 active:scale-95"
+            className="absolute right-4 top-16 z-20 h-12 w-12 rounded-full bg-black/60 backdrop-blur-sm transition-all duration-150 active:scale-95 shadow-lg"
             onClick={() => onOpenChange(false)}
           >
-            <X className="h-5 w-5" />
+            <X className="h-6 w-6 text-white" />
           </Button>
           
           <div 
