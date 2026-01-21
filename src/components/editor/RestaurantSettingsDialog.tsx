@@ -197,7 +197,7 @@ export const RestaurantSettingsDialog = ({
                 </div>
               </div>
 
-              {/* Text Overlay */}
+              {/* Text Overlay - COMMENTED OUT: Feature disabled
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="text-overlay" className="text-base">
@@ -214,6 +214,7 @@ export const RestaurantSettingsDialog = ({
                   disabled={isUpdating}
                 />
               </div>
+              */}
 
 
               {/* Menu Font - COMMENTED OUT: Font preview not rendering correctly
