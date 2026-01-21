@@ -35,6 +35,8 @@ interface DishDetailDialogProps {
   showCurrencySymbol?: boolean;
   menuFont?: string;
   cardImageShape?: 'square' | 'vertical';
+  // Use static options from dish data instead of fetching from DB (for demo page)
+  useStaticOptions?: boolean;
 }
 
 const allergenIconMap: Record<string, any> = {
@@ -57,23 +59,28 @@ export const DishDetailDialog = ({
   forceTwoDecimals = false, 
   showCurrencySymbol = true, 
   menuFont = 'Inter',
-  cardImageShape = 'square'
+  cardImageShape = 'square',
+  useStaticOptions = false
 }: DishDetailDialogProps) => {
   if (!dish) return null;
   
   const fontClass = getFontClassName(menuFont);
   const isVertical = cardImageShape === 'vertical';
 
-  // CRITICAL FIX: Always use fresh data from database, NEVER fall back to stale dish.options/modifiers
-  // This ensures Live Menu shows the same data as Editor Preview
-  const { data: fetchedOptions, isFetching: optionsFetching } = useDishOptions(dish.id);
-  const { data: fetchedModifiers, isFetching: modifiersFetching } = useDishModifiers(dish.id);
+  // For demo page: use static options from dish data
+  // For live menu: fetch from database
+  const { data: fetchedOptions, isFetching: optionsFetching } = useDishOptions(
+    useStaticOptions ? '' : dish.id // Disable fetch if using static options
+  );
+  const { data: fetchedModifiers, isFetching: modifiersFetching } = useDishModifiers(
+    useStaticOptions ? '' : dish.id // Disable fetch if using static options
+  );
   
-  // ALWAYS use fetched data - never fall back to potentially stale dish.options/modifiers
-  const options = fetchedOptions || [];
-  const modifiers = fetchedModifiers || [];
+  // Use static options from dish prop if useStaticOptions is true, otherwise use fetched data
+  const options = useStaticOptions ? (dish.options || []) : (fetchedOptions || []);
+  const modifiers = useStaticOptions ? (dish.modifiers || []) : (fetchedModifiers || []);
   
-  // Show options section based on ACTUAL data from database
+  // Show options section based on actual data
   const hasAnyOptions = options.length > 0 || modifiers.length > 0;
   const showOptionsSection = hasAnyOptions;
   

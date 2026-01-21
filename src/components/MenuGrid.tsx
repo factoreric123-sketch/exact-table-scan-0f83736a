@@ -25,6 +25,8 @@ interface MenuGridProps {
   cardImageShape?: 'square' | 'vertical';
   textOverlay?: boolean;
   menuFont?: string;
+  // Use static options from dish data instead of fetching from DB (for demo page)
+  useStaticOptions?: boolean;
 }
 
 const MenuGrid = memo(({ 
@@ -43,6 +45,7 @@ const MenuGrid = memo(({
   cardImageShape = 'square',
   textOverlay = false,
   menuFont = 'Inter',
+  useStaticOptions = false,
 }: MenuGridProps) => {
   const [selectedDish, setSelectedDish] = useState<DishDetail | null>(null);
 
@@ -120,6 +123,7 @@ const MenuGrid = memo(({
         showCurrencySymbol={showCurrencySymbol}
         menuFont={menuFont}
         cardImageShape={cardImageShape}
+        useStaticOptions={useStaticOptions}
       />
     </>
   );
