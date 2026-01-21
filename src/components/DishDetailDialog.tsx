@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import React from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Badge } from "@/components/ui/badge";
 import { X, Flame, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Salad } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -291,6 +292,11 @@ export const DishDetailDialog = ({
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className={`max-h-[95vh] ${fontClass}`}>
+          {/* Accessibility: Hidden title and description for screen readers */}
+          <VisuallyHidden>
+            <DrawerTitle>{dish.name}</DrawerTitle>
+            <DrawerDescription>{dish.description}</DrawerDescription>
+          </VisuallyHidden>
           <div 
             ref={scrollContainerRef}
             className="flex flex-col-reverse overflow-y-auto max-h-[90vh]"
@@ -324,6 +330,11 @@ export const DishDetailDialog = ({
             : 'max-w-[95vw] sm:max-w-lg md:max-w-4xl md:flex md:flex-row md:h-[70vh]'
         }`}
       >
+        {/* Accessibility: Hidden title and description for screen readers */}
+        <VisuallyHidden>
+          <DialogTitle>{dish.name}</DialogTitle>
+          <DialogDescription>{dish.description}</DialogDescription>
+        </VisuallyHidden>
         <Button
           variant="ghost"
           size="icon"
