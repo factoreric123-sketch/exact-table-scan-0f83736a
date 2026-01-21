@@ -1,16 +1,20 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react";
+import { Filter } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import CategoryNav from "@/components/CategoryNav";
 import SubcategoryNav from "@/components/SubcategoryNav";
 import MenuGrid from "@/components/MenuGrid";
 import RestaurantHeader from "@/components/RestaurantHeader";
 import { menuData, categories, subcategories } from "@/data/menuData";
 import Footer from "@/components/home/Footer";
-import { AllergenFilter, ALLERGEN_OPTIONS, DIETARY_OPTIONS, BADGE_OPTIONS } from "@/components/AllergenFilter";
-import { Button } from "@/components/ui/button";
-import { Filter } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-const Index = () => {
+// Lazy load filter - not needed for first paint
+const AllergenFilter = lazy(() => 
+  import('@/components/AllergenFilter').then(m => ({ default: m.AllergenFilter }))
+);
+
+const Demo = () => {
   const [activeCategory, setActiveCategory] = useState("Dinner");
   const [activeSubcategory, setActiveSubcategory] = useState("SIDES");
   const subcategoryRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -21,6 +25,7 @@ const Index = () => {
   const [selectedSpicy, setSelectedSpicy] = useState<boolean | null>(null);
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [filtersReady, setFiltersReady] = useState(false);
 
   const currentSubcategories = subcategories[activeCategory as keyof typeof subcategories] || [];
 
@@ -101,11 +106,11 @@ const Index = () => {
   }, []);
 
   // Scroll to subcategory when clicked with offset for sticky header
-  const handleSubcategoryClick = (subcategory: string) => {
+  const handleSubcategoryClick = useCallback((subcategory: string) => {
     setActiveSubcategory(subcategory);
     const element = subcategoryRefs.current[subcategory];
     if (element) {
-      const headerOffset = 120; // Height of sticky navigation (adjust as needed)
+      const headerOffset = 120;
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
       
@@ -114,12 +119,14 @@ const Index = () => {
         behavior: 'smooth'
       });
     }
-  };
+  }, []);
 
   // Update active subcategory based on scroll position
   useEffect(() => {
+    if (!currentSubcategories.length) return;
+
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 200; // Offset for sticky header
+      const scrollPosition = window.scrollY + 250;
       
       for (const subcategory of currentSubcategories) {
         const element = subcategoryRefs.current[subcategory];
@@ -133,7 +140,7 @@ const Index = () => {
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [currentSubcategories]);
 
@@ -145,6 +152,17 @@ const Index = () => {
     }
   }, [activeCategory]);
 
+  // Load filters after idle
+  useEffect(() => {
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(() => setFiltersReady(true));
+      return () => cancelIdleCallback(id);
+    } else {
+      const id = setTimeout(() => setFiltersReady(true), 300);
+      return () => clearTimeout(id);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Restaurant Hero */}
@@ -154,73 +172,78 @@ const Index = () => {
         heroImageUrl={null}
       />
 
-      {/* Category & Subcategory Navigation */}
+      {/* Sticky Navigation */}
       <div className="sticky top-0 z-40 bg-background border-b border-border">
-        <CategoryNav 
-          categories={categories}
-          activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
-        />
+        {/* Category Nav with Filter Button */}
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <CategoryNav 
+              categories={categories}
+              activeCategory={activeCategory}
+              onCategoryChange={setActiveCategory}
+            />
+          </div>
 
-        <div className="flex items-center justify-between px-4 py-2">
-          {currentSubcategories.length > 0 && (
-            <div className="flex-1">
-              <SubcategoryNav
-                subcategories={currentSubcategories}
-                activeSubcategory={activeSubcategory}
-                onSubcategoryChange={handleSubcategoryClick}
-              />
-            </div>
-          )}
-          
           {/* Filter Button */}
-          <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
-            <SheetTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className={`ml-2 gap-2 shrink-0 ${hasActiveFilters ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
-              >
-                <Filter className="h-4 w-4" />
-                Filters
-                {hasActiveFilters && (
-                  <span className="ml-1 bg-primary-foreground text-primary rounded-full px-1.5 py-0.5 text-xs font-medium">
-                    {selectedAllergens.length + selectedDietary.length + (selectedSpicy !== null ? 1 : 0) + selectedBadges.length}
-                  </span>
-                )}
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[320px] sm:w-[400px]">
-              <AllergenFilter
-                selectedAllergens={selectedAllergens}
-                selectedDietary={selectedDietary}
-                selectedSpicy={selectedSpicy}
-                selectedBadges={selectedBadges}
-                onAllergenToggle={handleAllergenToggle}
-                onDietaryToggle={handleDietaryToggle}
-                onSpicyToggle={handleSpicyToggle}
-                onBadgeToggle={handleBadgeToggle}
-                onClear={handleClearFilters}
-              />
-            </SheetContent>
-          </Sheet>
+          {filtersReady && (
+            <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
+              <SheetTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  className="mr-4 relative rounded-lg border-border shrink-0"
+                >
+                  <Filter className="h-4 w-4" />
+                  {hasActiveFilters && (
+                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
+                      {selectedAllergens.length + selectedDietary.length + selectedBadges.length + (selectedSpicy !== null ? 1 : 0)}
+                    </span>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+                <Suspense fallback={<div className="p-4">Loading filters...</div>}>
+                  <AllergenFilter
+                    selectedAllergens={selectedAllergens}
+                    selectedDietary={selectedDietary}
+                    selectedSpicy={selectedSpicy}
+                    selectedBadges={selectedBadges}
+                    onAllergenToggle={handleAllergenToggle}
+                    onDietaryToggle={handleDietaryToggle}
+                    onSpicyToggle={handleSpicyToggle}
+                    onBadgeToggle={handleBadgeToggle}
+                    onClear={handleClearFilters}
+                  />
+                </Suspense>
+              </SheetContent>
+            </Sheet>
+          )}
         </div>
+
+        {/* Subcategory Nav */}
+        {currentSubcategories.length > 0 && (
+          <SubcategoryNav
+            subcategories={currentSubcategories}
+            activeSubcategory={activeSubcategory}
+            onSubcategoryChange={handleSubcategoryClick}
+          />
+        )}
       </div>
 
-      {/* Main Content - All Subcategories in One Page */}
+      {/* Main Content */}
       <main>
-        {currentSubcategories.map((subcategory) => {
+        {currentSubcategories.map((subcategory, index) => {
           const subcategoryDishes = filteredMenuData.filter(
             (dish) => dish.category === activeCategory && dish.subcategory === subcategory
           );
           
-          // Skip empty subcategories after filtering
           if (subcategoryDishes.length === 0) return null;
           
           return (
             <div 
               key={subcategory}
-              ref={(el) => subcategoryRefs.current[subcategory] = el}
+              ref={(el) => { subcategoryRefs.current[subcategory] = el; }}
+              style={index > 0 ? { contentVisibility: 'auto' } : undefined}
             >
               <MenuGrid 
                 dishes={subcategoryDishes} 
@@ -244,10 +267,9 @@ const Index = () => {
       </main>
 
       {/* Footer */}
-      <Footer/>
-     
+      <Footer />
     </div>
   );
 };
 
-export default Index;
+export default Demo;
