@@ -87,19 +87,9 @@ export const AllergenFilter = memo(({
   const [allergensOpen, setAllergensOpen] = useState(true);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between pr-10">
+    <div className="flex flex-col h-full">
+      <div className="space-y-6 flex-1">
         <h3 className="text-lg font-semibold text-foreground">Filters</h3>
-        {hasActiveFilters && (
-          <button
-            onClick={onClear}
-            className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors duration-200 rounded-lg px-3 py-1.5 hover:bg-muted/50"
-          >
-            <X className="h-4 w-4" />
-            Clear all
-          </button>
-        )}
-      </div>
 
       {/* Dietary preferences */}
       <div className="space-y-2">
@@ -195,6 +185,20 @@ export const AllergenFilter = memo(({
               );
             })}
           </div>
+        </div>
+      )}
+      </div>
+      
+      {/* Clear all button at bottom */}
+      {hasActiveFilters && (
+        <div className="pt-6 mt-auto">
+          <button
+            onClick={onClear}
+            className="w-full text-sm text-muted-foreground hover:text-foreground flex items-center justify-center gap-1.5 transition-colors duration-200 rounded-lg px-3 py-3 hover:bg-muted/50 border border-border"
+          >
+            <X className="h-4 w-4" />
+            Clear all
+          </button>
         </div>
       )}
     </div>
