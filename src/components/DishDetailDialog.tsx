@@ -327,7 +327,7 @@ export const DishDetailDialog = ({
           
           <div 
             ref={scrollContainerRef}
-            className="flex-1 overflow-y-scroll overscroll-y-contain rounded-b-3xl"
+            className="flex-1 overflow-y-scroll overscroll-y-contain rounded-3xl"
             style={{
               WebkitOverflowScrolling: 'touch',
               overscrollBehavior: 'contain',
@@ -338,7 +338,7 @@ export const DishDetailDialog = ({
               <img
                 src={dish.image}
                 alt={dish.name}
-                className="w-full h-[55vh] object-cover"
+                className="w-full h-[55vh] object-cover rounded-t-3xl"
               />
             </div>
             
