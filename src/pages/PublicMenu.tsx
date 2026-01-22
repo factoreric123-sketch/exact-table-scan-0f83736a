@@ -722,7 +722,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
-import { Bookmark, Share2, Menu as MenuIcon, Filter } from "lucide-react";
+import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import CategoryNav from "@/components/CategoryNav";
@@ -734,6 +734,7 @@ import { useRestaurant } from "@/hooks/useRestaurants";
 import { useCategories } from "@/hooks/useCategories";
 import { useSubcategories } from "@/hooks/useSubcategories";
 import { supabase } from "@/integrations/supabase/client";
+import Footer from "@/components/home/Footer";
 
 interface PublicMenuProps {
   slugOverride?: string;
@@ -1012,57 +1013,10 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
 
   const categoryNames = categories?.map((c) => c.name) || [];
   const activeCategoryName = categories?.find((c) => c.id === activeCategory)?.name || "";
+  const hasActiveFilters = selectedAllergens.length > 0 || selectedDietary.length > 0 || selectedSpicy !== null || selectedBadges.length > 0;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Top Action Bar */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
-          <Button variant="ghost" size="icon" className="h-9 w-9">
-            <MenuIcon className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <Bookmark className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <Share2 className="h-5 w-5" />
-            </Button>
-            {restaurant?.show_allergen_filter !== false && (
-              <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 relative">
-                    <Filter className="h-5 w-5" />
-                    {(selectedAllergens.length > 0 ||
-                      selectedDietary.length > 0 ||
-                      selectedSpicy !== null ||
-                      selectedBadges.length > 0) && (
-                      <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full" />
-                    )}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-                  <AllergenFilter
-                    selectedAllergens={selectedAllergens}
-                    selectedDietary={selectedDietary}
-                    selectedSpicy={selectedSpicy}
-                    selectedBadges={selectedBadges}
-                    onAllergenToggle={handleAllergenToggle}
-                    onDietaryToggle={handleDietaryToggle}
-                    onSpicyToggle={handleSpicyToggle}
-                    onBadgeToggle={handleBadgeToggle}
-                    onClear={handleClearFilters}
-                    allergenOrder={restaurant.allergen_filter_order as string[] | undefined}
-                    dietaryOrder={restaurant.dietary_filter_order as string[] | undefined}
-                    badgeOrder={restaurant.badge_display_order as string[] | undefined}
-                  />
-                </SheetContent>
-              </Sheet>
-            )}
-          </div>
-        </div>
-      </header>
-
       {/* Restaurant Hero */}
       <RestaurantHeader
         name={restaurant.name || "Restaurant Menu"}
@@ -1070,19 +1024,61 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
         heroImageUrl={restaurant.hero_image_url}
       />
 
-      {/* Category & Subcategory Navigation */}
-      <div className="sticky top-[57px] z-40 bg-background border-b border-border">
-        {categoryNames.length > 0 && activeCategoryName && (
-          <CategoryNav
-            categories={categoryNames}
-            activeCategory={activeCategoryName}
-            onCategoryChange={(name) => {
-              const category = categories?.find((c) => c.name === name);
-              if (category) setActiveCategory(category.id);
-            }}
-          />
-        )}
+      {/* Sticky Navigation */}
+      <div className="sticky top-0 z-40 bg-background border-b border-border">
+        {/* Category Nav with Filter Button */}
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            {categoryNames.length > 0 && activeCategoryName && (
+              <CategoryNav
+                categories={categoryNames}
+                activeCategory={activeCategoryName}
+                onCategoryChange={(name) => {
+                  const category = categories?.find((c) => c.name === name);
+                  if (category) setActiveCategory(category.id);
+                }}
+              />
+            )}
+          </div>
 
+          {/* Filter Button */}
+          {restaurant?.show_allergen_filter !== false && (
+            <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
+              <SheetTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  className="mr-4 relative rounded-lg border-border shrink-0"
+                >
+                  <Filter className="h-4 w-4" />
+                  {hasActiveFilters && (
+                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
+                      {selectedAllergens.length + selectedDietary.length + selectedBadges.length + (selectedSpicy !== null ? 1 : 0)}
+                    </span>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+                <AllergenFilter
+                  selectedAllergens={selectedAllergens}
+                  selectedDietary={selectedDietary}
+                  selectedSpicy={selectedSpicy}
+                  selectedBadges={selectedBadges}
+                  onAllergenToggle={handleAllergenToggle}
+                  onDietaryToggle={handleDietaryToggle}
+                  onSpicyToggle={handleSpicyToggle}
+                  onBadgeToggle={handleBadgeToggle}
+                  onClear={handleClearFilters}
+                  allergenOrder={restaurant.allergen_filter_order as string[] | undefined}
+                  dietaryOrder={restaurant.dietary_filter_order as string[] | undefined}
+                  badgeOrder={restaurant.badge_display_order as string[] | undefined}
+                />
+              </SheetContent>
+            </Sheet>
+          )}
+        </div>
+
+        {/* Subcategory Nav */}
         {subcategories && subcategories.length > 0 && (
           <SubcategoryNav
             subcategories={subcategories.map((s) => s.name)}
@@ -1154,20 +1150,31 @@ const PublicMenu = ({ slugOverride }: PublicMenuProps) => {
                   showImage={restaurant?.show_images !== false}
                   layoutStyle={restaurant?.layout_style || 'generic'}
                   badgeColors={restaurant?.badge_colors}
+                  cardImageShape={(restaurant?.card_image_shape as 'square' | 'vertical') || 'vertical'}
+                  menuFont={restaurant?.menu_font || 'Inter'}
                 />
               </div>
             );
           })
         )}
+        
+        {/* Show message if no dishes match filters */}
+        {subcategories && subcategories.length > 0 && 
+          subcategories.every(sub => {
+            const subcategoryDishes = dishesBySubcategory[sub.name] || [];
+            return getFilteredDishes(subcategoryDishes).length === 0;
+          }) && (
+          <div className="text-center py-16 text-muted-foreground">
+            <p className="text-lg">No dishes match your current filters.</p>
+            <Button variant="link" onClick={handleClearFilters} className="mt-2">
+              Clear all filters
+            </Button>
+          </div>
+        )}
       </main>
 
       {/* Footer */}
-      <footer className="py-8 text-center">
-        <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
-          Powered By
-          <span className="font-semibold text-foreground">TAPTAB</span>
-        </p>
-      </footer>
+      <Footer />
     </div>
   );
 };
