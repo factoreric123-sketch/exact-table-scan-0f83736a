@@ -98,13 +98,32 @@ export const DishDetailDialog = ({
     }
   }, [options]);
 
-  // Reset scroll position when drawer opens - always start at top
+  // Reset scroll position when drawer opens - always start at top with aggressive reset
   useEffect(() => {
     if (open && isMobile && scrollContainerRef.current) {
-      // Reset to top when opening - ensures full scroll range is available
+      // Immediate reset
       scrollContainerRef.current.scrollTop = 0;
+      
+      // Also reset after a small delay to handle async content rendering
+      const timer = setTimeout(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = 0;
+        }
+      }, 50);
+      
+      // And another reset after content is fully rendered
+      const timer2 = requestAnimationFrame(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = 0;
+        }
+      });
+      
+      return () => {
+        clearTimeout(timer);
+        cancelAnimationFrame(timer2);
+      };
     }
-  }, [open, isMobile]);
+  }, [open, isMobile, dish?.id]);
   
   // Early return AFTER all hooks
   if (!dish) return null;
@@ -308,7 +327,7 @@ export const DishDetailDialog = ({
             <DrawerDescription>{dish.description}</DrawerDescription>
           </VisuallyHidden>
           
-          {/* X button - the ONLY way to close on mobile/tablet - positioned lower for easy thumb access */}
+          {/* X button - the ONLY way to close on mobile/tablet */}
           <Button
             variant="ghost"
             size="icon"
@@ -320,23 +339,25 @@ export const DishDetailDialog = ({
           
           <div 
             ref={scrollContainerRef}
-            className="flex-1 overflow-y-auto overflow-x-hidden"
+            className="h-full overflow-y-auto overflow-x-hidden"
             style={{
               WebkitOverflowScrolling: 'touch',
-              overscrollBehavior: 'none',
+              overscrollBehavior: 'contain',
+              scrollBehavior: 'smooth',
             }}
           >
-            {/* Image section */}
-            <div className="relative bg-dish-card flex-shrink-0">
+            {/* Image section - fixed height, not flex-shrink */}
+            <div className="relative bg-dish-card">
               <img
                 src={dish.image}
                 alt={dish.name}
                 className="w-full h-[55vh] object-cover rounded-t-3xl"
+                style={{ display: 'block' }}
               />
             </div>
             
-            {/* Content section - easy scrollable area with extra padding for options */}
-            <div className="p-6 pb-16 space-y-4 bg-background rounded-b-3xl">
+            {/* Content section - scrollable content */}
+            <div className="p-6 pb-20 space-y-4 bg-background rounded-b-3xl min-h-[45vh]">
               {renderContent()}
             </div>
           </div>
