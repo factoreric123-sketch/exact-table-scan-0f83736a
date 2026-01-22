@@ -349,6 +349,7 @@ export const DishDetailDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
+        hideClose
         className={`rounded-xl p-0 gap-0 bg-background overflow-hidden ${fontClass} ${
           isVertical 
             ? 'max-w-sm sm:max-w-md md:max-w-3xl md:flex md:flex-row md:h-[75vh]' 
