@@ -299,7 +299,7 @@ export const DishDetailDialog = ({
         modal={true}
       >
         <DrawerContent 
-          className={`${fontClass}`}
+          className={`${fontClass} overflow-hidden`}
           hideHandle
           onPointerDownOutside={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
@@ -327,10 +327,10 @@ export const DishDetailDialog = ({
           
           <div 
             ref={scrollContainerRef}
-            className="flex-1 overflow-y-scroll overscroll-y-contain rounded-3xl"
+            className="flex-1 overflow-y-auto overflow-x-hidden"
             style={{
               WebkitOverflowScrolling: 'touch',
-              overscrollBehavior: 'contain',
+              overscrollBehavior: 'none',
             }}
           >
             {/* Image section */}
