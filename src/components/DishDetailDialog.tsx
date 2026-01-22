@@ -299,15 +299,14 @@ export const DishDetailDialog = ({
         modal={true}
       >
         <DrawerContent 
-          className={`h-[100vh] ${fontClass}`}
+          className={`${fontClass}`}
           hideHandle
           onPointerDownOutside={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
           style={{ 
-            borderTopLeftRadius: '1.5rem',
-            borderTopRightRadius: '1.5rem',
-            borderBottomLeftRadius: '1.5rem',
-            borderBottomRightRadius: '1.5rem',
+            height: '94vh',
+            margin: '3vh 3vw',
+            borderRadius: '1.5rem',
           }}
         >
           {/* Accessibility: Hidden title and description for screen readers */}
