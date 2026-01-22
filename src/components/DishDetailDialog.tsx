@@ -299,10 +299,16 @@ export const DishDetailDialog = ({
         modal={true}
       >
         <DrawerContent 
-          className={`max-h-[95vh] ${fontClass}`}
+          className={`h-[100vh] ${fontClass}`}
           hideHandle
           onPointerDownOutside={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
+          style={{ 
+            borderTopLeftRadius: '1.5rem',
+            borderTopRightRadius: '1.5rem',
+            borderBottomLeftRadius: '1.5rem',
+            borderBottomRightRadius: '1.5rem',
+          }}
         >
           {/* Accessibility: Hidden title and description for screen readers */}
           <VisuallyHidden>
@@ -322,7 +328,7 @@ export const DishDetailDialog = ({
           
           <div 
             ref={scrollContainerRef}
-            className="flex-1 overflow-y-scroll overscroll-y-contain"
+            className="flex-1 overflow-y-scroll overscroll-y-contain rounded-b-3xl"
             style={{
               WebkitOverflowScrolling: 'touch',
               overscrollBehavior: 'contain',
@@ -338,7 +344,7 @@ export const DishDetailDialog = ({
             </div>
             
             {/* Content section - easy scrollable area with extra padding for options */}
-            <div className="p-6 pb-12 space-y-4 bg-background">
+            <div className="p-6 pb-16 space-y-4 bg-background rounded-b-3xl">
               {renderContent()}
             </div>
           </div>
