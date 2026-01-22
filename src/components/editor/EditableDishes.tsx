@@ -181,8 +181,6 @@ export const EditableDishes = ({
         showCurrencySymbol={restaurant?.show_currency_symbol !== false}
         layoutStyle={restaurant?.layout_style || "generic"}
         badgeColors={restaurant?.badge_colors}
-        cardImageShape={(restaurant?.card_image_shape as 'square' | 'vertical') || 'vertical'}
-        menuFont={restaurant?.menu_font || 'Inter'}
       />
     );
   }

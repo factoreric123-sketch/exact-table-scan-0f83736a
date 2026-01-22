@@ -456,41 +456,29 @@ const Editor = () => {
           restaurantId={restaurant.id}
         />
 
-      {/* Sticky Navigation - matches Demo structure */}
-      <div className="sticky top-16 z-40 bg-background border-b border-border mx-auto max-w-6xl">
+      <div className=" mx-auto max-w-6xl">
         <Sheet>
-          {/* Category Nav with Filter Button */}
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <EditableCategories
-                categories={categories}
-                activeCategory={activeCategory}
-                onCategoryChange={setActiveCategory}
-                restaurantId={restaurant.id}
-                previewMode={previewMode}
-              />
-            </div>
-            
-            {/* Filter Button - only in preview mode */}
-            {previewMode && restaurant.show_allergen_filter !== false && (
-              <SheetTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  className="mr-4 relative rounded-lg border-border shrink-0"
-                >
-                  <Filter className="h-4 w-4" />
-                  {(selectedAllergens.length > 0 || selectedDietary.length > 0 || selectedSpicy !== null || selectedBadges.length > 0) && (
-                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
-                      {selectedAllergens.length + selectedDietary.length + selectedBadges.length + (selectedSpicy !== null ? 1 : 0)}
-                    </span>
-                  )}
-                </Button>
-              </SheetTrigger>
-            )}
-          </div>
+          <EditableCategories
+            categories={categories}
+            activeCategory={activeCategory}
+            onCategoryChange={setActiveCategory}
+            restaurantId={restaurant.id}
+            previewMode={previewMode}
+            filterSheetTrigger={
+              previewMode && restaurant.show_allergen_filter !== false ? (
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Filter className="h-4 w-4" />
+                    Filters
+                  </Button>
+                </SheetTrigger>
+              ) : null
+            }
+          />
           
           <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+            <SheetHeader className="mb-6">
+            </SheetHeader>
             {previewMode && restaurant.show_allergen_filter !== false && (
               <AllergenFilter
                 selectedAllergens={selectedAllergens}
@@ -510,7 +498,6 @@ const Editor = () => {
           </SheetContent>
         </Sheet>
 
-        {/* Subcategory Nav */}
         <EditableSubcategories
           subcategories={subcategories}
           activeSubcategory={activeSubcategory}
@@ -518,10 +505,7 @@ const Editor = () => {
           categoryId={activeCategory}
           previewMode={previewMode}
         />
-      </div>
 
-      {/* Main Content Area */}
-      <div className="mx-auto max-w-6xl">
         {/* Preview Mode: Show all subcategories in one page */}
         {previewMode && viewMode === 'grid' && currentSubcategories.map((subcategory) => {
           const subcategoryDishes = dishesBySubcategory[subcategory.id] || [];
@@ -561,7 +545,7 @@ const Editor = () => {
             activeSubcategoryId={activeSubcategory}
           />
         )}
-      </div>
+        </div>
       </MenuThemeWrapper>
     </div>
   );
