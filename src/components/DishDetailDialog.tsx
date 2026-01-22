@@ -98,18 +98,11 @@ export const DishDetailDialog = ({
     }
   }, [options]);
 
-  // Scroll to show content on mobile when drawer opens
+  // Reset scroll position when drawer opens - always start at top
   useEffect(() => {
     if (open && isMobile && scrollContainerRef.current) {
-      // Small delay to ensure drawer animation completes, then scroll to show content
-      const timer = setTimeout(() => {
-        if (scrollContainerRef.current) {
-          // Scroll past the image to show content area
-          const imageHeight = scrollContainerRef.current.querySelector('img')?.offsetHeight || 0;
-          scrollContainerRef.current.scrollTop = Math.max(0, imageHeight - 100);
-        }
-      }, 150);
-      return () => clearTimeout(timer);
+      // Reset to top when opening - ensures full scroll range is available
+      scrollContainerRef.current.scrollTop = 0;
     }
   }, [open, isMobile]);
   
