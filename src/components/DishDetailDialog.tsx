@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import React from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Badge } from "@/components/ui/badge";
 import { X, Flame, Wheat, Milk, Egg, Fish, Shell, Nut, Sprout, Beef, Bird, Salad } from "lucide-react";
@@ -13,7 +12,6 @@ import { useDishOptions } from "@/hooks/useDishOptions";
 import { useDishModifiers } from "@/hooks/useDishModifiers";
 import { getFontClassName } from "@/lib/fontUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
-
 export interface DishDetail {
   id: string;
   name: string;
@@ -282,75 +280,73 @@ export const DishDetailDialog = ({
     </>
   );
 
-  // Mobile/Tablet: Use Drawer - X button is the ONLY way to close
+  // Mobile/Tablet: Custom fullscreen modal with reliable scrolling (no Vaul interference)
   if (isMobile) {
+    if (!open) return null;
+    
     return (
-      <Drawer 
-        open={open} 
-        onOpenChange={onOpenChange}
-        dismissible={false}
-        modal={true}
+      <div 
+        className="fixed inset-0 z-50"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dish-title"
       >
-        <DrawerContent 
-          className={`${fontClass}`}
-          hideHandle
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onInteractOutside={(e) => e.preventDefault()}
-          style={{ 
-            height: '94vh',
-            maxHeight: '94vh',
-            margin: '3vh 3vw',
+        {/* Backdrop */}
+        <div className="absolute inset-0 bg-black/80" />
+        
+        {/* Modal container with margins */}
+        <div 
+          className={`absolute z-50 bg-background ${fontClass}`}
+          style={{
+            top: '3vh',
+            left: '3vw',
+            right: '3vw',
+            bottom: '3vh',
             borderRadius: '1.5rem',
             overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
           }}
         >
-          {/* Accessibility: Hidden title and description for screen readers */}
+          {/* Accessibility */}
           <VisuallyHidden>
-            <DrawerTitle>{dish.name}</DrawerTitle>
-            <DrawerDescription>{dish.description}</DrawerDescription>
+            <h2 id="dish-title">{dish.name}</h2>
+            <p>{dish.description}</p>
           </VisuallyHidden>
           
-          {/* X button - FIXED position within viewport for reliable access */}
+          {/* X button - absolutely positioned within the modal */}
           <Button
             variant="ghost"
             size="icon"
-            className="fixed z-50 h-12 w-12 rounded-full bg-black/60 backdrop-blur-sm transition-all duration-150 active:scale-95 shadow-lg"
+            className="absolute right-4 top-4 z-50 h-12 w-12 rounded-full bg-black/60 backdrop-blur-sm transition-all duration-150 active:scale-95 shadow-lg"
             onClick={() => onOpenChange(false)}
-            style={{
-              top: 'calc(3vh + 16px)',
-              right: 'calc(3vw + 16px)',
-            }}
           >
             <X className="h-6 w-6 text-white" />
           </Button>
           
-          {/* Scrollable container - uses flex-1 to fill remaining height */}
+          {/* Scrollable container - simple overflow-y-auto */}
           <div 
             ref={scrollContainerRef}
-            className="flex-1 min-h-0 w-full overflow-y-scroll overflow-x-hidden"
+            className="h-full w-full overflow-y-auto"
             style={{
               WebkitOverflowScrolling: 'touch',
-              overscrollBehavior: 'none',
             }}
           >
             {/* Image section */}
-            <div className="relative bg-dish-card flex-shrink-0">
+            <div className="relative bg-dish-card">
               <img
                 src={dish.image}
                 alt={dish.name}
-                className="w-full h-[55vh] object-cover rounded-t-3xl"
+                className="w-full h-[55vh] object-cover"
+                style={{ borderRadius: '1.5rem 1.5rem 0 0' }}
               />
             </div>
             
             {/* Content section */}
-            <div className="p-6 pb-20 space-y-4 bg-background">
+            <div className="p-6 pb-24 space-y-4 bg-background">
               {renderContent()}
             </div>
           </div>
-        </DrawerContent>
-      </Drawer>
+        </div>
+      </div>
     );
   }
 
