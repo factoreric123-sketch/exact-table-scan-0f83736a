@@ -322,23 +322,22 @@ export const DishDetailDialog = ({
             <X className="h-6 w-6 text-white" />
           </Button>
           
-          {/* Scrollable container - simple overflow-y-auto */}
+          {/* Scrollable container - prevent over-scroll with overscroll-behavior */}
           <div 
             ref={scrollContainerRef}
-            className="h-full w-full overflow-y-auto"
+            className="h-full w-full overflow-y-auto overscroll-none"
             style={{
               WebkitOverflowScrolling: 'touch',
+              overscrollBehavior: 'none',
             }}
           >
-            {/* Image section */}
-            <div className="relative bg-dish-card">
-              <img
-                src={dish.image}
-                alt={dish.name}
-                className="w-full h-[55vh] object-cover"
-                style={{ borderRadius: '1.5rem 1.5rem 0 0' }}
-              />
-            </div>
+            {/* Image section - flush with top, no gap */}
+            <img
+              src={dish.image}
+              alt={dish.name}
+              className="w-full h-[55vh] object-cover block"
+              style={{ borderRadius: '1.5rem 1.5rem 0 0' }}
+            />
             
             {/* Content section */}
             <div className="p-6 pb-24 space-y-4 bg-background">
