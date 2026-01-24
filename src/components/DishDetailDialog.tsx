@@ -99,33 +99,47 @@ export const DishDetailDialog = ({
   // Reset scroll position when drawer opens - always start at top
   // Lock body scroll when mobile modal is open
   useEffect(() => {
-    if (open && isMobile) {
-      // Lock background scroll
-      const originalOverflow = document.body.style.overflow;
-      const originalPosition = document.body.style.position;
-      const originalWidth = document.body.style.width;
-      const originalTop = document.body.style.top;
-      const scrollY = window.scrollY;
-      
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.top = `-${scrollY}px`;
-      
-      // Reset scroll container to top
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTop = 0;
-      }
-      
-      return () => {
-        // Restore background scroll
-        document.body.style.overflow = originalOverflow;
-        document.body.style.position = originalPosition;
-        document.body.style.width = originalWidth;
-        document.body.style.top = originalTop;
-        window.scrollTo(0, scrollY);
-      };
+    if (!open || !isMobile) return;
+    
+    // Store original values
+    const scrollY = window.scrollY;
+    const html = document.documentElement;
+    const body = document.body;
+    
+    // Apply scroll lock to both html and body
+    html.style.overflow = 'hidden';
+    html.style.position = 'fixed';
+    html.style.width = '100%';
+    html.style.height = '100%';
+    html.style.top = `-${scrollY}px`;
+    
+    body.style.overflow = 'hidden';
+    body.style.position = 'fixed';
+    body.style.width = '100%';
+    body.style.height = '100%';
+    body.style.top = `-${scrollY}px`;
+    
+    // Reset scroll container to top
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
     }
+    
+    return () => {
+      // Restore scroll
+      html.style.overflow = '';
+      html.style.position = '';
+      html.style.width = '';
+      html.style.height = '';
+      html.style.top = '';
+      
+      body.style.overflow = '';
+      body.style.position = '';
+      body.style.width = '';
+      body.style.height = '';
+      body.style.top = '';
+      
+      window.scrollTo(0, scrollY);
+    };
   }, [open, isMobile]);
   
   // Early return AFTER all hooks
