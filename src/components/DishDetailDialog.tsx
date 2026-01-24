@@ -292,14 +292,18 @@ export const DishDetailDialog = ({
         modal={true}
       >
         <DrawerContent 
-          className={`${fontClass} overflow-hidden`}
+          className={`${fontClass}`}
           hideHandle
           onPointerDownOutside={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
           style={{ 
             height: '94vh',
+            maxHeight: '94vh',
             margin: '3vh 3vw',
             borderRadius: '1.5rem',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
           {/* Accessibility: Hidden title and description for screen readers */}
@@ -308,19 +312,24 @@ export const DishDetailDialog = ({
             <DrawerDescription>{dish.description}</DrawerDescription>
           </VisuallyHidden>
           
-          {/* X button - the ONLY way to close on mobile/tablet - positioned lower for easy thumb access */}
+          {/* X button - FIXED position within viewport for reliable access */}
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-4 top-4 z-20 h-12 w-12 rounded-full bg-black/60 backdrop-blur-sm transition-all duration-150 active:scale-95 shadow-lg"
+            className="fixed z-50 h-12 w-12 rounded-full bg-black/60 backdrop-blur-sm transition-all duration-150 active:scale-95 shadow-lg"
             onClick={() => onOpenChange(false)}
+            style={{
+              top: 'calc(3vh + 16px)',
+              right: 'calc(3vw + 16px)',
+            }}
           >
             <X className="h-6 w-6 text-white" />
           </Button>
           
+          {/* Scrollable container - uses flex-1 to fill remaining height */}
           <div 
             ref={scrollContainerRef}
-            className="flex-1 overflow-y-auto overflow-x-hidden"
+            className="flex-1 min-h-0 w-full overflow-y-scroll overflow-x-hidden"
             style={{
               WebkitOverflowScrolling: 'touch',
               overscrollBehavior: 'none',
@@ -335,8 +344,8 @@ export const DishDetailDialog = ({
               />
             </div>
             
-            {/* Content section - easy scrollable area with extra padding for options */}
-            <div className="p-6 pb-16 space-y-4 bg-background rounded-b-3xl">
+            {/* Content section */}
+            <div className="p-6 pb-20 space-y-4 bg-background">
               {renderContent()}
             </div>
           </div>
