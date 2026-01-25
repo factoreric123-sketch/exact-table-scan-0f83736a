@@ -96,17 +96,18 @@ export const DishDetailDialog = ({
     }
   }, [options]);
 
-  // Mobile scroll lock - simplified approach
+  // Mobile scroll lock - prevents background scroll while modal is open
   useEffect(() => {
     if (!open || !isMobile) return;
     
-    // Save current scroll position
-    savedScrollY.current = window.scrollY;
+    // Capture scroll position at open time
+    const scrollY = window.scrollY;
+    savedScrollY.current = scrollY;
     
     // Lock body scroll
     document.body.style.overflow = 'hidden';
     document.body.style.position = 'fixed';
-    document.body.style.top = `-${savedScrollY.current}px`;
+    document.body.style.top = `-${scrollY}px`;
     document.body.style.width = '100%';
     
     // Reset scroll container to top
@@ -115,14 +116,17 @@ export const DishDetailDialog = ({
     }
     
     return () => {
-      // Restore body scroll
+      // Get saved position before clearing styles
+      const savedY = savedScrollY.current;
+      
+      // Clear all body styles first
       document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.width = '';
       
-      // Restore scroll position
-      window.scrollTo(0, savedScrollY.current);
+      // Restore scroll position instantly (no animation)
+      window.scrollTo({ top: savedY, behavior: 'instant' });
     };
   }, [open, isMobile]);
   
