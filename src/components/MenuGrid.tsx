@@ -43,7 +43,7 @@ const MenuGrid = memo(({
   showCurrencySymbol = true,
   layoutStyle = 'generic',
   badgeColors,
-  cardImageShape = 'square',
+  cardImageShape = 'vertical',
   textOverlay = false,
   menuFont = 'Inter',
   onDishClick,

@@ -402,7 +402,7 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
                   showCurrencySymbol={restaurant.show_currency_symbol !== false}
                   layoutStyle={restaurant.layout_style || 'generic'}
                   badgeColors={restaurant.badge_colors}
-                  cardImageShape={restaurant.card_image_shape || 'square'}
+                  cardImageShape={restaurant.card_image_shape || 'vertical'}
                   textOverlay={restaurant.text_overlay === true}
                   menuFont={restaurant.menu_font || 'Inter'}
                   onDishClick={handleDishClick}
@@ -432,7 +432,7 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
                 showCurrencySymbol={restaurant.show_currency_symbol !== false}
                 layoutStyle={restaurant.layout_style || 'generic'}
                 badgeColors={restaurant.badge_colors}
-                cardImageShape={restaurant.card_image_shape || 'square'}
+                cardImageShape={restaurant.card_image_shape || 'vertical'}
                 textOverlay={restaurant.text_overlay === true}
                 menuFont={restaurant.menu_font || 'Inter'}
                 onDishClick={handleDishClick}
@@ -450,7 +450,7 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
         forceTwoDecimals={restaurant.force_two_decimals === true}
         showCurrencySymbol={restaurant.show_currency_symbol !== false}
         menuFont={restaurant.menu_font || 'Inter'}
-        cardImageShape={restaurant.card_image_shape || 'square'}
+        cardImageShape={restaurant.card_image_shape || 'vertical'}
       />
 
       {/* Footer */}
