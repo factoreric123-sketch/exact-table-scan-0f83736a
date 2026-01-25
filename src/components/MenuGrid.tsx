@@ -1,6 +1,6 @@
-import { useState, memo, useCallback } from "react";
+import { memo, useCallback } from "react";
 import DishCard, { Dish } from "./DishCard";
-import { DishDetailDialog, DishDetail } from "./DishDetailDialog";
+import { DishDetail } from "./DishDetailDialog";
 import { getFontClassName } from "@/lib/fontUtils";
 
 interface MenuGridProps {
@@ -21,12 +21,11 @@ interface MenuGridProps {
     popular: string;
     chef_recommendation: string;
   };
-  // New customization options
   cardImageShape?: 'square' | 'vertical';
   textOverlay?: boolean;
   menuFont?: string;
-  // Use static options from dish data instead of fetching from DB (for demo page)
-  useStaticOptions?: boolean;
+  // Callback to parent when dish is clicked
+  onDishClick?: (dish: DishDetail) => void;
 }
 
 const MenuGrid = memo(({ 
@@ -45,28 +44,28 @@ const MenuGrid = memo(({
   cardImageShape = 'square',
   textOverlay = false,
   menuFont = 'Inter',
-  useStaticOptions = false,
+  onDishClick,
 }: MenuGridProps) => {
-  const [selectedDish, setSelectedDish] = useState<DishDetail | null>(null);
-
   // Memoize callback to prevent re-renders
   const handleDishClick = useCallback((dish: Dish) => {
-    setSelectedDish({
-      id: dish.id,
-      name: dish.name,
-      description: dish.description,
-      price: dish.price,
-      image: dish.image,
-      allergens: dish.allergens,
-      calories: dish.calories,
-      isVegetarian: dish.isVegetarian,
-      isVegan: dish.isVegan,
-      isSpicy: dish.isSpicy,
-      hasOptions: dish.hasOptions,
-      options: dish.options,
-      modifiers: dish.modifiers,
-    });
-  }, []);
+    if (onDishClick) {
+      onDishClick({
+        id: dish.id,
+        name: dish.name,
+        description: dish.description,
+        price: dish.price,
+        image: dish.image,
+        allergens: dish.allergens,
+        calories: dish.calories,
+        isVegetarian: dish.isVegetarian,
+        isVegan: dish.isVegan,
+        isSpicy: dish.isSpicy,
+        hasOptions: dish.hasOptions,
+        options: dish.options,
+        modifiers: dish.modifiers,
+      });
+    }
+  }, [onDishClick]);
 
   if (dishes.length === 0) {
     return null;
@@ -90,42 +89,29 @@ const MenuGrid = memo(({
   const fontClass = getFontClassName(menuFont);
 
   return (
-    <>
-      <div className={`${paddingClass} ${fontClass}`} style={{ contentVisibility: 'auto' }}>
-        <h2 className={`${titleSizeClass} font-bold text-foreground mb-6`}>{sectionTitle}</h2>
-        <div className={`grid ${gridColsClass} ${gapClass}`}>
-          {dishes.map((dish) => (
-            <DishCard 
-              key={dish.id} 
-              dish={dish} 
-              onClick={() => handleDishClick(dish)}
-              showPrice={showPrice}
-              showImage={showImage}
-              imageSize={imageSize}
-              fontSize={fontSize}
-              forceTwoDecimals={forceTwoDecimals}
-              showCurrencySymbol={showCurrencySymbol}
-              layoutStyle={layoutStyle}
-              badgeColors={badgeColors}
-              cardImageShape={cardImageShape}
-              textOverlay={textOverlay}
-              menuFont={menuFont}
-            />
-          ))}
-        </div>
+    <div className={`${paddingClass} ${fontClass}`} style={{ contentVisibility: 'auto' }}>
+      <h2 className={`${titleSizeClass} font-bold text-foreground mb-6`}>{sectionTitle}</h2>
+      <div className={`grid ${gridColsClass} ${gapClass}`}>
+        {dishes.map((dish) => (
+          <DishCard 
+            key={dish.id} 
+            dish={dish} 
+            onClick={() => handleDishClick(dish)}
+            showPrice={showPrice}
+            showImage={showImage}
+            imageSize={imageSize}
+            fontSize={fontSize}
+            forceTwoDecimals={forceTwoDecimals}
+            showCurrencySymbol={showCurrencySymbol}
+            layoutStyle={layoutStyle}
+            badgeColors={badgeColors}
+            cardImageShape={cardImageShape}
+            textOverlay={textOverlay}
+            menuFont={menuFont}
+          />
+        ))}
       </div>
-
-      <DishDetailDialog
-        dish={selectedDish}
-        open={!!selectedDish}
-        onOpenChange={(open) => !open && setSelectedDish(null)}
-        forceTwoDecimals={forceTwoDecimals}
-        showCurrencySymbol={showCurrencySymbol}
-        menuFont={menuFont}
-        cardImageShape={cardImageShape}
-        useStaticOptions={useStaticOptions}
-      />
-    </>
+    </div>
   );
 });
 
