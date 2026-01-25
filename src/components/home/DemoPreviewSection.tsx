@@ -25,10 +25,6 @@ const DemoPreviewSection = () => {
             
             {/* Phone Mockup */}
             <div className="relative flex-shrink-0 animate-fade-in-up animation-delay-200">
-              {/* Floating badge */}
-              <div className="absolute -top-3 -right-3 z-20 bg-card border border-border rounded-xl p-2.5 shadow-lg">
-                <Zap className="w-5 h-5 text-orange-500" />
-              </div>
               
               {/* Phone Frame */}
               <div className="relative w-[280px] sm:w-[320px] rounded-[2.5rem] bg-foreground p-3 shadow-2xl">
