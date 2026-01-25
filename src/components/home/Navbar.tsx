@@ -47,7 +47,7 @@ const Navbar = () => {
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 group">
-              <img src={logoDark} alt="menu" className="h-8 lg:h-10 group-hover:scale-105 transition-transform" />
+              <img src={logoDark} alt="menu" className="h-12 lg:h-14 group-hover:scale-105 transition-transform" />
             </Link>
 
             {/* Desktop Navigation */}
