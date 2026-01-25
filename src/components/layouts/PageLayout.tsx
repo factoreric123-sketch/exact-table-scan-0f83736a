@@ -1,6 +1,5 @@
 import { ReactNode } from "react";
 import Navbar from "@/components/home/Navbar";
-import Footer from "@/components/home/Footer";
 
 interface PageLayoutProps {
   children: ReactNode;
@@ -13,7 +12,6 @@ const PageLayout = ({ children }: PageLayoutProps) => {
       <main className="flex-1">
         {children}
       </main>
-      <Footer />
     </div>
   );
 };
