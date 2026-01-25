@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MobileMenu from "./MobileMenu";
+import logoDark from "@/assets/logo-dark.png";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -46,7 +47,7 @@ const Navbar = () => {
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 group">
-              <img src="/logo.png" alt="menu" className="h-8 lg:h-10 group-hover:scale-105 transition-transform" />
+              <img src={logoDark} alt="menu" className="h-8 lg:h-10 group-hover:scale-105 transition-transform" />
             </Link>
 
             {/* Desktop Navigation */}
