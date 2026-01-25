@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, Zap } from "lucide-react";
+import demoMenuPreview from "@/assets/demo-menu-preview.png";
 
 const DemoPreviewSection = () => {
   const navigate = useNavigate();
@@ -18,39 +19,65 @@ const DemoPreviewSection = () => {
           </p>
         </div>
 
-        {/* Demo Content */}
-        <div className="max-w-3xl mx-auto text-center space-y-8">
-          <div className="space-y-4">
-            <h3 className="text-3xl sm:text-4xl font-bold">
-              See it in action
-            </h3>
-            <p className="text-lg text-muted-foreground max-w-md mx-auto">
-              Browse our interactive demo featuring real dishes, photos, dietary filters, and the premium design your guests will love.
-            </p>
-          </div>
+        {/* Demo Phone Mockup */}
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+            
+            {/* Phone Mockup */}
+            <div className="relative flex-shrink-0 animate-fade-in-up animation-delay-200">
+              
+              {/* Phone Frame */}
+              <div className="relative w-[280px] sm:w-[320px] rounded-[2.5rem] bg-foreground p-3 shadow-2xl">
+                {/* Screen */}
+                <div className="rounded-[2rem] overflow-hidden">
+                  <img 
+                    src={demoMenuPreview} 
+                    alt="Palladino's menu preview" 
+                    className="w-full h-auto"
+                  />
+                </div>
+              </div>
+              
+              {/* Glow effect behind phone */}
+              <div className="absolute inset-0 -z-10 blur-3xl opacity-20 bg-foreground rounded-full scale-75" />
+            </div>
 
-          {/* Feature list */}
-          <div className="flex flex-wrap gap-3 justify-center">
-            {["Photos", "Allergens", "Dietary filters", "20+ Themes", "QR Codes", "Drag & Drop", "Size Options", "Add-ons", "Badges", "Customization", "Desktop · Tablet · Mobile"].map((feature) => (
-              <span
-                key={feature}
-                className="px-4 py-2 bg-background text-foreground border border-border rounded-full text-sm font-medium"
+            {/* Text Content */}
+            <div className="flex-1 text-center lg:text-left space-y-8">
+              <div className="space-y-4">
+                <h3 className="text-3xl sm:text-4xl font-bold">
+                  See it in action
+                </h3>
+                <p className="text-lg text-muted-foreground max-w-md mx-auto lg:mx-0">
+                  Browse our interactive demo featuring real dishes, photos, dietary filters, and the premium design your guests will love.
+                </p>
+              </div>
+
+              {/* Feature list */}
+              <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
+                {["Photos", "Allergens", "Dietary filters", "20+ Themes", "QR Codes", "Drag & Drop", "Size Options", "Add-ons", "Badges", "Customization", "Desktop · Tablet · Mobile"].map((feature) => (
+                  <span
+                    key={feature}
+                    className="px-4 py-2 bg-background text-foreground border border-border rounded-full text-sm font-medium"
+                  >
+                    {feature}
+                  </span>
+                ))}
+              </div>
+
+              {/* CTA */}
+              <Button
+                onClick={() => navigate("/demo")}
+                size="lg"
+                className="bg-foreground hover:bg-foreground/90 text-background font-semibold text-lg h-14 px-8 group/btn"
               >
-                {feature}
-              </span>
-            ))}
+                <Sparkles className="w-5 h-5 mr-2" />
+                View live demo
+                <ArrowRight className="w-5 h-5 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+              </Button>
+            </div>
           </div>
 
-          {/* CTA */}
-          <Button
-            onClick={() => navigate("/demo")}
-            size="lg"
-            className="bg-foreground hover:bg-foreground/90 text-background font-semibold text-lg h-14 px-8 group/btn"
-          >
-            <Sparkles className="w-5 h-5 mr-2" />
-            View live demo
-            <ArrowRight className="w-5 h-5 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-          </Button>
         </div>
       </div>
     </section>
