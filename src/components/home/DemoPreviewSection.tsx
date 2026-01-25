@@ -56,19 +56,20 @@ const DemoPreviewSection = () => {
           </div>
 
           {/* Feature highlights */}
-          <div className="grid sm:grid-cols-3 gap-6 mt-12">
+          <div className="grid sm:grid-cols-4 gap-4 mt-12">
             {[
-              { title: "Allergen Filtering", desc: "Smart dietary options" },
-              { title: "Mobile Perfect", desc: "Instant loading" },
-              { title: "Real-time Updates", desc: "Change anything, anytime" },
+              { title: "7 Allergen Filters", desc: "Gluten, dairy, nuts & more" },
+              { title: "Dietary Options", desc: "Vegan, vegetarian, spicy" },
+              { title: "Dish Badges", desc: "New, popular, chef's pick" },
+              { title: "Live Preview", desc: "See changes instantly" },
             ].map((feature, index) => (
               <div
                 key={index}
-                className="text-center p-6 rounded-xl bg-card border border-border animate-fade-in-up"
+                className="text-center p-5 rounded-xl bg-card border border-border animate-fade-in-up"
                 style={{ animationDelay: `${(index + 3) * 100}ms` }}
               >
-                <div className="font-semibold mb-1 text-black">{feature.title}</div>
-                <div className="text-sm text-black">{feature.desc}</div>
+                <div className="font-semibold mb-1 text-foreground">{feature.title}</div>
+                <div className="text-sm text-muted-foreground">{feature.desc}</div>
               </div>
             ))}
           </div>

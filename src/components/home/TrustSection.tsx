@@ -48,20 +48,20 @@ const TrustSection = () => {
         {/* Trust metrics */}
         <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           <div>
-            <div className="text-3xl md:text-4xl font-bold mb-2">500+</div>
-            <div className="text-sm text-muted-foreground">Active Menus</div>
+            <div className="text-3xl md:text-4xl font-bold mb-2">20+</div>
+            <div className="text-sm text-muted-foreground">Premium Themes</div>
           </div>
           <div>
-            <div className="text-3xl md:text-4xl font-bold mb-2">50K+</div>
-            <div className="text-sm text-muted-foreground">Monthly Views</div>
-          </div>
-          <div>
-            <div className="text-3xl md:text-4xl font-bold mb-2">99.9%</div>
-            <div className="text-sm text-muted-foreground">Uptime</div>
+            <div className="text-3xl md:text-4xl font-bold mb-2">7</div>
+            <div className="text-sm text-muted-foreground">Allergen Filters</div>
           </div>
           <div>
             <div className="text-3xl md:text-4xl font-bold mb-2">{'<100ms'}</div>
             <div className="text-sm text-muted-foreground">Load Speed</div>
+          </div>
+          <div>
+            <div className="text-3xl md:text-4xl font-bold mb-2">∞</div>
+            <div className="text-sm text-muted-foreground">Dishes & Categories</div>
           </div>
         </div>
       </div>

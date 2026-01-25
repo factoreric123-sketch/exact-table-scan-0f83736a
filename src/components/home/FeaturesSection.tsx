@@ -1,35 +1,45 @@
-import { Palette, Smartphone, Zap, QrCode, Filter, Move } from "lucide-react";
+import { Palette, Smartphone, Zap, QrCode, Filter, Move, Image, Utensils, LayoutGrid, Undo2 } from "lucide-react";
 
 const features = [
   {
     icon: Palette,
-    title: "10+ Premium Themes",
-    description: "Professionally designed themes that make your menu stand out. Customize every detail to match your brand identity.",
+    title: "20+ Premium Themes",
+    description: "From Dark Elegance to Sage & Cream — professionally designed themes with custom fonts, colors, and styles.",
   },
   {
-    icon: Zap,
-    title: "Lightning Fast",
-    description: "Under 100ms load times guaranteed. Your customers access menus instantly with zero frustration.",
-  },
-  {
-    icon: QrCode,
-    title: "QR Code Ready",
-    description: "Generate professional QR codes instantly. Print and place them on tables for seamless contactless ordering.",
+    icon: Image,
+    title: "Photos That Sell",
+    description: "High-quality dish images with flexible layouts. Square or vertical cards, text overlays, your choice.",
   },
   {
     icon: Filter,
-    title: "Smart Filtering",
-    description: "Filter by allergens, dietary preferences, and spiciness. Help customers find exactly what they're looking for.",
+    title: "Allergen & Dietary Filters",
+    description: "Gluten-free, vegan, spicy levels, nut allergies — customers filter to find exactly what works for them.",
   },
   {
     icon: Move,
-    title: "Drag & Drop Editor",
-    description: "Reorganize your entire menu in seconds. Intuitive interface that anyone can master in minutes.",
+    title: "Drag & Drop Everything",
+    description: "Reorder categories, subcategories, and dishes instantly. Spreadsheet view for bulk edits.",
   },
   {
-    icon: Smartphone,
-    title: "Mobile Perfection",
-    description: "Flawless experience on every device. Your menu adapts automatically to any screen size.",
+    icon: QrCode,
+    title: "QR Codes in Seconds",
+    description: "Generate, download, and print QR codes. Place on tables and let customers scan to view.",
+  },
+  {
+    icon: Zap,
+    title: "Under 100ms Load",
+    description: "Edge-optimized delivery. Your menu loads before customers even look up from scanning.",
+  },
+  {
+    icon: Utensils,
+    title: "Options & Add-ons",
+    description: "Size variations, modifiers, extras — show all pricing options clearly on every dish.",
+  },
+  {
+    icon: Undo2,
+    title: "Undo/Redo + Preview",
+    description: "Ctrl+Z works. Preview mode shows exactly what customers see. No surprises.",
   },
 ];
 
@@ -49,22 +59,22 @@ const FeaturesSection = () => {
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
               <div
                 key={index}
-                className="group animate-fade-in-up"
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="group animate-fade-in-up p-6 rounded-2xl bg-card border border-border hover:border-foreground/20 transition-colors"
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-foreground text-background flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="flex flex-col gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-foreground text-background flex items-center justify-center group-hover:scale-110 transition-transform">
                     <Icon className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
+                    <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
                   </div>
                 </div>
               </div>
