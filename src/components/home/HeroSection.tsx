@@ -20,20 +20,21 @@ const HeroSection = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-background opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-background"></span>
               </span>
-              Trusted by 500+ restaurants worldwide
+              500+ restaurants already made the switch
             </div>
 
             {/* Main headline */}
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight">
-              Digital menus that{" "}
-              <span className="inline-block bg-foreground text-background px-3 py-1">
-                just work
+              It's 2026.{" "}
+              <span className="block mt-2">Your menu shouldn't</span>
+              <span className="inline-block bg-foreground text-background px-3 py-1 mt-2">
+                be a PDF.
               </span>
             </h1>
 
             {/* Subheadline */}
             <p className="text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Create beautiful, fast-loading digital menus in minutes. No coding, no headaches, no credit card required.
+              Photos. Allergens. Instant updates. Give your guests a menu that actually helps them order.
             </p>
 
             {/* CTAs */}
