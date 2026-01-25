@@ -25,8 +25,12 @@ const HeroSection = () => {
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight">
             It's 2026.{" "}
             <span className="block mt-2">Your menu shouldn't</span>
-            <span className="inline-block bg-foreground text-background px-3 py-1 mt-2">
-              be a PDF.
+            <span className="block mt-2">be a PDF.</span>
+            <span className="block mt-4">
+              Make a{" "}
+              <span className="inline-block bg-foreground text-background px-4 py-1">
+                Smart Menu.
+              </span>
             </span>
           </h1>
 
