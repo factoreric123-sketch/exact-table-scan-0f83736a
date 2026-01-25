@@ -40,11 +40,11 @@ const FeaturesSection = () => {
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-20 animate-fade-in-up">
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-            Everything you need.{" "}
-            <span className="block">Nothing you don't.</span>
+            A better menu,{" "}
+            <span className="block">in every way.</span>
           </h2>
           <p className="text-xl text-muted-foreground">
-            Built for restaurant owners who want results, not complexity.
+            Better clarity. Better service.
           </p>
         </div>
 

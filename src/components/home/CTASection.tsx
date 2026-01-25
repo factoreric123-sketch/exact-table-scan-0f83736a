@@ -18,12 +18,12 @@ const CTASection = () => {
           <div className="relative z-10 text-center space-y-8">
             {/* Main headline */}
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
-              Start your free trial today
+              The easiest menu your guests will ever use.
             </h2>
 
             {/* Description */}
             <p className="text-xl text-background/80 max-w-2xl mx-auto">
-              Join 500+ restaurants already using MenuTap. No credit card required. Cancel anytime.
+              Menus that remove confusion. Join 500+ restaurants already using MenuTap.
             </p>
 
             {/* CTAs */}
