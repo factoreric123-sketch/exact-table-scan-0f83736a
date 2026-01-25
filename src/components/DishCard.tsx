@@ -84,7 +84,7 @@ const DishCard = memo(({
     popular: "6, 182, 212",
     chef_recommendation: "59, 130, 246",
   },
-  cardImageShape = 'square',
+  cardImageShape = 'vertical',
   textOverlay = false,
   menuFont = 'Inter',
 }: DishCardProps) => {

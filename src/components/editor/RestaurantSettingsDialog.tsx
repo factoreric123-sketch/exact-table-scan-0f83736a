@@ -192,7 +192,7 @@ export const RestaurantSettingsDialog = ({
                 </p>
                 <div className="flex gap-2">
                   <Button
-                    variant={restaurant.card_image_shape !== 'vertical' ? "default" : "outline"}
+                    variant={restaurant.card_image_shape === 'square' ? "default" : "outline"}
                     size="sm"
                     onClick={() => updateSetting("card_image_shape", "square")}
                     disabled={isUpdating}
@@ -202,7 +202,7 @@ export const RestaurantSettingsDialog = ({
                     Square
                   </Button>
                   <Button
-                    variant={restaurant.card_image_shape === 'vertical' ? "default" : "outline"}
+                    variant={restaurant.card_image_shape !== 'square' ? "default" : "outline"}
                     size="sm"
                     onClick={() => updateSetting("card_image_shape", "vertical")}
                     disabled={isUpdating}
