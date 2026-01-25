@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/home/Navbar";
 import HeroSection from "@/components/home/HeroSection";
+import FeaturesSection from "@/components/home/FeaturesSection";
 import DemoPreviewSection from "@/components/home/DemoPreviewSection";
 import CTASection from "@/components/home/CTASection";
 import Footer from "@/components/home/Footer";
@@ -29,6 +30,7 @@ const Home = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <HeroSection />
+      <FeaturesSection />
       <DemoPreviewSection />
       <CTASection />
       <Footer />
