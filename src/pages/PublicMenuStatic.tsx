@@ -396,6 +396,7 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
                   fontSize={restaurant.menu_font_size || 'medium'}
                   showPrice={restaurant.show_prices !== false}
                   showImage={restaurant.show_images !== false}
+                  showAllergens={restaurant.show_allergens_on_cards !== false}
                   imageSize={restaurant.image_size || 'compact'}
                   forceTwoDecimals={restaurant.force_two_decimals === true}
                   showCurrencySymbol={restaurant.show_currency_symbol !== false}
@@ -425,6 +426,7 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
                 fontSize={restaurant.menu_font_size || 'medium'}
                 showPrice={restaurant.show_prices !== false}
                 showImage={restaurant.show_images !== false}
+                showAllergens={restaurant.show_allergens_on_cards !== false}
                 imageSize={restaurant.image_size || 'compact'}
                 forceTwoDecimals={restaurant.force_two_decimals === true}
                 showCurrencySymbol={restaurant.show_currency_symbol !== false}

@@ -40,6 +40,7 @@ export interface Restaurant {
   card_image_shape?: 'square' | 'vertical';
   text_overlay?: boolean;
   menu_font?: string;
+  show_allergens_on_cards?: boolean;
 }
 
 export const useRestaurants = () => {

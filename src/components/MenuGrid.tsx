@@ -11,6 +11,7 @@ interface MenuGridProps {
   fontSize?: 'small' | 'medium' | 'large';
   showPrice?: boolean;
   showImage?: boolean;
+  showAllergens?: boolean;
   imageSize?: 'compact' | 'large';
   forceTwoDecimals?: boolean;
   showCurrencySymbol?: boolean;
@@ -36,6 +37,7 @@ const MenuGrid = memo(({
   fontSize = 'medium',
   showPrice = true,
   showImage = true,
+  showAllergens = true,
   imageSize = 'compact',
   forceTwoDecimals = false,
   showCurrencySymbol = true,
@@ -99,6 +101,7 @@ const MenuGrid = memo(({
             onClick={() => handleDishClick(dish)}
             showPrice={showPrice}
             showImage={showImage}
+            showAllergens={showAllergens}
             imageSize={imageSize}
             fontSize={fontSize}
             forceTwoDecimals={forceTwoDecimals}
