@@ -115,24 +115,6 @@ const DemoPreviewSection = () => {
             </div>
           </div>
 
-          {/* Feature highlights */}
-          <div className="grid sm:grid-cols-4 gap-4 mt-20">
-            {[
-              { title: "7 Allergen Filters", desc: "Gluten, dairy, nuts & more" },
-              { title: "Dietary Options", desc: "Vegan, vegetarian, spicy" },
-              { title: "Dish Badges", desc: "New, popular, chef's pick" },
-              { title: "Live Preview", desc: "See changes instantly" },
-            ].map((feature, index) => (
-              <div
-                key={index}
-                className="text-center p-5 rounded-xl bg-card border border-border animate-fade-in-up"
-                style={{ animationDelay: `${(index + 3) * 100}ms` }}
-              >
-                <div className="font-semibold mb-1 text-foreground">{feature.title}</div>
-                <div className="text-sm text-muted-foreground">{feature.desc}</div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </section>
