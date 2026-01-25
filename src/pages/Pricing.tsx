@@ -34,9 +34,7 @@ const Pricing = () => {
         "Publish menus publicly",
         "Shareable menu links",
         "Download QR codes (PNG/SVG)",
-        "Priority email support",
-        "Advanced themes (coming soon)",
-        "Custom branding (coming soon)"
+        "Priority email support"
       ],
       ctaText: "Start 7-Day Free Trial",
       ctaLink: "/auth?signup=true",
