@@ -47,7 +47,7 @@ export const menuData: Dish[] = [
     image: lobsterMacCheese,
     category: "Dinner",
     subcategory: "SIDES",
-    allergens: ["Shellfish", "Dairy", "Gluten"],
+    allergens: ["Shellfish", "Dairy"],
     calories: 650,
     isNew: true, // Badge: New
   },
@@ -80,7 +80,7 @@ export const menuData: Dish[] = [
     image: caesarSalad,
     category: "Dinner",
     subcategory: "SALADS",
-    allergens: ["Dairy", "Gluten", "Eggs"],
+    allergens: ["Dairy", "Gluten"],
     calories: 320,
     isVegetarian: true,
     isPopular: true, // Badge: Popular
@@ -144,7 +144,7 @@ export const menuData: Dish[] = [
     image: jerkChickenEggrolls,
     category: "Dinner",
     subcategory: "Appetizer",
-    allergens: ["Gluten", "Soy", "Eggs"],
+    allergens: ["Gluten", "Soy"],
     calories: 420,
     isSpicy: true,
     // No badge
@@ -159,7 +159,7 @@ export const menuData: Dish[] = [
     image: lambChops,
     category: "Dinner",
     subcategory: "ENTRÉES",
-    allergens: ["Allium"],
+    allergens: [],
     calories: 680,
     isChefRecommendation: true, // Badge: Chef's Pick
   },
@@ -171,7 +171,7 @@ export const menuData: Dish[] = [
     image: grilledSalmon,
     category: "Dinner",
     subcategory: "ENTRÉES",
-    allergens: ["Dairy", "Allium"],
+    allergens: ["Dairy"],
     calories: 520,
     // No badge
   },
@@ -183,7 +183,7 @@ export const menuData: Dish[] = [
     image: ribeyeSteak,
     category: "Dinner",
     subcategory: "ENTRÉES",
-    allergens: ["Dairy", "Allium"],
+    allergens: ["Dairy"],
     calories: 920,
     isPopular: true, // Badge: Popular
     hasOptions: true,
@@ -201,7 +201,7 @@ export const menuData: Dish[] = [
     image: shrimpGrits,
     category: "Dinner",
     subcategory: "ENTRÉES",
-    allergens: ["Shellfish", "Dairy", "Allium"],
+    allergens: ["Shellfish", "Dairy"],
     calories: 740,
     isNew: true, // Badge: New
   },
@@ -213,7 +213,7 @@ export const menuData: Dish[] = [
     image: bbqRibs,
     category: "Dinner",
     subcategory: "ENTRÉES",
-    allergens: ["Soy", "Allium"],
+    allergens: ["Soy"],
     calories: 840,
     // No badge
     hasOptions: true,
@@ -232,7 +232,7 @@ export const menuData: Dish[] = [
     image: chocolateLavaCake,
     category: "Dinner",
     subcategory: "DESSERTS",
-    allergens: ["Dairy", "Gluten", "Eggs"],
+    allergens: ["Dairy", "Gluten"],
     calories: 620,
     isPopular: true, // Badge: Popular
   },
@@ -244,7 +244,7 @@ export const menuData: Dish[] = [
     image: nyCheesecake,
     category: "Dinner",
     subcategory: "DESSERTS",
-    allergens: ["Dairy", "Gluten", "Eggs"],
+    allergens: ["Dairy", "Gluten"],
     calories: 540,
     // No badge
   },
