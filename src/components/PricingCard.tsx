@@ -23,12 +23,12 @@ const PricingCard = ({ title, price, description, features, limitations, ctaText
       )}
       <CardHeader>
         <CardTitle className="text-2xl">{title}</CardTitle>
-        <p className="text-md text-muted-foreground">{description}</p>
+        <p className="text-md text-foreground/70">{description}</p>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-4xl font-bold">
           {price}
-          {price !== "Custom" && <span className="text-lg font-normal text-muted-foreground">/month</span>}
+          {price !== "Custom" && <span className="text-lg font-normal text-foreground/70">/month</span>}
         </div>
         <ul className="space-y-3">
           {features.map((feature, index) => (
