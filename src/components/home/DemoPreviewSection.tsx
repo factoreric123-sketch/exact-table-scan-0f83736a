@@ -11,10 +11,10 @@ const DemoPreviewSection = () => {
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 animate-fade-in-up">
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-            See it in action
+            Photos + Details = Happy Customers
           </h2>
           <p className="text-xl text-muted-foreground">
-            Experience a live restaurant menu. Try filtering, browsing categories, and see why customers love it.
+            Make sure your customers know what they're ordering. No more guessing games.
           </p>
         </div>
 

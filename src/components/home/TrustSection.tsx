@@ -6,7 +6,10 @@ const TrustSection = () => {
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Social proof header */}
         <div className="text-center mb-12">
-          <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+          <p className="text-lg font-medium text-foreground">
+            Customers know exactly what they're ordering.
+          </p>
+          <p className="text-sm text-muted-foreground mt-1">
             Trusted by restaurants worldwide
           </p>
         </div>

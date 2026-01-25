@@ -34,7 +34,7 @@ const HeroSection = () => {
 
             {/* Subheadline */}
             <p className="text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Photos. Allergens. Instant updates. Give your guests a menu that actually helps them order.
+              Create beautiful, fast-loading digital menus in minutes. No coding, no headaches, no credit card required.
             </p>
 
             {/* CTAs */}
