@@ -15,9 +15,11 @@ const Pricing = () => {
         "10+ beautiful themes",
         "Mobile-optimized menus",
         "Real-time menu updates",
-        "Preview mode",
-        "❌ No QR code generation",
-        "❌ No public menu publishing"
+        "Preview mode"
+      ],
+      limitations: [
+        "No QR code generation",
+        "No public menu publishing"
       ],
       ctaText: "Get Started Free",
       ctaLink: "/auth?signup=true"
@@ -28,13 +30,13 @@ const Pricing = () => {
       description: "For restaurants ready to go live",
       features: [
         "Everything in Free, plus:",
-        "✅ Unlimited QR code generation",
-        "✅ Publish menus publicly",
-        "✅ Shareable menu links",
-        "✅ Download QR codes (PNG/SVG)",
-        "✅ Priority email support",
-        "✅ Advanced themes (coming soon)",
-        "✅ Custom branding (coming soon)"
+        "Unlimited QR code generation",
+        "Publish menus publicly",
+        "Shareable menu links",
+        "Download QR codes (PNG/SVG)",
+        "Priority email support",
+        "Advanced themes (coming soon)",
+        "Custom branding (coming soon)"
       ],
       ctaText: "Start 7-Day Free Trial",
       ctaLink: "/auth?signup=true",

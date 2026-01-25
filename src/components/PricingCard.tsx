@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface PricingCardProps {
@@ -8,12 +7,13 @@ interface PricingCardProps {
   price: string;
   description: string;
   features: string[];
+  limitations?: string[];
   ctaText: string;
   ctaLink: string;
   popular?: boolean;
 }
 
-const PricingCard = ({ title, price, description, features, ctaText, ctaLink, popular }: PricingCardProps) => {
+const PricingCard = ({ title, price, description, features, limitations, ctaText, ctaLink, popular }: PricingCardProps) => {
   return (
     <Card className={`relative ${popular ? "border-accent shadow-lg scale-105" : ""}`}>
       {popular && (
@@ -23,18 +23,24 @@ const PricingCard = ({ title, price, description, features, ctaText, ctaLink, po
       )}
       <CardHeader>
         <CardTitle className="text-2xl">{title}</CardTitle>
-        <p className="text-md text-black">{description}</p>
+        <p className="text-md text-muted-foreground">{description}</p>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-4xl font-bold">
           {price}
-          {price !== "Custom" && <span className="text-lg font-normal text-black">/month</span>}
+          {price !== "Custom" && <span className="text-lg font-normal text-muted-foreground">/month</span>}
         </div>
         <ul className="space-y-3">
           {features.map((feature, index) => (
             <li key={index} className="flex items-start gap-2">
-              <Check className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+              <span className="text-muted-foreground">•</span>
               <span className="text-sm">{feature}</span>
+            </li>
+          ))}
+          {limitations?.map((limitation, index) => (
+            <li key={`limit-${index}`} className="flex items-start gap-2 text-muted-foreground">
+              <span>•</span>
+              <span className="text-sm">{limitation}</span>
             </li>
           ))}
         </ul>
