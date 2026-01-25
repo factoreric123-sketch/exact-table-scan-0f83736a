@@ -37,8 +37,8 @@ const HeroSection = () => {
               Create beautiful, fast-loading digital menus in minutes. No coding, no headaches, no credit card required.
             </p>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
+            {/* CTA */}
+            <div className="flex justify-center lg:justify-start pt-2">
               <Button
                 onClick={() => navigate("/auth?signup=true")}
                 size="lg"
@@ -46,15 +46,6 @@ const HeroSection = () => {
               >
                 Start for free
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button
-                onClick={() => navigate("/demo")}
-                variant="outline"
-                size="lg"
-                className="text-lg h-14 px-8 group"
-              >
-                <Play className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
-                See demo
               </Button>
             </div>
 
