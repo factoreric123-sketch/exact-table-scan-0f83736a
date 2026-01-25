@@ -38,8 +38,8 @@ const PricingCard = ({ title, price, description, features, limitations, ctaText
             </li>
           ))}
           {limitations?.map((limitation, index) => (
-            <li key={`limit-${index}`} className="flex items-start gap-2 text-muted-foreground">
-              <span>•</span>
+            <li key={`limit-${index}`} className="flex items-start gap-2">
+              <span className="text-muted-foreground">•</span>
               <span className="text-sm">{limitation}</span>
             </li>
           ))}
