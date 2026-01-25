@@ -7,6 +7,7 @@ import SubcategoryNav from '@/components/SubcategoryNav';
 import MenuGrid from '@/components/MenuGrid';
 import RestaurantHeader from '@/components/RestaurantHeader';
 import { MenuThemeWrapper } from '@/components/MenuThemeWrapper';
+import { DishDetailDialog, DishDetail } from '@/components/DishDetailDialog';
 
 // Lazy load filter - not needed for first paint
 const AllergenFilter = lazy(() => 
@@ -55,6 +56,9 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
   const [filterOpen, setFilterOpen] = useState(false);
   const [filtersReady, setFiltersReady] = useState(false);
   const subcategoryRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  
+  // Single dish detail dialog state - lifted from MenuGrid
+  const [selectedDish, setSelectedDish] = useState<DishDetail | null>(null);
 
   // Set initial category instantly
   useEffect(() => {
@@ -250,6 +254,11 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
     setSelectedBadges([]);
   }, []);
 
+  // Handle dish click from MenuGrid
+  const handleDishClick = useCallback((dish: DishDetail) => {
+    setSelectedDish(dish);
+  }, []);
+
   const categoryNames = categories?.map((c) => c.name) || [];
   const activeCategoryName = categories?.find((c) => c.id === activeCategory)?.name || '';
 
@@ -395,6 +404,7 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
                   cardImageShape={restaurant.card_image_shape || 'square'}
                   textOverlay={restaurant.text_overlay === true}
                   menuFont={restaurant.menu_font || 'Inter'}
+                  onDishClick={handleDishClick}
                 />
               </div>
             );
@@ -423,11 +433,23 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
                 cardImageShape={restaurant.card_image_shape || 'square'}
                 textOverlay={restaurant.text_overlay === true}
                 menuFont={restaurant.menu_font || 'Inter'}
+                onDishClick={handleDishClick}
               />
             </div>
           );
         })}
       </main>
+
+      {/* Single shared dish detail dialog */}
+      <DishDetailDialog
+        dish={selectedDish}
+        open={!!selectedDish}
+        onOpenChange={(open) => !open && setSelectedDish(null)}
+        forceTwoDecimals={restaurant.force_two_decimals === true}
+        showCurrencySymbol={restaurant.show_currency_symbol !== false}
+        menuFont={restaurant.menu_font || 'Inter'}
+        cardImageShape={restaurant.card_image_shape || 'square'}
+      />
 
       {/* Footer */}
       <footer className="py-8 text-center">

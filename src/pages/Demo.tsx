@@ -8,6 +8,7 @@ import MenuGrid from "@/components/MenuGrid";
 import RestaurantHeader from "@/components/RestaurantHeader";
 import { menuData, categories, subcategories } from "@/data/menuData";
 import Footer from "@/components/home/Footer";
+import { DishDetailDialog, DishDetail } from "@/components/DishDetailDialog";
 
 // Lazy load filter - not needed for first paint
 const AllergenFilter = lazy(() => 
@@ -26,6 +27,9 @@ const Demo = () => {
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
   const [filtersReady, setFiltersReady] = useState(false);
+  
+  // Single dish detail dialog state
+  const [selectedDish, setSelectedDish] = useState<DishDetail | null>(null);
 
   const currentSubcategories = subcategories[activeCategory as keyof typeof subcategories] || [];
 
@@ -103,6 +107,11 @@ const Demo = () => {
     setSelectedDietary([]);
     setSelectedSpicy(null);
     setSelectedBadges([]);
+  }, []);
+
+  // Handle dish click from MenuGrid
+  const handleDishClick = useCallback((dish: DishDetail) => {
+    setSelectedDish(dish);
   }, []);
 
   // Scroll to subcategory when clicked with offset for sticky header
@@ -249,7 +258,7 @@ const Demo = () => {
                 dishes={subcategoryDishes} 
                 sectionTitle={subcategory} 
                 cardImageShape="vertical"
-                useStaticOptions={true}
+                onDishClick={handleDishClick}
               />
             </div>
           );
@@ -265,6 +274,15 @@ const Demo = () => {
           </div>
         )}
       </main>
+
+      {/* Single shared dish detail dialog with static options */}
+      <DishDetailDialog
+        dish={selectedDish}
+        open={!!selectedDish}
+        onOpenChange={(open) => !open && setSelectedDish(null)}
+        cardImageShape="vertical"
+        useStaticOptions={true}
+      />
 
       {/* Footer */}
       <Footer />

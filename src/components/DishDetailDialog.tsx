@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import React from "react";
+import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { useDishOptions } from "@/hooks/useDishOptions";
 import { useDishModifiers } from "@/hooks/useDishModifiers";
 import { getFontClassName } from "@/lib/fontUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
+
 export interface DishDetail {
   id: string;
   name: string;
@@ -36,7 +37,6 @@ interface DishDetailDialogProps {
   showCurrencySymbol?: boolean;
   menuFont?: string;
   cardImageShape?: 'square' | 'vertical';
-  // Use static options from dish data instead of fetching from DB (for demo page)
   useStaticOptions?: boolean;
 }
 
@@ -65,6 +65,7 @@ export const DishDetailDialog = ({
 }: DishDetailDialogProps) => {
   const isMobile = useIsMobile();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const savedScrollY = useRef<number>(0);
   
   // All hooks must be called BEFORE any conditional returns (Rules of Hooks)
   const [selectedOption, setSelectedOption] = useState("");
@@ -73,10 +74,10 @@ export const DishDetailDialog = ({
   // For demo page: use static options from dish data
   // For live menu: fetch from database
   const { data: fetchedOptions } = useDishOptions(
-    useStaticOptions || !dish ? '' : dish.id // Disable fetch if using static options or no dish
+    useStaticOptions || !dish ? '' : dish.id
   );
   const { data: fetchedModifiers } = useDishModifiers(
-    useStaticOptions || !dish ? '' : dish.id // Disable fetch if using static options or no dish
+    useStaticOptions || !dish ? '' : dish.id
   );
   
   // Use static options from dish prop if useStaticOptions is true, otherwise use fetched data
@@ -90,34 +91,23 @@ export const DishDetailDialog = ({
   // Sync selectedOption when options change
   useEffect(() => {
     if (options.length > 0) {
-      // Reset selection when options change (e.g., after edit)
       const firstOptionId = options[0].id;
       setSelectedOption(prev => options.some(o => o.id === prev) ? prev : firstOptionId);
     }
   }, [options]);
 
-  // Reset scroll position when drawer opens - always start at top
-  // Lock body scroll when mobile modal is open
+  // Mobile scroll lock - simplified approach
   useEffect(() => {
     if (!open || !isMobile) return;
     
-    // Store original values
-    const scrollY = window.scrollY;
-    const html = document.documentElement;
-    const body = document.body;
+    // Save current scroll position
+    savedScrollY.current = window.scrollY;
     
-    // Apply scroll lock to both html and body
-    html.style.overflow = 'hidden';
-    html.style.position = 'fixed';
-    html.style.width = '100%';
-    html.style.height = '100%';
-    html.style.top = `-${scrollY}px`;
-    
-    body.style.overflow = 'hidden';
-    body.style.position = 'fixed';
-    body.style.width = '100%';
-    body.style.height = '100%';
-    body.style.top = `-${scrollY}px`;
+    // Lock body scroll
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${savedScrollY.current}px`;
+    document.body.style.width = '100%';
     
     // Reset scroll container to top
     if (scrollContainerRef.current) {
@@ -125,20 +115,14 @@ export const DishDetailDialog = ({
     }
     
     return () => {
-      // Restore scroll
-      html.style.overflow = '';
-      html.style.position = '';
-      html.style.width = '';
-      html.style.height = '';
-      html.style.top = '';
+      // Restore body scroll
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
       
-      body.style.overflow = '';
-      body.style.position = '';
-      body.style.width = '';
-      body.style.height = '';
-      body.style.top = '';
-      
-      window.scrollTo(0, scrollY);
+      // Restore scroll position
+      window.scrollTo(0, savedScrollY.current);
     };
   }, [open, isMobile]);
   
@@ -318,13 +302,13 @@ export const DishDetailDialog = ({
     </>
   );
 
-  // Mobile/Tablet: Custom fullscreen modal with reliable scrolling (no Vaul interference)
+  // Mobile/Tablet: Custom fullscreen modal using Portal
   if (isMobile) {
     if (!open) return null;
     
-    return (
+    const modalContent = (
       <div 
-        className="fixed inset-0 z-50"
+        className={`fixed inset-0 z-[100] ${fontClass}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="dish-title"
@@ -334,7 +318,7 @@ export const DishDetailDialog = ({
         
         {/* Modal container with margins */}
         <div 
-          className={`absolute z-50 bg-background ${fontClass}`}
+          className="absolute z-[101] bg-background"
           style={{
             top: '3vh',
             left: '3vw',
@@ -354,13 +338,13 @@ export const DishDetailDialog = ({
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-4 top-4 z-50 h-12 w-12 rounded-full bg-black/60 backdrop-blur-sm transition-all duration-150 active:scale-95 shadow-lg"
+            className="absolute right-4 top-4 z-[102] h-12 w-12 rounded-full bg-black/60 backdrop-blur-sm transition-all duration-150 active:scale-95 shadow-lg"
             onClick={() => onOpenChange(false)}
           >
             <X className="h-6 w-6 text-white" />
           </Button>
           
-          {/* Scrollable container - prevent over-scroll with overscroll-behavior */}
+          {/* Scrollable container */}
           <div 
             ref={scrollContainerRef}
             className="h-full w-full overflow-y-auto overscroll-none"
@@ -369,7 +353,7 @@ export const DishDetailDialog = ({
               overscrollBehavior: 'none',
             }}
           >
-            {/* Image section - flush with top, no gap */}
+            {/* Image section */}
             <img
               src={dish.image}
               alt={dish.name}
@@ -385,6 +369,9 @@ export const DishDetailDialog = ({
         </div>
       </div>
     );
+
+    // Use Portal to render outside React tree, directly under document.body
+    return createPortal(modalContent, document.body);
   }
 
   // Desktop: Use Dialog with side-by-side layout
