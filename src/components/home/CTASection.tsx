@@ -26,8 +26,8 @@ const CTASection = () => {
               Menus that remove confusion. Join 500+ restaurants already using MenuTap.
             </p>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+            {/* CTA */}
+            <div className="flex justify-center pt-4">
               <Button
                 onClick={() => navigate("/auth?signup=true")}
                 size="lg"
@@ -35,14 +35,6 @@ const CTASection = () => {
               >
                 Get started free
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button
-                onClick={() => navigate("/demo")}
-                variant="outline"
-                size="lg"
-                className="text-lg text-gray-50 h-14 px-8 border-background/20 hover:bg-background/10  hover:text-background"
-              >
-                View demo
               </Button>
             </div>
 
