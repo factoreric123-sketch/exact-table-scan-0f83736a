@@ -176,7 +176,7 @@ const Demo = () => {
     <div className="min-h-screen bg-background">
       {/* Restaurant Hero */}
       <RestaurantHeader 
-        name="Victory Restaurant and Lounge"
+        name="Palladino's"
         tagline="Upscale Dining & Premium Cocktails"
         heroImageUrl={null}
       />
