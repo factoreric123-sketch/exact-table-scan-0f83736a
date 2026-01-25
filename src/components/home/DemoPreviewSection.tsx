@@ -58,7 +58,7 @@ const DemoPreviewSection = () => {
                 {["Photos", "Allergens", "Dietary filters", "20+ Themes", "QR Codes", "Drag & Drop", "Size Options", "Add-ons", "Badges", "Customization", "Desktop · Tablet · Mobile"].map((feature) => (
                   <span
                     key={feature}
-                    className="px-4 py-2 bg-card border border-border rounded-full text-sm font-medium"
+                    className="px-4 py-2 bg-background text-foreground border border-border rounded-full text-sm font-medium"
                   >
                     {feature}
                   </span>
