@@ -49,6 +49,7 @@ interface DishCardProps {
   onClick?: () => void;
   showPrice?: boolean;
   showImage?: boolean;
+  showAllergens?: boolean;
   imageSize?: 'compact' | 'large';
   fontSize?: 'small' | 'medium' | 'large';
   forceTwoDecimals?: boolean;
@@ -71,6 +72,7 @@ const DishCard = memo(({
   onClick,
   showPrice = true,
   showImage = true,
+  showAllergens = true,
   imageSize = 'compact',
   fontSize = 'medium',
   forceTwoDecimals = false,
@@ -250,8 +252,8 @@ const DishCard = memo(({
             decoding="async"
           />
           
-          {/* Overlay badges */}
-          {(dish.allergens && dish.allergens.length > 0) && (
+          {/* Overlay badges - only show if showAllergens is true */}
+          {showAllergens && (dish.allergens && dish.allergens.length > 0) && (
             <div className="absolute bottom-2 left-2 right-2 flex flex-wrap gap-1">
               {dish.allergens.slice(0, 3).map((allergen) => {
                 const Icon = allergenIcons[allergen.toLowerCase()];

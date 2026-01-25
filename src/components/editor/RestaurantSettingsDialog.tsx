@@ -141,6 +141,23 @@ export const RestaurantSettingsDialog = ({
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
+                  <Label htmlFor="show-allergens" className="text-base">
+                    Show Allergens on Cards
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Display allergen badges on dish images (always visible when clicking a dish)
+                  </p>
+                </div>
+                <Switch
+                  id="show-allergens"
+                  checked={restaurant.show_allergens_on_cards !== false}
+                  onCheckedChange={(checked) => updateSetting("show_allergens_on_cards", checked)}
+                  disabled={isUpdating}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
                   <Label htmlFor="filter-toggle" className="text-base">
                     Show Filter Options
                   </Label>
