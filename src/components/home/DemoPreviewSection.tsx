@@ -55,7 +55,7 @@ const DemoPreviewSection = () => {
 
               {/* Feature list */}
               <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
-                {["Photos", "Allergens", "Dietary filters", "20+ Themes", "QR Codes", "Drag & Drop", "Size Options", "Add-ons", "Badges", "Customization", "Desktop · Tablet · Mobile"].map((feature) => (
+                {["Photos", "Allergens", "Dietary filters", "20+ Themes", "QR Codes", "Drag & Drop", "Size Options", "Add-ons", "Badges", "Customization", "All Screen Sizes"].map((feature) => (
                   <span
                     key={feature}
                     className="px-4 py-2 bg-background text-foreground border border-border rounded-full text-sm font-medium"
