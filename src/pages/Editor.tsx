@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useRestaurantById, useUpdateRestaurant } from "@/hooks/useRestaurants";
 import { useCategories } from "@/hooks/useCategories";
-import { useSubcategories } from "@/hooks/useSubcategories";
+import { useSubcategories, useSubcategoriesByRestaurant } from "@/hooks/useSubcategories";
 import { useDishes } from "@/hooks/useDishes";
 import { useFullMenu } from "@/hooks/useFullMenu";
 import { EditorTopBar } from "@/components/editor/EditorTopBar";
@@ -42,6 +42,7 @@ const Editor = () => {
   const { data: restaurant, isLoading: restaurantLoading, refetch: refetchRestaurant } = useRestaurantById(restaurantId || "");
   const { data: categories = [], isLoading: categoriesLoading } = useCategories(restaurantId || "");
   const { data: subcategories = [], isLoading: subcategoriesLoading } = useSubcategories(activeCategory);
+  const { data: allSubcategories = [] } = useSubcategoriesByRestaurant(restaurantId || "");
   const { data: dishes = [], isLoading: dishesLoading } = useDishes(activeSubcategory);
   const updateRestaurant = useUpdateRestaurant();
   
@@ -444,6 +445,10 @@ const Editor = () => {
         onFilterToggle={handleFilterToggle}
         onRefresh={refetchRestaurant}
         onUpdate={handleUpdate}
+        hasPendingChanges={hasPendingChanges}
+        fullMenuData={fullMenuData}
+        categories={categories}
+        subcategories={allSubcategories}
       />
 
       {/* Menu content wrapped in theme - each restaurant gets its own theme */}
