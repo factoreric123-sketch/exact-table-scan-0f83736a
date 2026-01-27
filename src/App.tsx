@@ -26,6 +26,7 @@ import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import TermsOfService from "./pages/legal/TermsOfService";
 import CookiePolicy from "./pages/legal/CookiePolicy";
 import GDPR from "./pages/legal/GDPR";
+import BusinessCard from "./pages/BusinessCard";
 
 // Apple-level instant loading configuration
 const queryClient = new QueryClient({
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/cookies" element={<CookiePolicy />} />
             <Route path="/gdpr" element={<GDPR />} />
+            <Route path="/business-card" element={<BusinessCard />} />
             <Route
               path="/dashboard"
               element={
