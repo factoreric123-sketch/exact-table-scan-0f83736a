@@ -254,14 +254,14 @@ const DishCard = memo(({
           
           {/* Overlay badges - only show if showAllergens is true */}
           {showAllergens && (dish.allergens && dish.allergens.length > 0) && (
-            <div className="absolute bottom-2 left-2 right-2 flex flex-wrap gap-1">
+            <div className="absolute bottom-2 left-2 right-2 flex flex-nowrap gap-1 overflow-hidden">
               {dish.allergens.slice(0, 3).map((allergen) => {
                 const Icon = allergenIcons[allergen.toLowerCase()];
                 return (
                   <Badge
                     key={allergen}
                     variant="secondary"
-                    className="bg-background/90 backdrop-blur-sm text-xs px-2 py-0.5 gap-1"
+                    className="bg-background/90 backdrop-blur-sm text-xs px-2 py-0.5 gap-1 flex-shrink-0"
                   >
                     {Icon && <Icon className="h-3 w-3" />}
                     {capitalize(allergen)}
@@ -269,7 +269,7 @@ const DishCard = memo(({
                 );
               })}
               {dish.allergens.length > 3 && (
-                <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm text-xs px-2 py-0.5">
+                <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm text-xs px-2 py-0.5 flex-shrink-0">
                   +{dish.allergens.length - 3}
                 </Badge>
               )}
