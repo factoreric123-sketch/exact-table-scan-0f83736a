@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, Copy, ExternalLink, CheckCheck } from "lucide-react";
+import { Download, Copy, ExternalLink, CheckCheck, Upload, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +24,8 @@ export const QRCodeModal = ({
 }: QRCodeModalProps) => {
   const [size, setSize] = useState<number>(250);
   const [copied, setCopied] = useState(false);
+  const [customQrImage, setCustomQrImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Short link for everything: display, copy, open, QR
   const baseUrl = import.meta.env.VITE_PUBLIC_SITE_URL || window.location.origin;
@@ -221,6 +223,16 @@ export const QRCodeModal = ({
       return;
     }
 
+    if (customQrImage) {
+      // Download custom image
+      const a = document.createElement("a");
+      a.href = customQrImage;
+      a.download = `${restaurantSlug}-qr-code.png`;
+      a.click();
+      toast.success("Custom QR Code downloaded");
+      return;
+    }
+
     const svg = document.getElementById("qr-svg") as unknown as SVGElement;
     if (!svg) return;
 
@@ -233,6 +245,31 @@ export const QRCodeModal = ({
     a.click();
     URL.revokeObjectURL(url);
     toast.success("QR Code downloaded as SVG");
+  };
+
+  const handleCustomQrUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setCustomQrImage(event.target?.result as string);
+      toast.success("Custom QR code uploaded!");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleResetToGenerated = () => {
+    setCustomQrImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    toast.success("Switched back to generated QR code");
   };
 
   return (
@@ -291,15 +328,25 @@ export const QRCodeModal = ({
             </div>
           </div>
 
+          {/* QR Code Display */}
           <div className="flex justify-center">
             <div className="bg-white p-4 rounded-lg">
-              <QRCodeCanvas
-                id="qr-canvas"
-                value={qrUrl}
-                size={size}
-                level="H"
-                includeMargin
-              />
+              {customQrImage ? (
+                <img 
+                  src={customQrImage} 
+                  alt="Custom QR Code" 
+                  style={{ width: size, height: size }}
+                  className="object-contain"
+                />
+              ) : (
+                <QRCodeCanvas
+                  id="qr-canvas"
+                  value={qrUrl}
+                  size={size}
+                  level="H"
+                  includeMargin
+                />
+              )}
             </div>
           </div>
 
@@ -311,6 +358,42 @@ export const QRCodeModal = ({
               level="H"
               includeMargin
             />
+          </div>
+
+          {/* Upload Custom QR */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium block">Custom QR Code</label>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              onChange={handleCustomQrUpload}
+              className="hidden"
+            />
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-2"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="h-4 w-4" />
+                Upload Your QR
+              </Button>
+              {customQrImage && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 gap-2"
+                  onClick={handleResetToGenerated}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Use Generated
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="space-y-3">
