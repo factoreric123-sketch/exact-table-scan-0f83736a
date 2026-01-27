@@ -326,19 +326,22 @@
 
 
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Eye, EyeOff, QrCode, Palette, Upload, Undo2, Redo2, LayoutGrid, Table2, Settings, Share2, RefreshCw, Check, Menu, X } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, QrCode, Palette, Upload, Undo2, Redo2, LayoutGrid, Table2, Settings, Share2, RefreshCw, Check, Menu, X, Download, FileSpreadsheet } from "lucide-react";
 import { QRCodeModal } from "@/components/editor/QRCodeModal";
 import { ShareDialog } from "@/components/editor/ShareDialog";
 import { ThemeGalleryModal } from "@/components/editor/ThemeGalleryModal";
 import { PaywallModal } from "@/components/PaywallModal";
 import { RestaurantSettingsDialog } from "@/components/editor/RestaurantSettingsDialog";
+import { ExcelImportDialog } from "@/components/editor/ExcelImportDialog";
 import { useSubscription } from "@/hooks/useSubscription";
 import type { Restaurant } from "@/hooks/useRestaurants";
 import { Theme } from "@/lib/types/theme";
+import { exportMenuToExcel, parseExcelFile, downloadImportTemplate } from "@/lib/excelUtils";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -354,6 +357,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { Category } from "@/hooks/useCategories";
+import type { Subcategory } from "@/hooks/useSubcategories";
 
 interface EditorTopBarProps {
   restaurant: Restaurant;
@@ -371,6 +376,10 @@ interface EditorTopBarProps {
   onRefresh?: () => void;
   onUpdate?: () => Promise<void>;
   hasPendingChanges?: boolean;
+  // Excel import/export props
+  fullMenuData?: { restaurant: any; categories: any[] } | null;
+  categories?: Category[];
+  subcategories?: Subcategory[];
 }
 
 export const EditorTopBar = ({
@@ -389,6 +398,9 @@ export const EditorTopBar = ({
   onRefresh,
   onUpdate,
   hasPendingChanges = false,
+  fullMenuData,
+  categories = [],
+  subcategories = [],
 }: EditorTopBarProps) => {
   const navigate = useNavigate();
   const [showQRModal, setShowQRModal] = useState(false);
@@ -399,6 +411,9 @@ export const EditorTopBar = ({
   const [paywallFeature, setPaywallFeature] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importData, setImportData] = useState<any[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { hasPremium } = useSubscription();
 
   const handleUpdateClick = async () => {
@@ -444,6 +459,47 @@ export const EditorTopBar = ({
       setPaywallFeature("Menu Sharing");
       setShowPaywall(true);
     }
+    setShowMobileMenu(false);
+  };
+
+  const handleExportClick = () => {
+    if (!fullMenuData) {
+      toast.error("No menu data to export");
+      return;
+    }
+    exportMenuToExcel(fullMenuData, restaurant.name);
+    toast.success("Menu exported to Excel");
+    setShowMobileMenu(false);
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+    setShowMobileMenu(false);
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const data = await parseExcelFile(file);
+      if (data.length === 0) {
+        toast.error("No data found in the file");
+        return;
+      }
+      setImportData(data);
+      setShowImportDialog(true);
+    } catch (error) {
+      toast.error("Failed to parse Excel file");
+    }
+
+    // Reset input so same file can be selected again
+    e.target.value = '';
+  };
+
+  const handleDownloadTemplate = () => {
+    downloadImportTemplate();
+    toast.success("Template downloaded");
     setShowMobileMenu(false);
   };
 
@@ -601,7 +657,7 @@ export const EditorTopBar = ({
 
                       {/* Share & Export */}
                       {!previewMode && (
-                        <div className="pb-4">
+                        <div className="pb-3 border-b">
                           <p className="text-xs font-medium text-muted-foreground mb-2 px-2">SHARE</p>
                           <Button
                             variant="ghost"
@@ -618,6 +674,37 @@ export const EditorTopBar = ({
                           >
                             <QrCode className="h-4 w-4" />
                             QR Code
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Import/Export */}
+                      {!previewMode && (
+                        <div className="pb-4">
+                          <p className="text-xs font-medium text-muted-foreground mb-2 px-2">DATA</p>
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start gap-2"
+                            onClick={handleExportClick}
+                          >
+                            <Download className="h-4 w-4" />
+                            Export to Excel
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start gap-2"
+                            onClick={handleImportClick}
+                          >
+                            <FileSpreadsheet className="h-4 w-4" />
+                            Import from Excel
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start gap-2"
+                            onClick={handleDownloadTemplate}
+                          >
+                            <Download className="h-4 w-4" />
+                            Download Template
                           </Button>
                         </div>
                       )}
@@ -760,6 +847,31 @@ export const EditorTopBar = ({
                     <Share2 className="h-4 w-4" />
                     Share
                   </Button>
+
+                  {/* Import/Export Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <FileSpreadsheet className="h-4 w-4" />
+                        Excel
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={handleExportClick}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Export Menu
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleImportClick}>
+                        <FileSpreadsheet className="h-4 w-4 mr-2" />
+                        Import Menu
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleDownloadTemplate}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Download Template
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </>
               )}
 
@@ -838,6 +950,25 @@ export const EditorTopBar = ({
         open={showPaywall}
         onOpenChange={setShowPaywall}
         feature={paywallFeature}
+      />
+
+      {/* Hidden file input for Excel import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".xlsx,.xls,.csv"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      {/* Excel Import Dialog */}
+      <ExcelImportDialog
+        open={showImportDialog}
+        onOpenChange={setShowImportDialog}
+        data={importData}
+        restaurantId={restaurant.id}
+        categories={categories}
+        subcategories={subcategories}
       />
     </>
   );
