@@ -140,26 +140,11 @@ export const ExcelImportDialog = ({
             <div className="space-y-4">
               {data.map((row, index) => (
                 <div key={index} className="border-b pb-3">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                    {(row.Category || row.category) && (
-                      <span className="px-2 py-0.5 bg-muted rounded">
-                        {row.Category || row.category}
-                      </span>
-                    )}
-                    {(row.Subcategory || row.subcategory) && (
-                      <>
-                        <span>→</span>
-                        <span className="px-2 py-0.5 bg-muted rounded">
-                          {row.Subcategory || row.subcategory}
-                        </span>
-                      </>
-                    )}
-                  </div>
                   <h4 className="font-semibold">{row.Name || row.name}</h4>
                   <p className="text-sm text-muted-foreground line-clamp-2">
                     {row.Description || row.description}
                   </p>
-                  <div className="flex flex-wrap gap-2 mt-2 text-xs">
+                  <div className="flex gap-2 mt-2 text-xs">
                     <span className="font-mono">{row.Price || row.price}</span>
                     {(row.Vegetarian || row.vegetarian) && (
                       <span className="px-2 py-0.5 bg-green-500/10 text-green-500 rounded">
@@ -169,16 +154,6 @@ export const ExcelImportDialog = ({
                     {(row.Vegan || row.vegan) && (
                       <span className="px-2 py-0.5 bg-green-500/10 text-green-500 rounded">
                         Vegan
-                      </span>
-                    )}
-                    {(row.Spicy || row.spicy) && (
-                      <span className="px-2 py-0.5 bg-red-500/10 text-red-500 rounded">
-                        Spicy
-                      </span>
-                    )}
-                    {(row.New || row.new) && (
-                      <span className="px-2 py-0.5 bg-blue-500/10 text-blue-500 rounded">
-                        New
                       </span>
                     )}
                   </div>
