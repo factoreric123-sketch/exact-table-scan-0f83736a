@@ -220,14 +220,16 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
     }
   };
 
-  // Track local image for instant preview
+  // Track local image for instant preview - use ref to persist across parent re-renders
   const [localImageUrl, setLocalImageUrl] = useState<string | null>(null);
+  const localImageRef = useRef<string | null>(null);
 
   const handleImageCrop = async (croppedFile: File) => {
     // 1. Create local blob URL for INSTANT preview
     const localPreviewUrl = URL.createObjectURL(croppedFile);
     
-    // 2. INSTANTLY update local state (UI shows image immediately)
+    // 2. INSTANTLY update both state AND ref (ref persists across parent updates)
+    localImageRef.current = localPreviewUrl;
     setLocalImageUrl(localPreviewUrl);
     
     // 3. Close modal immediately for snappy UX
@@ -258,19 +260,21 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
         await queryClient.refetchQueries({ queryKey: ['full-menu'] });
         
         // Now safe to clear blob URL since dish.image_url should be updated
+        localImageRef.current = null;
         setLocalImageUrl(null);
         URL.revokeObjectURL(localPreviewUrl);
       }, 3000);
     } catch (error) {
       // Revert on failure
+      localImageRef.current = null;
       setLocalImageUrl(null);
       URL.revokeObjectURL(localPreviewUrl);
       toast.error("Failed to upload image");
     }
   };
 
-  // Use local image if available, otherwise use dish image
-  const displayImageUrl = localImageUrl || dish.image_url;
+  // Use local image if available (check both state and ref for resilience), otherwise use dish image
+  const displayImageUrl = localImageUrl || localImageRef.current || dish.image_url;
 
   return (
     <>
