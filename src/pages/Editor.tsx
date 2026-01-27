@@ -31,6 +31,7 @@ const Editor = () => {
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [activeSubcategory, setActiveSubcategory] = useState<string>("");
   const [previewMode, setPreviewMode] = useState(false);
+  const [devicePreview, setDevicePreview] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
   const [selectedDietary, setSelectedDietary] = useState<string[]>([]);
@@ -432,6 +433,9 @@ const Editor = () => {
             if (viewMode === 'table') {
               setViewMode('grid');
             }
+          } else {
+            // Reset device preview when exiting preview mode
+            setDevicePreview('desktop');
           }
           setPreviewMode(newPreviewMode);
         }}
@@ -444,19 +448,36 @@ const Editor = () => {
         onFilterToggle={handleFilterToggle}
         onRefresh={refetchRestaurant}
         onUpdate={handleUpdate}
+        devicePreview={devicePreview}
+        onDevicePreviewChange={setDevicePreview}
       />
 
       {/* Menu content wrapped in theme - each restaurant gets its own theme */}
-      <MenuThemeWrapper theme={restaurant.theme} className="min-h-[calc(100vh-64px)]">
-        <RestaurantHeader
-          name={restaurant.name}
-          tagline={restaurant.tagline || ""}
-          heroImageUrl={restaurant.hero_image_url}
-          editable={!previewMode}
-          restaurantId={restaurant.id}
-        />
+      {/* Device preview frame wrapper */}
+      <div className={`transition-all duration-300 ${
+        previewMode && devicePreview !== 'desktop' 
+          ? 'flex justify-center py-6 bg-muted/30' 
+          : ''
+      }`}>
+        <div 
+          className={`transition-all duration-300 ${
+            previewMode && devicePreview === 'tablet' 
+              ? 'w-[768px] max-w-full mx-auto shadow-2xl rounded-lg overflow-hidden border border-border' 
+              : previewMode && devicePreview === 'mobile' 
+                ? 'w-[390px] max-w-full mx-auto shadow-2xl rounded-[2rem] overflow-hidden border-[8px] border-foreground' 
+                : 'w-full'
+          }`}
+        >
+          <MenuThemeWrapper theme={restaurant.theme} className="min-h-[calc(100vh-64px)]">
+            <RestaurantHeader
+              name={restaurant.name}
+              tagline={restaurant.tagline || ""}
+              heroImageUrl={restaurant.hero_image_url}
+              editable={!previewMode}
+              restaurantId={restaurant.id}
+            />
 
-      <div className=" mx-auto max-w-6xl">
+          <div className=" mx-auto max-w-6xl">
         <Sheet>
           <EditableCategories
             categories={categories}
@@ -546,7 +567,9 @@ const Editor = () => {
           />
         )}
         </div>
-      </MenuThemeWrapper>
+          </MenuThemeWrapper>
+        </div>
+      </div>
     </div>
   );
 };

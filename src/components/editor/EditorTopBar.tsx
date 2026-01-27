@@ -330,7 +330,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Eye, EyeOff, QrCode, Palette, Upload, Undo2, Redo2, LayoutGrid, Table2, Settings, Share2, RefreshCw, Check, Menu, X } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, QrCode, Palette, Upload, Undo2, Redo2, LayoutGrid, Table2, Settings, Share2, RefreshCw, Check, Menu, X, Monitor, Tablet, Smartphone } from "lucide-react";
 import { QRCodeModal } from "@/components/editor/QRCodeModal";
 import { ShareDialog } from "@/components/editor/ShareDialog";
 import { ThemeGalleryModal } from "@/components/editor/ThemeGalleryModal";
@@ -355,6 +355,8 @@ import {
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+type DeviceType = 'desktop' | 'tablet' | 'mobile';
+
 interface EditorTopBarProps {
   restaurant: Restaurant;
   previewMode: boolean;
@@ -371,6 +373,8 @@ interface EditorTopBarProps {
   onRefresh?: () => void;
   onUpdate?: () => Promise<void>;
   hasPendingChanges?: boolean;
+  devicePreview?: DeviceType;
+  onDevicePreviewChange?: (device: DeviceType) => void;
 }
 
 export const EditorTopBar = ({
@@ -389,6 +393,8 @@ export const EditorTopBar = ({
   onRefresh,
   onUpdate,
   hasPendingChanges = false,
+  devicePreview = 'desktop',
+  onDevicePreviewChange,
 }: EditorTopBarProps) => {
   const navigate = useNavigate();
   const [showQRModal, setShowQRModal] = useState(false);
@@ -527,6 +533,32 @@ export const EditorTopBar = ({
                             {viewMode === 'grid' ? <Table2 className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
                             Switch to {viewMode === 'grid' ? 'Table' : 'Grid'} View
                           </Button>
+                        )}
+                        {/* Device Preview Switcher - only in preview mode */}
+                        {previewMode && onDevicePreviewChange && (
+                          <div className="flex items-center justify-center gap-1 mt-2 p-1 bg-muted rounded-lg">
+                            <button
+                              onClick={() => onDevicePreviewChange('desktop')}
+                              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-xs font-medium transition-colors ${devicePreview === 'desktop' ? 'bg-background shadow-sm' : 'hover:bg-background/50'}`}
+                            >
+                              <Monitor className="h-3.5 w-3.5" />
+                              Desktop
+                            </button>
+                            <button
+                              onClick={() => onDevicePreviewChange('tablet')}
+                              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-xs font-medium transition-colors ${devicePreview === 'tablet' ? 'bg-background shadow-sm' : 'hover:bg-background/50'}`}
+                            >
+                              <Tablet className="h-3.5 w-3.5" />
+                              Tablet
+                            </button>
+                            <button
+                              onClick={() => onDevicePreviewChange('mobile')}
+                              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-xs font-medium transition-colors ${devicePreview === 'mobile' ? 'bg-background shadow-sm' : 'hover:bg-background/50'}`}
+                            >
+                              <Smartphone className="h-3.5 w-3.5" />
+                              Mobile
+                            </button>
+                          </div>
                         )}
                       </div>
 
@@ -696,6 +728,35 @@ export const EditorTopBar = ({
                   </>
                 )}
               </Button>
+
+              {/* Device Preview Switcher - only show in preview mode */}
+              {previewMode && onDevicePreviewChange && (
+                <div className="flex items-center border border-border rounded-md overflow-hidden">
+                  <button
+                    onClick={() => onDevicePreviewChange('desktop')}
+                    className={`p-2 transition-colors ${devicePreview === 'desktop' ? 'bg-foreground text-background' : 'hover:bg-muted'}`}
+                    title="Desktop view"
+                  >
+                    <Monitor className="h-4 w-4" />
+                  </button>
+                  <div className="w-px h-6 bg-border" />
+                  <button
+                    onClick={() => onDevicePreviewChange('tablet')}
+                    className={`p-2 transition-colors ${devicePreview === 'tablet' ? 'bg-foreground text-background' : 'hover:bg-muted'}`}
+                    title="Tablet view"
+                  >
+                    <Tablet className="h-4 w-4" />
+                  </button>
+                  <div className="w-px h-6 bg-border" />
+                  <button
+                    onClick={() => onDevicePreviewChange('mobile')}
+                    className={`p-2 transition-colors ${devicePreview === 'mobile' ? 'bg-foreground text-background' : 'hover:bg-muted'}`}
+                    title="Mobile view"
+                  >
+                    <Smartphone className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
 
               {!previewMode && (
                 <>
