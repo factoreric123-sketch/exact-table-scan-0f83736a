@@ -250,7 +250,7 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
         updates: { image_url: imageUrl },
       });
       
-      toast.success("Image saved — click Preview to see it");
+      toast.success("Image saved. Click preview to see it");
       
       // 6. Keep blob URL visible, then refresh cache after 3s
       // This ensures the image stays visible while cache updates
