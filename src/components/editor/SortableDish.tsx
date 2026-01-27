@@ -248,14 +248,18 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
         updates: { image_url: imageUrl },
       });
       
-      // 6. Replace local blob with real URL and cleanup
-      setLocalImageUrl(null);
-      URL.revokeObjectURL(localPreviewUrl);
       toast.success("Image saved");
       
-      // 7. Subtle background refresh after 1.5s to ensure sync
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['full-menu'] });
+      // 6. Keep blob URL visible, then refresh cache after 1.5s
+      // This ensures the image stays visible while cache updates
+      setTimeout(async () => {
+        // Force refetch to get updated dish.image_url from DB
+        await queryClient.invalidateQueries({ queryKey: ['full-menu'] });
+        await queryClient.refetchQueries({ queryKey: ['full-menu'] });
+        
+        // Now safe to clear blob URL since dish.image_url should be updated
+        setLocalImageUrl(null);
+        URL.revokeObjectURL(localPreviewUrl);
       }, 1500);
     } catch (error) {
       // Revert on failure
