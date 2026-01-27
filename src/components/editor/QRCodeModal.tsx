@@ -25,6 +25,7 @@ export const QRCodeModal = ({
   const [size, setSize] = useState<number>(250);
   const [copied, setCopied] = useState(false);
   const [customQrImage, setCustomQrImage] = useState<string | null>(null);
+  const [imageKey, setImageKey] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Short link for everything: display, copy, open, QR
@@ -260,6 +261,10 @@ export const QRCodeModal = ({
     reader.onload = (event) => {
       setCustomQrImage(event.target?.result as string);
       toast.success("Custom QR code uploaded!");
+      // Refresh the image display after 1.5 seconds
+      setTimeout(() => {
+        setImageKey(prev => prev + 1);
+      }, 1500);
     };
     reader.readAsDataURL(file);
   };
@@ -333,10 +338,11 @@ export const QRCodeModal = ({
             <div className="bg-white p-4 rounded-lg">
               {customQrImage ? (
                 <img 
+                  key={imageKey}
                   src={customQrImage} 
                   alt="Custom QR Code" 
                   style={{ width: size, height: size }}
-                  className="object-contain"
+                  className="object-contain animate-in fade-in duration-300"
                 />
               ) : (
                 <QRCodeCanvas
