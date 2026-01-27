@@ -250,7 +250,7 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
       
       toast.success("Image saved");
       
-      // 6. Keep blob URL visible, then refresh cache after 1.5s
+      // 6. Keep blob URL visible, then refresh cache after 3s
       // This ensures the image stays visible while cache updates
       setTimeout(async () => {
         // Force refetch to get updated dish.image_url from DB
@@ -260,7 +260,7 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
         // Now safe to clear blob URL since dish.image_url should be updated
         setLocalImageUrl(null);
         URL.revokeObjectURL(localPreviewUrl);
-      }, 1500);
+      }, 3000);
     } catch (error) {
       // Revert on failure
       setLocalImageUrl(null);
