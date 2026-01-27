@@ -252,6 +252,11 @@ const SortableDishInner = ({ dish, subcategoryId, restaurantId, forceTwoDecimals
       setLocalImageUrl(null);
       URL.revokeObjectURL(localPreviewUrl);
       toast.success("Image saved");
+      
+      // 7. Subtle background refresh after 1.5s to ensure sync
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['full-menu'] });
+      }, 1500);
     } catch (error) {
       // Revert on failure
       setLocalImageUrl(null);
