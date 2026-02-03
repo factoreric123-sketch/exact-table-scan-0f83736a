@@ -4,7 +4,7 @@ import { Download, Printer } from "lucide-react";
 import logoDark from "@/assets/logo-dark.png";
 
 const BusinessCard = () => {
-  const demoUrl = `${window.location.origin}/demo`;
+  const demoUrl = "https://exact-clone-guardian.lovable.app/demo";
 
   const handlePrint = () => {
     window.print();
