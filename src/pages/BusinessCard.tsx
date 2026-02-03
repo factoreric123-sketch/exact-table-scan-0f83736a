@@ -2,12 +2,44 @@ import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Download, Printer } from "lucide-react";
 import logoDark from "@/assets/logo-dark.png";
+import { useRef } from "react";
 
 const BusinessCard = () => {
   const demoUrl = "https://exact-clone-guardian.lovable.app/demo";
+  const qrRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadQR = () => {
+    const svg = qrRef.current?.querySelector("svg");
+    if (!svg) return;
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+
+    // Make it high-res (4x)
+    const size = 512;
+    canvas.width = size;
+    canvas.height = size;
+
+    img.onload = () => {
+      if (ctx) {
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, size, size);
+        ctx.drawImage(img, 0, 0, size, size);
+        
+        const link = document.createElement("a");
+        link.download = "menu-demo-qr.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      }
+    };
+
+    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
   };
 
   return (
@@ -17,6 +49,10 @@ const BusinessCard = () => {
         <Button onClick={handlePrint} className="gap-2">
           <Printer className="h-4 w-4" />
           Print Card
+        </Button>
+        <Button onClick={handleDownloadQR} variant="outline" className="gap-2">
+          <Download className="h-4 w-4" />
+          Download QR
         </Button>
       </div>
 
@@ -49,7 +85,7 @@ const BusinessCard = () => {
                 = Happy Customers
               </p>
               
-              <div className="bg-white p-1.5 rounded-md shadow-sm border">
+              <div ref={qrRef} className="bg-white p-1.5 rounded-md shadow-sm border">
                 <QRCodeSVG
                   value={demoUrl}
                   size={56}
