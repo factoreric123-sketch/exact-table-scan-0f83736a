@@ -42,7 +42,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
 
     const emailResponse = await resend.emails.send({
-      from: "MenuTap Contact <onboarding@resend.dev>",
+      from: "Contact Form <onboarding@resend.dev>",
       to: ["factoreric123@gmail.com"],
       subject: `[Contact Form] ${subject}`,
       html: `

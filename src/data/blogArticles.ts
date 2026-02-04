@@ -19,7 +19,7 @@ export const blogArticles: BlogArticle[] = [
     date: "March 15, 2024",
     readTime: "8 min read",
     image: "/placeholder.svg",
-    author: "MenuTap Team",
+    author: "The Team",
     content: `
 Digital menus are transforming the restaurant industry, and the benefits go far beyond just convenience. Here are 10 proven ways they can increase your revenue:
 
@@ -65,7 +65,7 @@ Collect customer data (with permission) and send targeted promotions, loyalty re
 
 ## Ready to Transform Your Restaurant?
 
-The transition to digital menus is easier than you think. With MenuTap, you can have your entire menu digitized in minutes, not weeks. Start your free trial today and see the revenue impact for yourself.
+The transition to digital menus is easier than you think. With our software, you can have your entire menu digitized in minutes, not weeks. Start your free trial today and see the revenue impact for yourself.
     `
   },
   {
@@ -76,7 +76,7 @@ The transition to digital menus is easier than you think. With MenuTap, you can 
     date: "March 10, 2024",
     readTime: "5 min read",
     image: "/placeholder.svg",
-    author: "MenuTap Team",
+    author: "The Team",
     content: `
 QR codes are everywhere in restaurants now, but implementation matters. Here's how to do it right:
 
@@ -108,7 +108,7 @@ Customers expect instant results. Optimize your menu for fast loading – under 
 
 Track scan rates and customer feedback. Continuously improve the experience based on real data.
 
-Ready to implement QR code menus the right way? MenuTap makes it effortless with pre-optimized templates and built-in analytics.
+Ready to implement QR code menus the right way? Our software makes it effortless with pre-optimized templates and built-in analytics.
     `
   },
   {
@@ -119,7 +119,7 @@ Ready to implement QR code menus the right way? MenuTap makes it effortless with
     date: "March 5, 2024",
     readTime: "7 min read",
     image: "/placeholder.svg",
-    author: "MenuTap Team",
+    author: "The Team",
     content: `
 Menu design is a science. Every color, font, and layout choice influences what customers order. Here's what research tells us:
 
@@ -151,20 +151,20 @@ Images increase orders by 30%, but use them sparingly. Too many images make the 
 
 Don't overcrowd your menu. White space helps customers focus and makes the menu feel premium.
 
-MenuTap's theme library includes professionally designed templates that incorporate these psychological principles, helping you maximize revenue without a design degree.
+Our theme library includes professionally designed templates that incorporate these psychological principles, helping you maximize revenue without a design degree.
     `
   },
   {
-    slug: "getting-started-with-taptab",
-    title: "Getting Started with MenuTap in 5 Minutes",
-    excerpt: "A step-by-step guide to creating your first digital menu and going live with MenuTap.",
+    slug: "getting-started-with-digital-menus",
+    title: "Getting Started with Digital Menus in 5 Minutes",
+    excerpt: "A step-by-step guide to creating your first digital menu and going live with our platform.",
     category: "Product Updates",
     date: "February 28, 2024",
     readTime: "4 min read",
     image: "/placeholder.svg",
-    author: "MenuTap Team",
+    author: "The Team",
     content: `
-Creating a digital menu shouldn't take days. Here's how to go live with MenuTap in just 5 minutes:
+Creating a digital menu shouldn't take days. Here's how to go live with our software in just 5 minutes:
 
 ## Step 1: Sign Up (30 seconds)
 
@@ -207,7 +207,7 @@ That's it! Your menu is now accessible via QR code or a custom link. You can upd
 
 The free tier includes everything you need for one restaurant. Upgrade when you're ready to add more locations or advanced features.
 
-Start your free trial at menutap.com and see how easy modern menu management can be.
+Start your free trial today and see how easy modern menu management can be.
     `
   },
   {
@@ -218,7 +218,7 @@ Start your free trial at menutap.com and see how easy modern menu management can
     date: "February 20, 2024",
     readTime: "6 min read",
     image: "/placeholder.svg",
-    author: "MenuTap Team",
+    author: "The Team",
     content: `
 The restaurant industry is evolving rapidly. Here are the trends shaping its future:
 
@@ -254,58 +254,58 @@ The pandemic accelerated the shift to contactless payments, ordering, and dining
 
 From energy monitoring to waste tracking, technology is helping restaurants reduce their environmental impact.
 
-At MenuTap, we're committed to staying at the forefront of these trends, ensuring our platform evolves with your needs.
+We're committed to staying at the forefront of these trends, ensuring our platform evolves with your needs.
     `
   },
   {
-    slug: "taptab-vs-traditional-menu-apps",
-    title: "MenuTap vs Traditional Menu Apps: What's the Difference?",
-    excerpt: "Compare MenuTap's modern approach to digital menus with legacy solutions and see why restaurants are making the switch.",
+    slug: "digital-menus-vs-traditional-apps",
+    title: "Our Platform vs Traditional Menu Apps: What's the Difference?",
+    excerpt: "Compare our modern approach to digital menus with legacy solutions and see why restaurants are making the switch.",
     category: "Product Updates",
     date: "February 15, 2024",
     readTime: "5 min read",
     image: "/placeholder.svg",
-    author: "MenuTap Team",
+    author: "The Team",
     content: `
-Not all digital menu solutions are created equal. Here's what makes MenuTap different:
+Not all digital menu solutions are created equal. Here's what makes our software different:
 
 ## Speed
 
-Traditional apps require downloading and installation. MenuTap loads instantly in any browser – no app required.
+Traditional apps require downloading and installation. Our platform loads instantly in any browser – no app required.
 
 ## Design
 
-Legacy solutions use dated templates. MenuTap offers modern, premium themes designed by professional UI/UX designers.
+Legacy solutions use dated templates. We offer modern, premium themes designed by professional UI/UX designers.
 
 ## Pricing
 
-Traditional platforms charge per location or per user. MenuTap is free for one restaurant, with transparent flat-rate pricing for more.
+Traditional platforms charge per location or per user. Our software is free for one restaurant, with transparent flat-rate pricing for more.
 
 ## Updates
 
-Old platforms require re-uploading your entire menu for changes. MenuTap offers real-time updates that sync instantly.
+Old platforms require re-uploading your entire menu for changes. Our platform offers real-time updates that sync instantly.
 
 ## Customer Experience
 
-Traditional apps often have clunky interfaces. MenuTap is optimized for mobile with smooth animations and intuitive navigation.
+Traditional apps often have clunky interfaces. Our software is optimized for mobile with smooth animations and intuitive navigation.
 
 ## Analytics
 
-Most solutions provide basic stats. MenuTap gives you actionable insights on popular dishes, peak times, and customer preferences.
+Most solutions provide basic stats. We give you actionable insights on popular dishes, peak times, and customer preferences.
 
 ## Customization
 
-Legacy platforms lock you into their design. MenuTap lets you customize everything: colors, fonts, layouts, branding.
+Legacy platforms lock you into their design. Our software lets you customize everything: colors, fonts, layouts, branding.
 
 ## Support
 
-Traditional vendors have slow email support. MenuTap offers responsive customer service and an extensive knowledge base.
+Traditional vendors have slow email support. We offer responsive customer service and an extensive knowledge base.
 
 ## Technology
 
-Old platforms use outdated tech. MenuTap is built on modern web frameworks for superior performance and reliability.
+Old platforms use outdated tech. Our platform is built on modern web frameworks for superior performance and reliability.
 
-Ready to experience the difference? Start your free trial today and see why forward-thinking restaurants are choosing MenuTap.
+Ready to experience the difference? Start your free trial today and see why forward-thinking restaurants are choosing our software.
     `
   }
 ];

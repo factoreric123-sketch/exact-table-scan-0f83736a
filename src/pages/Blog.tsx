@@ -14,7 +14,7 @@ const Blog = () => {
       <section className="bg-muted/30 py-24">
         <div className="container mx-auto px-4 max-w-6xl text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            MenuTap Blog
+            Our Blog
           </h1>
           <p className="text-xl text-muted-foreground">
             Tips, insights, and updates from the world of restaurant technology
@@ -71,7 +71,7 @@ const Blog = () => {
             Ready to Transform Your Menu?
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            Join thousands of restaurants using MenuTap to create beautiful digital menus.
+            Join thousands of restaurants using our software to create beautiful digital menus.
           </p>
           <Button asChild size="lg" variant="secondary">
             <Link to="/auth?signup=true">Start Free Trial</Link>
