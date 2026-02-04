@@ -23,7 +23,7 @@ const CTASection = () => {
 
             {/* Description */}
             <p className="text-xl text-background/80 max-w-2xl mx-auto">
-              Menus that remove confusion. Join 500+ restaurants already using MenuTap.
+              Menus that remove confusion. Join 500+ restaurants already using menu.
             </p>
 
             {/* CTA */}
