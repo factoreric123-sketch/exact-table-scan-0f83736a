@@ -90,7 +90,7 @@ const App = () => (
             />
             {/* Canonical route for public menus */}
             <Route path="/menu/:slug" element={<PublicMenu />} />
-            {/* Short link format compatible with TapTab-like URLs */}
+            {/* Short link format for QR codes */}
             <Route path="/m/:restaurantHash/:menuId" element={<MenuShortDisplay />} />
             {/* Legacy redirect for old QR codes */}
             <Route path="/:slug" element={<MenuRedirect />} />

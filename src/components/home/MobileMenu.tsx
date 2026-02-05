@@ -25,12 +25,12 @@ const MobileMenu = ({ isOpen, onClose, scrollToSection }: MobileMenuProps) => {
         <div className="flex flex-col gap-6 mt-16">
           <button
             onClick={() => {
-              scrollToSection("features");
+              navigate("/");
               onClose();
             }}
             className="text-2xl font-semibold text-foreground hover:text-accent transition-colors text-left"
           >
-            Features
+            Home
           </button>
           <button
             onClick={() => {

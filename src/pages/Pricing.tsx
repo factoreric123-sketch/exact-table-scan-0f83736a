@@ -70,10 +70,6 @@ const Pricing = () => {
     {
       question: "Do you offer refunds?",
       answer: "If you cancel within the first 30 days, we'll provide a full refund, no questions asked. After that, you can cancel anytime and your access continues until the end of your billing period."
-    },
-    {
-      question: "Can I get a discount for annual billing?",
-      answer: "Annual billing with discounts is coming soon! For now, we offer simple monthly billing at $10/month. Join our waitlist for annual plans and we'll notify you when it's available."
     }
   ];
 
@@ -85,11 +81,8 @@ const Pricing = () => {
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-xl text-muted-foreground mb-4">
+          <p className="text-xl text-muted-foreground">
             Start free, upgrade when you need more. No credit card required.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Save 20% with annual billing
           </p>
         </div>
       </section>

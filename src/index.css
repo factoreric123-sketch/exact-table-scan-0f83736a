@@ -111,8 +111,8 @@ All colors MUST be HSL.
   }
 
   html {
-    /* Native smooth scrolling */
-    scroll-behavior: smooth;
+    /* Instant scroll - no animation */
+    scroll-behavior: auto;
     /* iOS momentum scrolling */
     -webkit-overflow-scrolling: touch;
   }

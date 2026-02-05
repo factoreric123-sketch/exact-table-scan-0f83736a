@@ -24,7 +24,7 @@ const Navbar = () => {
     if (location.pathname === "/") {
       const element = document.getElementById(id);
       if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
+        element.scrollIntoView({ behavior: "auto" });
         setIsMobileMenuOpen(false);
       }
     } else {
@@ -52,12 +52,12 @@ const Navbar = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-8">
-              <button
-                onClick={() => scrollToSection("features")}
+              <Link
+                to="/"
                 className="text-foreground/80 hover:text-foreground transition-colors text-sm font-medium"
               >
-                Features
-              </button>
+                Home
+              </Link>
               <Link
                 to="/demo"
                 className="text-foreground/80 hover:text-foreground transition-colors text-sm font-medium"
