@@ -119,8 +119,8 @@ const PrivacyPolicy = () => {
           If you have questions or concerns about this Privacy Policy or our data practices, please contact us:
         </p>
         <ul>
-          <li>Email: privacy@taptab.com</li>
-          <li>Address: TAPTAB Privacy Team</li>
+          <li>Email: privacy@example.com</li>
+          <li>Address: Privacy Team</li>
         </ul>
       </section>
     </LegalPageLayout>
