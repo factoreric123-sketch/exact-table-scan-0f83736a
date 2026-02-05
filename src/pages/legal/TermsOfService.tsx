@@ -183,12 +183,8 @@ const TermsOfService = () => {
       <section>
         <h2>13. Contact Information</h2>
         <p>
-          For questions about these Terms of Service, contact us at:
+          For questions about these Terms of Service, please visit our <a href="/contact">Contact page</a>.
         </p>
-        <ul>
-          <li>Email: legal@example.com</li>
-          <li>Support: support@example.com</li>
-        </ul>
       </section>
     </LegalPageLayout>
   );

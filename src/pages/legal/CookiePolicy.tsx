@@ -167,12 +167,11 @@ const CookiePolicy = () => {
       <section>
         <h2>8. Contact Us</h2>
         <p>
-          If you have questions about our use of cookies, please contact us:
+          If you have questions about our use of cookies, please visit our <a href="/contact">Contact page</a>.
         </p>
-        <ul>
-          <li>Email: privacy@example.com</li>
-          <li>See our <a href="/privacy" className="text-accent hover:underline">Privacy Policy</a> for more information on data handling</li>
-        </ul>
+        <p>
+          See our <a href="/privacy">Privacy Policy</a> for more information on data handling.
+        </p>
       </section>
     </LegalPageLayout>
   );
