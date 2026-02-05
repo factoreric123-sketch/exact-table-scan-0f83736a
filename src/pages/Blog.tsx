@@ -1,8 +1,8 @@
-import PageLayout from "@/components/layouts/PageLayout";
 import BlogCard from "@/components/blog/BlogCard";
 import { blogArticles } from "@/data/blogArticles";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import PageLayout from "@/components/layouts/PageLayout";
 
 const Blog = () => {
   const featuredArticle = blogArticles[0];

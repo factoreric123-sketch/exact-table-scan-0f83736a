@@ -12,7 +12,7 @@ const GDPR = () => {
       <section>
         <h2>Our Commitment to GDPR Compliance</h2>
         <p>
-          TAPTAB is fully committed to complying with the General Data Protection Regulation (GDPR) and protecting the privacy rights of individuals in the European Economic Area (EEA). This page explains your rights under GDPR and how we handle your personal data.
+          We are fully committed to complying with the General Data Protection Regulation (GDPR) and protecting the privacy rights of individuals in the European Economic Area (EEA). This page explains your rights under GDPR and how we handle your personal data.
         </p>
       </section>
 
@@ -38,7 +38,7 @@ const GDPR = () => {
 
         <h3>2. Right to Rectification</h3>
         <p>
-          You have the right to correct inaccurate or incomplete personal data. You can update most information directly through your account settings. For data you cannot update yourself, contact us at privacy@taptab.com.
+          You have the right to correct inaccurate or incomplete personal data. You can update most information directly through your account settings. For data you cannot update yourself, contact us at privacy@example.com.
         </p>
 
         <h3>3. Right to Erasure ("Right to be Forgotten")</h3>
@@ -112,7 +112,7 @@ const GDPR = () => {
         </p>
         <ul>
           <li>Use the self-service tools in your account dashboard</li>
-          <li>Email us at privacy@taptab.com with your request</li>
+          <li>Email us at privacy@example.com with your request</li>
           <li>Submit a request through our contact form</li>
         </ul>
         <p>
@@ -156,8 +156,8 @@ const GDPR = () => {
           For questions about GDPR compliance or to exercise your rights, contact our Data Protection Officer:
         </p>
         <ul>
-          <li>Email: dpo@taptab.com</li>
-          <li>Mailing Address: TAPTAB Data Protection Officer</li>
+          <li>Email: dpo@example.com</li>
+          <li>Mailing Address: Data Protection Officer</li>
         </ul>
       </section>
 

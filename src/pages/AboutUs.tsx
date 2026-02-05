@@ -1,8 +1,8 @@
-import PageLayout from "@/components/layouts/PageLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Target, Zap, Heart, DollarSign } from "lucide-react";
+import PageLayout from "@/components/layouts/PageLayout";
 
 const AboutUs = () => {
   const values = [
@@ -86,24 +86,10 @@ const AboutUs = () => {
       {/* Stats */}
       <section className="py-24">
         <div className="container mx-auto px-4 max-w-6xl">
-          <div className="grid md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-4xl md:text-5xl font-bold text-white mb-2">1,000+</div>
-              <div className="text-muted-foreground">Restaurants</div>
-            </div>
-            <div>
-              <div className="text-4xl md:text-5xl font-bold text-white mb-2">15</div>
-              <div className="text-muted-foreground">Countries</div>
-            </div>
-            <div>
-              <div className="text-4xl md:text-5xl font-bold text-white mb-2">50K+</div>
-              <div className="text-muted-foreground">Monthly Scans</div>
-            </div>
-            <div>
-              <div className="text-4xl md:text-5xl font-bold text-white mb-2">12</div>
-              <div className="text-muted-foreground">Team Members</div>
-            </div>
-          </div>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center">Ready to Get Started?</h2>
+          <p className="text-xl text-muted-foreground text-center max-w-2xl mx-auto">
+            Join restaurants around the world who are transforming their menu experience with our software.
+          </p>
         </div>
       </section>
 

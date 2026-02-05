@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { Github, Twitter, Linkedin, Mail } from "lucide-react";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -93,8 +92,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-border">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-            © {currentYear} All rights reserved.
-            <p>Made for restaurants worldwide</p>
+            <p>© {currentYear} All rights reserved.</p>
           </div>
         </div>
       </div>

@@ -170,7 +170,7 @@ const CookiePolicy = () => {
           If you have questions about our use of cookies, please contact us:
         </p>
         <ul>
-          <li>Email: privacy@taptab.com</li>
+          <li>Email: privacy@example.com</li>
           <li>See our <a href="/privacy" className="text-accent hover:underline">Privacy Policy</a> for more information on data handling</li>
         </ul>
       </section>
