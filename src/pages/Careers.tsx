@@ -183,8 +183,8 @@ const Careers = () => {
             We're always looking for talented people. Send us your resume and tell us why you'd be a great addition to the team.
           </p>
           <p className="opacity-90">
-            <a href="mailto:careers@taptab.com" className="underline">
-              careers@taptab.com
+            <a href="/contact" className="underline">
+              Contact Us
             </a>
           </p>
         </div>

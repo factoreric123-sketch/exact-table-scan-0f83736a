@@ -47,7 +47,7 @@ const TermsOfService = () => {
       <section>
         <h2>4. Acceptable Use Policy</h2>
         <p>
-          You agree not to use TAPTAB to:
+          You agree not to use our platform to:
         </p>
         <ul>
           <li>Upload illegal, harmful, or offensive content</li>
@@ -103,7 +103,7 @@ const TermsOfService = () => {
       <section>
         <h2>7. Data Ownership and Privacy</h2>
         <p>
-          You own all content you upload to TAPTAB. We do not claim ownership of your menu data, images, or restaurant information. Your use of our services is subject to our Privacy Policy, which explains how we collect, use, and protect your data.
+          You own all content you upload to our platform. We do not claim ownership of your menu data, images, or restaurant information. Your use of our services is subject to our Privacy Policy, which explains how we collect, use, and protect your data.
         </p>
         <p>
           We use industry-standard security measures to protect your data, but we cannot guarantee absolute security. You are responsible for maintaining backups of important data.

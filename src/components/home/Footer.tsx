@@ -12,14 +12,14 @@ const Footer = () => {
             <h3 className="font-semibold text-foreground">Product</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link to="/demo" >
-                  Demo
+                <Link to="/" >
+                  Home
                 </Link>
               </li>
               <li>
-                <a href="#features" >
-                  Features
-                </a>
+                <Link to="/demo" >
+                  Demo
+                </Link>
               </li>
               <li>
                 <Link to="/pricing" >
