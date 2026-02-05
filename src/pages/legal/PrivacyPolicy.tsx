@@ -5,7 +5,7 @@ const PrivacyPolicy = () => {
     <LegalPageLayout
       title="Privacy Policy"
       lastUpdated="March 1, 2024"
-      breadcrumbs={[{ label: "Privacy Policy", href: "/privacy" }]}
+      icon="shield"
     >
       <section>
         <h2>1. Information We Collect</h2>

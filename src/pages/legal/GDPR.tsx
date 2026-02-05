@@ -7,7 +7,7 @@ const GDPR = () => {
     <LegalPageLayout
       title="GDPR Compliance"
       lastUpdated="March 1, 2024"
-      breadcrumbs={[{ label: "GDPR Compliance", href: "/gdpr" }]}
+      icon="shield"
     >
       <section>
         <h2>Our Commitment to GDPR Compliance</h2>
