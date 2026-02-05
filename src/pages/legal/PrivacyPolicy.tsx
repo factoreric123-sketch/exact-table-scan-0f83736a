@@ -88,7 +88,7 @@ const PrivacyPolicy = () => {
           <li><strong>Right to Restrict Processing:</strong> Request restriction of processing</li>
         </ul>
         <p>
-          To exercise these rights, contact us at privacy@taptab.com. We will respond within 30 days.
+          To exercise these rights, please visit our <a href="/contact">Contact page</a>. We will respond within 30 days.
         </p>
       </section>
 
@@ -116,12 +116,8 @@ const PrivacyPolicy = () => {
       <section>
         <h2>10. Contact Information</h2>
         <p>
-          If you have questions or concerns about this Privacy Policy or our data practices, please contact us:
+          If you have questions or concerns about this Privacy Policy or our data practices, please visit our <a href="/contact">Contact page</a>.
         </p>
-        <ul>
-          <li>Email: privacy@example.com</li>
-          <li>Address: Privacy Team</li>
-        </ul>
       </section>
     </LegalPageLayout>
   );

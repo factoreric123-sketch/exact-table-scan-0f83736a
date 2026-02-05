@@ -1,5 +1,4 @@
 import LegalPageLayout from "@/components/layouts/LegalPageLayout";
-import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const GDPR = () => {
@@ -38,7 +37,7 @@ const GDPR = () => {
 
         <h3>2. Right to Rectification</h3>
         <p>
-          You have the right to correct inaccurate or incomplete personal data. You can update most information directly through your account settings. For data you cannot update yourself, contact us at privacy@example.com.
+          You have the right to correct inaccurate or incomplete personal data. You can update most information directly through your account settings. For data you cannot update yourself, please visit our <a href="/contact">Contact page</a>.
         </p>
 
         <h3>3. Right to Erasure ("Right to be Forgotten")</h3>
@@ -112,17 +111,11 @@ const GDPR = () => {
         </p>
         <ul>
           <li>Use the self-service tools in your account dashboard</li>
-          <li>Email us at privacy@example.com with your request</li>
-          <li>Submit a request through our contact form</li>
+          <li>Submit a request through our <a href="/contact">Contact page</a></li>
         </ul>
         <p>
           We will respond to all requests within 30 days. In some cases, we may need to verify your identity before processing your request.
         </p>
-        <div className="mt-6">
-          <Button asChild>
-            <Link to="/contact">Contact Us About GDPR</Link>
-          </Button>
-        </div>
       </section>
 
       <section>
@@ -153,18 +146,14 @@ const GDPR = () => {
       <section>
         <h2>Data Protection Officer</h2>
         <p>
-          For questions about GDPR compliance or to exercise your rights, contact our Data Protection Officer:
+          For questions about GDPR compliance or to exercise your rights, please visit our <a href="/contact">Contact page</a>.
         </p>
-        <ul>
-          <li>Email: dpo@example.com</li>
-          <li>Mailing Address: Data Protection Officer</li>
-        </ul>
       </section>
 
       <section>
         <h2>Children's Data</h2>
         <p>
-          Our services are not directed to children under 16 years of age. We do not knowingly collect data from children. If you believe we've collected data from a child, please contact us immediately and we will delete it.
+          Our services are not directed to children under 16 years of age. We do not knowingly collect data from children. If you believe we've collected data from a child, please notify us through our <a href="/contact">Contact page</a> and we will delete it.
         </p>
       </section>
 
