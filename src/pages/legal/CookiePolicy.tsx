@@ -5,7 +5,7 @@ const CookiePolicy = () => {
     <LegalPageLayout
       title="Cookie Policy"
       lastUpdated="March 1, 2024"
-      breadcrumbs={[{ label: "Cookie Policy", href: "/cookies" }]}
+      icon="cookie"
     >
       <section>
         <h2>1. What Are Cookies?</h2>

@@ -5,19 +5,19 @@ const TermsOfService = () => {
     <LegalPageLayout
       title="Terms of Service"
       lastUpdated="March 1, 2024"
-      breadcrumbs={[{ label: "Terms of Service", href: "/terms" }]}
+      icon="scale"
     >
       <section>
         <h2>1. Acceptance of Terms</h2>
         <p>
-          By accessing or using TAPTAB's services, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using our services.
+          By accessing or using our services, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using our services.
         </p>
       </section>
 
       <section>
         <h2>2. Service Description</h2>
         <p>
-          TAPTAB provides a cloud-based platform that enables restaurants to create, manage, and share digital menus. Our services include:
+          We provide a cloud-based platform that enables restaurants to create, manage, and share digital menus. Our services include:
         </p>
         <ul>
           <li>Digital menu creation and management tools</li>
@@ -31,7 +31,7 @@ const TermsOfService = () => {
       <section>
         <h2>3. User Accounts and Registration</h2>
         <p>
-          To use TAPTAB, you must create an account and provide accurate, complete information. You are responsible for:
+          To use our platform, you must create an account and provide accurate, complete information. You are responsible for:
         </p>
         <ul>
           <li>Maintaining the confidentiality of your account credentials</li>
@@ -67,7 +67,7 @@ const TermsOfService = () => {
       <section>
         <h2>5. Intellectual Property Rights</h2>
         <p>
-          The TAPTAB platform, including its design, features, and content, is protected by copyright, trademark, and other intellectual property laws. You may not:
+          Our platform, including its design, features, and content, is protected by copyright, trademark, and other intellectual property laws. You may not:
         </p>
         <ul>
           <li>Copy, modify, or distribute our software or content</li>
@@ -128,7 +128,7 @@ const TermsOfService = () => {
       <section>
         <h2>9. Limitation of Liability</h2>
         <p>
-          To the maximum extent permitted by law, TAPTAB shall not be liable for:
+          To the maximum extent permitted by law, we shall not be liable for:
         </p>
         <ul>
           <li>Indirect, incidental, or consequential damages</li>
@@ -166,7 +166,7 @@ const TermsOfService = () => {
         <ul>
           <li>Good-faith negotiation between the parties</li>
           <li>Binding arbitration if negotiation fails</li>
-          <li>Governing law of the jurisdiction where TAPTAB is registered</li>
+          <li>Governing law of the applicable jurisdiction</li>
         </ul>
         <p>
           You agree to resolve disputes individually and waive any right to participate in class-action lawsuits.
@@ -186,8 +186,8 @@ const TermsOfService = () => {
           For questions about these Terms of Service, contact us at:
         </p>
         <ul>
-          <li>Email: legal@taptab.com</li>
-          <li>Support: support@taptab.com</li>
+          <li>Email: legal@example.com</li>
+          <li>Support: support@example.com</li>
         </ul>
       </section>
     </LegalPageLayout>

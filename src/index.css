@@ -7,6 +7,60 @@ All colors MUST be HSL.
 */
 
 @layer base {
+  /* Legal page content styling */
+  .legal-content section {
+    @apply bg-card/5 rounded-xl p-6 md:p-8 border border-border/30;
+  }
+  
+  .legal-content h2 {
+    @apply text-xl md:text-2xl font-bold text-foreground mb-4 pb-3 border-b border-border/30;
+  }
+  
+  .legal-content h3 {
+    @apply text-lg font-semibold text-foreground mt-6 mb-3;
+  }
+  
+  .legal-content p {
+    @apply text-foreground/80 leading-relaxed mb-4;
+  }
+  
+  .legal-content ul {
+    @apply space-y-2 mb-4 pl-0 list-none;
+  }
+  
+  .legal-content li {
+    @apply text-foreground/80 flex items-start gap-3 pl-0;
+  }
+  
+  .legal-content li::before {
+    content: "→";
+    @apply text-muted-foreground font-bold mt-0 flex-shrink-0;
+  }
+  
+  .legal-content strong {
+    @apply text-foreground font-semibold;
+  }
+  
+  .legal-content a {
+    @apply text-foreground underline underline-offset-2 hover:text-foreground/80 transition-colors;
+  }
+  
+  .legal-content table {
+    @apply w-full border-collapse rounded-lg overflow-hidden my-4;
+  }
+  
+  .legal-content th {
+    @apply bg-muted/30 text-foreground font-semibold text-left px-4 py-3 border-b border-border;
+  }
+  
+  .legal-content td {
+    @apply px-4 py-3 border-b border-border/30 text-foreground/80;
+  }
+  
+  .legal-content tr:last-child td {
+    @apply border-b-0;
+  }
+
   :root {
     --background: 0 0% 6%;
     --foreground: 0 0% 98%;
