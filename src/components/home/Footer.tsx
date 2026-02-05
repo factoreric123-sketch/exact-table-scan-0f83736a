@@ -12,7 +12,7 @@ const Footer = () => {
             <h3 className="font-semibold text-foreground">Product</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link to="/" >
+                <Link to="/" onClick={() => window.scrollTo(0, 0)}>
                   Home
                 </Link>
               </li>
