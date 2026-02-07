@@ -70,18 +70,22 @@ const BlogPost = () => {
       {/* Content - using legal-content styling */}
       <main className="flex-1">
         <div className="container mx-auto px-4 max-w-4xl py-12 md:py-16">
-          <div className="legal-content space-y-8">
+          <div className="space-y-6">
             {article.content.split('\n\n').map((paragraph, index) => {
               const trimmed = paragraph.trim();
               if (!trimmed) return null;
               if (trimmed.startsWith('## ')) {
                 return (
-                  <section key={index}>
-                    <h2>{trimmed.substring(3)}</h2>
-                  </section>
+                  <h2 key={index} className="text-2xl font-bold text-foreground mt-10 mb-2">
+                    {trimmed.substring(3)}
+                  </h2>
                 );
               }
-              return <p key={index}>{trimmed}</p>;
+              return (
+                <p key={index} className="text-foreground/80 leading-relaxed">
+                  {trimmed}
+                </p>
+              );
             })}
           </div>
 
