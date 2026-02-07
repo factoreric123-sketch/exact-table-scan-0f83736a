@@ -84,7 +84,7 @@ const StatsSection = () => {
         {/* Trust Signals */}
         <div className="mt-16 text-center">
           <p className="text-muted-foreground text-sm lg:text-base">
-            Trusted by restaurants worldwide • No credit card required • Free forever for 1 restaurant
+            Trusted by restaurants worldwide • No credit card required
           </p>
         </div>
       </div>
