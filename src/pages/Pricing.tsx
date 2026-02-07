@@ -48,10 +48,6 @@ const Pricing = () => {
       answer: "Yes! The free plan lets you create unlimited menus and use the full visual editor forever. No credit card required, no time limits. Upgrade to Premium only when you're ready to publish."
     },
     {
-      question: "What's included in the 7-day free trial?",
-      answer: "The 7-day trial gives you full access to Premium features: QR code generation, public menu publishing, and shareable links. No credit card required to start the trial. Cancel anytime during the trial without being charged."
-    },
-    {
       question: "Can I cancel my Premium subscription anytime?",
       answer: "Absolutely. Cancel anytime with one click from your dashboard. Your menus will remain published until the end of your billing period, then automatically revert to the free plan."
     },
