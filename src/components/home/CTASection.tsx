@@ -46,7 +46,7 @@ const CTASection = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4" />
-                <span>Free forever plan</span>
+                <span>No technical skills needed</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4" />

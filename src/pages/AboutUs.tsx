@@ -56,9 +56,6 @@ const AboutUs = () => {
           <p>
             We knew there had to be a better way. So we built this platform – a modern, beautiful, and affordable digital menu software that anyone can use, regardless of technical skill.
             </p>
-            <p>
-              Today, we're proud to serve over 1,000 restaurants across 15 countries, helping them create stunning digital experiences that their customers love.
-            </p>
           </div>
         </div>
       </section>
@@ -97,13 +94,13 @@ const AboutUs = () => {
       <section className="bg-accent text-accent-foreground py-24">
         <div className="container mx-auto px-4 max-w-4xl text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Join Thousands of Restaurants
+            Ready to Transform Your Menu?
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            Transform your menu experience today. No credit card required.
+            Get started today. No credit card required.
           </p>
           <Button asChild size="lg" variant="secondary">
-            <Link to="/auth?signup=true">Start Free Trial</Link>
+            <Link to="/auth?signup=true">Get Started</Link>
           </Button>
         </div>
       </section>

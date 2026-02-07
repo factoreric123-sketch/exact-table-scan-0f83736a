@@ -150,19 +150,6 @@ const GDPR = () => {
         </p>
       </section>
 
-      <section>
-        <h2>Children's Data</h2>
-        <p>
-          Our services are not directed to children under 16 years of age. We do not knowingly collect data from children. If you believe we've collected data from a child, please notify us through our <a href="/contact">Contact page</a> and we will delete it.
-        </p>
-      </section>
-
-      <section>
-        <h2>Automated Decision-Making</h2>
-        <p>
-          We do not use automated decision-making or profiling that produces legal or similarly significant effects. Any automated processing (e.g., spam filtering, analytics) is used solely to improve service quality.
-        </p>
-      </section>
 
       <section>
         <h2>Data Breach Notification</h2>
