@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play, Check } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -55,21 +55,6 @@ const HeroSection = () => {
             </Button>
           </div>
 
-          {/* Trust signals */}
-          <div className="flex flex-wrap items-center gap-x-8 gap-y-3 justify-center pt-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4" />
-              <span>Setup in 5 minutes</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4" />
-              <span>No technical skills needed</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4" />
-              <span>No credit card</span>
-            </div>
-          </div>
         </div>
       </div>
     </section>

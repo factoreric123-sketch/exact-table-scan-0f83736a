@@ -1,7 +1,8 @@
-import BlogCard from "@/components/blog/BlogCard";
 import { blogArticles } from "@/data/blogArticles";
-import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Calendar, Clock, ArrowRight, BookOpen } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import PageLayout from "@/components/layouts/PageLayout";
 
 const Blog = () => {
@@ -10,41 +11,54 @@ const Blog = () => {
 
   return (
     <PageLayout>
-      {/* Hero */}
-      <section className="bg-muted/30 py-24">
-        <div className="container mx-auto px-4 max-w-6xl text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+      {/* Hero Section - matching legal pages style */}
+      <div className="relative bg-gradient-to-br from-background via-background to-muted/20 border-b border-border">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent" />
+        <div className="container mx-auto px-4 max-w-4xl py-16 md:py-24 relative">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="p-3 rounded-xl bg-accent/10 border border-accent/20">
+              <BookOpen className="w-8 h-8 text-accent" />
+            </div>
+            <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+              Insights & Updates
+            </span>
+          </div>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
             Our Blog
           </h1>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-lg text-muted-foreground">
             Tips, insights, and updates from the world of restaurant technology
           </p>
         </div>
-      </section>
+      </div>
 
       {/* Featured Article */}
-      <section className="py-12">
+      <section className="py-12 md:py-16">
         <div className="container mx-auto px-4 max-w-6xl">
-          <h2 className="text-2xl font-bold mb-6">Featured Article</h2>
-          <Link to={`/blog/${featuredArticle.slug}`}>
-            <div className="grid lg:grid-cols-2 gap-8 bg-card rounded-lg overflow-hidden hover:shadow-xl transition-shadow border">
-              <div className="aspect-video lg:aspect-auto overflow-hidden">
-                <img 
-                  src={featuredArticle.image} 
-                  alt={featuredArticle.title}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <div className="p-8 flex flex-col justify-center">
-                <div className="inline-block w-fit bg-accent/10 text-accent px-3 py-1 rounded-full text-sm font-medium mb-4">
-                  {featuredArticle.category}
+          <Link to={`/blog/${featuredArticle.slug}`} className="group block">
+            <div className="rounded-2xl border border-border/50 bg-card/5 overflow-hidden hover:border-border transition-colors">
+              <div className="p-8 md:p-10 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20">
+                    {featuredArticle.category}
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">Featured</span>
                 </div>
-                <h3 className="text-3xl text-black font-bold mb-4">{featuredArticle.title}</h3>
-                <p className="text-black mb-6">{featuredArticle.excerpt}</p>
-                <div className="flex items-center gap-4 text-sm text-black">
-                  <span>{featuredArticle.date}</span>
-                  <span>•</span>
-                  <span>{featuredArticle.readTime}</span>
+                <h2 className="text-3xl md:text-4xl font-bold text-foreground group-hover:text-foreground/80 transition-colors">
+                  {featuredArticle.title}
+                </h2>
+                <p className="text-muted-foreground text-lg leading-relaxed max-w-3xl">
+                  {featuredArticle.excerpt}
+                </p>
+                <div className="flex items-center gap-6 text-sm text-muted-foreground pt-2">
+                  <span className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    {featuredArticle.date}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    {featuredArticle.readTime}
+                  </span>
                 </div>
               </div>
             </div>
@@ -53,29 +67,36 @@ const Blog = () => {
       </section>
 
       {/* Article Grid */}
-      <section className="py-12 pb-24">
+      <section className="pb-24">
         <div className="container mx-auto px-4 max-w-6xl">
-          <h2 className="text-2xl font-bold mb-6">Recent Articles</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <h2 className="text-2xl font-bold mb-8 pb-3 border-b border-border/30">Recent Articles</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {otherArticles.map((article) => (
-              <BlogCard key={article.slug} {...article} />
+              <Link key={article.slug} to={`/blog/${article.slug}`} className="group">
+                <div className="h-full rounded-xl border border-border/30 bg-card/5 p-6 hover:border-border transition-colors space-y-4">
+                  <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20 text-xs">
+                    {article.category}
+                  </Badge>
+                  <h3 className="text-lg font-bold text-foreground group-hover:text-foreground/80 transition-colors line-clamp-2">
+                    {article.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
+                    {article.excerpt}
+                  </p>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
+                    <span className="flex items-center gap-1.5">
+                      <Calendar className="w-3 h-3" />
+                      {article.date}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-3 h-3" />
+                      {article.readTime}
+                    </span>
+                  </div>
+                </div>
+              </Link>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="bg-accent text-accent-foreground py-24">
-        <div className="container mx-auto px-4 max-w-4xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Ready to Transform Your Menu?
-          </h2>
-          <p className="text-xl mb-8 opacity-90">
-            Join thousands of restaurants using our software to create beautiful digital menus.
-          </p>
-          <Button asChild size="lg" variant="secondary">
-            <Link to="/auth?signup=true">Start Free Trial</Link>
-          </Button>
         </div>
       </section>
     </PageLayout>
