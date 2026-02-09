@@ -55,6 +55,16 @@ const HeroSection = () => {
             </Button>
           </div>
 
+          {/* Trust signals */}
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm text-muted-foreground pt-2">
+            {["Setup in 5 minutes", "No technical skills needed", "No credit card needed"].map((item) => (
+              <span key={item} className="flex items-center gap-1.5">
+                <svg className="w-4 h-4 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                {item}
+              </span>
+            ))}
+          </div>
+
         </div>
       </div>
     </section>
