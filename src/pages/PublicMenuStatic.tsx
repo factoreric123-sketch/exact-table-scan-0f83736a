@@ -453,13 +453,6 @@ const PublicMenuStatic = ({ restaurant, categories, onCategoryChange }: PublicMe
         cardImageShape={restaurant.card_image_shape || 'vertical'}
       />
 
-      {/* Footer */}
-      <footer className="py-8 text-center">
-        <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
-          Powered By
-          <span className="font-semibold text-foreground">menu</span>
-        </p>
-      </footer>
     </MenuThemeWrapper>
   );
 };
