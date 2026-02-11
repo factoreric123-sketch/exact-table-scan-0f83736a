@@ -76,10 +76,7 @@ export const PaywallModal = ({ open, onOpenChange, feature }: PaywallModalProps)
         <div className="space-y-6 py-4">
           <div className="text-center">
             <div className="text-4xl font-bold">$10</div>
-            <div className="text-sm text-muted-foreground">per month • Cancel anytime</div>
-            <div className="mt-2 inline-block rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
-              14-day free trial
-            </div>
+            <div className="text-sm text-muted-foreground">per month</div>
           </div>
 
           <div className="space-y-3">

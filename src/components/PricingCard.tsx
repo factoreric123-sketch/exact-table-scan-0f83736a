@@ -22,7 +22,7 @@ const PricingCard = ({ title, price, description, features, limitations, ctaText
         </div>
       )}
       <CardHeader>
-        <CardTitle className="text-2xl">{title}</CardTitle>
+        <CardTitle className="text-2xl text-foreground">{title}</CardTitle>
         <p className="text-md text-foreground/70">{description}</p>
       </CardHeader>
       <CardContent className="space-y-4">
