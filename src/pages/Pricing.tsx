@@ -74,10 +74,10 @@ const Pricing = () => {
       {/* Hero */}
       <section className="bg-muted/30 py-24">
         <div className="container mx-auto px-4 max-w-6xl text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 text-foreground">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-xl text-foreground/70">
             Start free, upgrade when you need more. No credit card required.
           </p>
         </div>
