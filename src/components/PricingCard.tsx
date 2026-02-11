@@ -15,32 +15,32 @@ interface PricingCardProps {
 
 const PricingCard = ({ title, price, description, features, limitations, ctaText, ctaLink, popular }: PricingCardProps) => {
   return (
-    <Card className={`relative ${popular ? "border-accent shadow-lg scale-105" : ""}`}>
+    <Card className={`relative text-card-foreground ${popular ? "border-accent shadow-lg scale-105" : ""}`}>
       {popular && (
         <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground px-4 py-1 rounded-full text-sm font-medium">
           Most Popular
         </div>
       )}
       <CardHeader>
-        <CardTitle className="text-2xl text-foreground">{title}</CardTitle>
-        <p className="text-md text-foreground/70">{description}</p>
+        <CardTitle className="text-2xl text-card-foreground">{title}</CardTitle>
+        <p className="text-md text-card-foreground/70">{description}</p>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="text-4xl font-bold">
+        <div className="text-4xl font-bold text-card-foreground">
           {price}
-          {price !== "Custom" && <span className="text-lg font-normal text-foreground/70">/month</span>}
+          {price !== "Custom" && <span className="text-lg font-normal text-card-foreground/70">/month</span>}
         </div>
         <ul className="space-y-3">
           {features.map((feature, index) => (
             <li key={index} className="flex items-start gap-2">
-              <span className="text-muted-foreground">•</span>
-              <span className="text-sm">{feature}</span>
+              <span className="text-card-foreground/50">•</span>
+              <span className="text-sm text-card-foreground">{feature}</span>
             </li>
           ))}
           {limitations?.map((limitation, index) => (
             <li key={`limit-${index}`} className="flex items-start gap-2">
-              <span className="text-muted-foreground">•</span>
-              <span className="text-sm">{limitation}</span>
+              <span className="text-card-foreground/50">•</span>
+              <span className="text-sm text-card-foreground">{limitation}</span>
             </li>
           ))}
         </ul>
