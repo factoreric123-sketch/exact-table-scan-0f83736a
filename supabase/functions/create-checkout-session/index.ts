@@ -65,7 +65,7 @@ serve(async (req) => {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'TAPTAB Premium',
+              name: 'Menu Premium',
               description: 'Unlimited QR codes, public menus, and shareable links',
             },
             unit_amount: 1000, // $10.00
