@@ -69,6 +69,12 @@ export const menuData: Dish[] = [
       { id: "truffle-medium", name: "Medium", price: "12.00", order_index: 1 },
       { id: "truffle-large", name: "Large", price: "16.00", order_index: 2 },
     ],
+    modifiers: [
+      { id: "truffle-mod-1", name: "Extra Truffle Oil", price: "2.00", order_index: 0 },
+      { id: "truffle-mod-2", name: "Bacon Bits", price: "3.00", order_index: 1 },
+      { id: "truffle-mod-3", name: "Ranch Dipping Sauce", price: "1.50", order_index: 2 },
+      { id: "truffle-mod-4", name: "Cheese Sauce", price: "2.00", order_index: 3 },
+    ],
   },
 
   // SALADS (2 items)
