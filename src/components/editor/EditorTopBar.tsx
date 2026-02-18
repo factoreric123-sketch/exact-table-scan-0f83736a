@@ -465,7 +465,7 @@ export const EditorTopBar = ({
               <div className="min-w-0 flex-1">
                 <h1 className="text-sm sm:text-base font-bold truncate">{restaurant.name}</h1>
                 <p className="text-xs text-muted-foreground hidden sm:block">
-                  {viewMode === 'grid' ? 'Visual Editor' : 'Table Editor'}
+                   Visual Editor
                 </p>
               </div>
               {!restaurant.published && (
@@ -515,19 +515,6 @@ export const EditorTopBar = ({
                           {previewMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           {previewMode ? "Exit Preview" : "Preview Menu"}
                         </Button>
-                        {!previewMode && (
-                          <Button
-                            variant="ghost"
-                            className="w-full justify-start gap-2"
-                            onClick={() => {
-                              onViewModeChange(viewMode === 'grid' ? 'table' : 'grid');
-                              setShowMobileMenu(false);
-                            }}
-                          >
-                            {viewMode === 'grid' ? <Table2 className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
-                            Switch to {viewMode === 'grid' ? 'Table' : 'Grid'} View
-                          </Button>
-                        )}
                       </div>
 
                       {/* Edit Controls */}
@@ -645,7 +632,7 @@ export const EditorTopBar = ({
                 <div>
                   <h1 className="text-lg font-bold">{restaurant.name}</h1>
                   <p className="text-xs text-muted-foreground">
-                    {viewMode === 'grid' ? 'Visual Editor' : 'Table Editor'}
+                    Visual Editor
                   </p>
                 </div>
                 {!restaurant.published && (
@@ -657,27 +644,6 @@ export const EditorTopBar = ({
             </div>
 
             <div className="flex items-center gap-2">
-              {!previewMode && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onViewModeChange(viewMode === 'grid' ? 'table' : 'grid')}
-                  className="gap-2"
-                >
-                  {viewMode === 'grid' ? (
-                    <>
-                      <Table2 className="h-4 w-4" />
-                      Table View
-                    </>
-                  ) : (
-                    <>
-                      <LayoutGrid className="h-4 w-4" />
-                      Grid View
-                    </>
-                  )}
-                </Button>
-              )}
-
               <Button
                 variant="outline"
                 size="sm"
