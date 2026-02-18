@@ -11,6 +11,7 @@ import { EditableCategories } from "@/components/editor/EditableCategories";
 import { EditableSubcategories } from "@/components/editor/EditableSubcategories";
 import { EditableDishes } from "@/components/editor/EditableDishes";
 import { SpreadsheetView } from "@/components/editor/SpreadsheetView";
+import { ExcelImportDialog } from "@/components/editor/ExcelImportDialog";
 import RestaurantHeader from "@/components/RestaurantHeader";
 import { AllergenFilter } from "@/components/AllergenFilter";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -37,6 +38,8 @@ const Editor = () => {
   const [selectedSpicy, setSelectedSpicy] = useState<boolean | null>(null);
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importData, setImportData] = useState<any[]>([]);
   const subcategoryRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   const { data: restaurant, isLoading: restaurantLoading, refetch: refetchRestaurant } = useRestaurantById(restaurantId || "");
@@ -444,6 +447,10 @@ const Editor = () => {
         onFilterToggle={handleFilterToggle}
         onRefresh={refetchRestaurant}
         onUpdate={handleUpdate}
+        onImportData={(data) => {
+          setImportData(data);
+          setShowImportDialog(true);
+        }}
       />
 
       {/* Menu content wrapped in theme - each restaurant gets its own theme */}
@@ -547,6 +554,16 @@ const Editor = () => {
         )}
         </div>
       </MenuThemeWrapper>
+
+      <ExcelImportDialog
+        open={showImportDialog}
+        onOpenChange={setShowImportDialog}
+        data={importData}
+        restaurantId={restaurant.id}
+        categories={categories}
+        subcategories={subcategories.filter(s => s.category_id === activeCategory)}
+        subcategoryId={activeSubcategory}
+      />
     </div>
   );
 };

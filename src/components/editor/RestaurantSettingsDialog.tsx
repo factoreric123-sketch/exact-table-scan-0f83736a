@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,7 +11,7 @@ import { useUpdateRestaurant } from "@/hooks/useRestaurants";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { Loader2, Square, RectangleVertical } from "lucide-react";
+import { Loader2, Square, RectangleVertical, Upload, Download } from "lucide-react";
 import { menuFontOptions, getFontClassName } from "@/lib/fontUtils";
 
 interface RestaurantSettingsDialogProps {
@@ -19,6 +20,7 @@ interface RestaurantSettingsDialogProps {
   restaurant: Restaurant;
   onFilterToggle: () => void;
   onSettingsUpdate: () => void;
+  onImportData?: (data: any[]) => void;
 }
 
 export const RestaurantSettingsDialog = ({
@@ -27,6 +29,7 @@ export const RestaurantSettingsDialog = ({
   restaurant,
   onFilterToggle,
   onSettingsUpdate,
+  onImportData,
 }: RestaurantSettingsDialogProps) => {
   const updateRestaurant = useUpdateRestaurant();
   const [badgeColors, setBadgeColors] = useState(
@@ -69,6 +72,79 @@ export const RestaurantSettingsDialog = ({
     const newColors = { ...badgeColors, [badge]: rgb };
     setBadgeColors(newColors);
     updateSetting("badge_colors", newColors);
+  };
+
+  const handleExampleImport = () => {
+    try {
+      const templateData = [
+        {
+          Category: "Appetizers",
+          Subcategory: "Starters",
+          Name: "Example Dish",
+          Description: "A delicious example dish",
+          Price: "12.99",
+          Calories: 350,
+          Allergens: "gluten, dairy",
+          Vegetarian: "No",
+          Vegan: "No",
+          Spicy: "No",
+          New: "Yes",
+          Special: "No",
+          Popular: "No",
+          "Chef's Pick": "No",
+        },
+        {
+          Category: "Main Course",
+          Subcategory: "Grilled",
+          Name: "Another Example",
+          Description: "Another example to show the format",
+          Price: "24.99",
+          Calories: 600,
+          Allergens: "",
+          Vegetarian: "Yes",
+          Vegan: "No",
+          Spicy: "Yes",
+          New: "No",
+          Special: "Yes",
+          Popular: "Yes",
+          "Chef's Pick": "Yes",
+        },
+      ];
+
+      const worksheet = XLSX.utils.json_to_sheet(templateData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Import Template");
+      XLSX.writeFile(workbook, "menu_import_template.xlsx");
+      toast.success("Example import template downloaded");
+    } catch (error) {
+      toast.error("Failed to generate template");
+    }
+  };
+
+  const handleImportClick = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".xlsx,.xls,.csv";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const data = new Uint8Array(event.target?.result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: "array" });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+            onImportData?.(jsonData);
+            onOpenChange(false);
+          } catch (error) {
+            toast.error("Failed to read file");
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    };
+    input.click();
   };
 
   const isUpdating = updateRestaurant.isPending;
@@ -380,6 +456,28 @@ export const RestaurantSettingsDialog = ({
               ))}
               <p className="text-xs text-muted-foreground mt-2">
                 Enter RGB values separated by commas (e.g., 255, 100, 50)
+              </p>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Import / Export */}
+          <div>
+            <h3 className="text-sm font-semibold mb-4">Import Menu</h3>
+            <div className="flex flex-col gap-3">
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleImportClick} className="gap-2 flex-1">
+                  <Upload className="h-4 w-4" />
+                  Import Excel
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleExampleImport} className="gap-2 flex-1">
+                  <Download className="h-4 w-4" />
+                  Example Format
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Download the example template to see the expected format, then import your menu data.
               </p>
             </div>
           </div>
