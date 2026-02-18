@@ -335,42 +335,54 @@ export const SpreadsheetView = ({
     overscan: 10,
   });
 
-  const handleExport = useCallback(() => {
+  const handleExampleImport = useCallback(() => {
     try {
-      // Export ALL dishes with their category and subcategory information
-      const exportData = dishes.map((dish) => {
-        const subcategory = subcategories.find((s) => s.id === dish.subcategory_id);
-        const category = categories.find((c) => c.id === subcategory?.category_id);
-        
-        return {
-          Category: category?.name || "",
-          Subcategory: subcategory?.name || "",
-          Name: dish.name,
-          Description: dish.description || "",
-          Price: dish.price,
-          Calories: dish.calories || "",
-          Allergens: dish.allergens?.join(", ") || "",
-          Vegetarian: dish.is_vegetarian ? "Yes" : "No",
-          Vegan: dish.is_vegan ? "Yes" : "No",
-          Spicy: dish.is_spicy ? "Yes" : "No",
-          New: dish.is_new ? "Yes" : "No",
-          Special: dish.is_special ? "Yes" : "No",
-          Popular: dish.is_popular ? "Yes" : "No",
-          "Chef's Pick": dish.is_chef_recommendation ? "Yes" : "No",
-        };
-      });
+      const templateData = [
+        {
+          Category: "Appetizers",
+          Subcategory: "Starters",
+          Name: "Example Dish",
+          Description: "A delicious example dish",
+          Price: "12.99",
+          Calories: 350,
+          Allergens: "gluten, dairy",
+          Vegetarian: "No",
+          Vegan: "No",
+          Spicy: "No",
+          New: "Yes",
+          Special: "No",
+          Popular: "No",
+          "Chef's Pick": "No",
+        },
+        {
+          Category: "Main Course",
+          Subcategory: "Grilled",
+          Name: "Another Example",
+          Description: "Another example to show the format",
+          Price: "24.99",
+          Calories: 600,
+          Allergens: "",
+          Vegetarian: "Yes",
+          Vegan: "No",
+          Spicy: "Yes",
+          New: "No",
+          Special: "Yes",
+          Popular: "Yes",
+          "Chef's Pick": "Yes",
+        },
+      ];
 
-      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const worksheet = XLSX.utils.json_to_sheet(templateData);
       const workbook = XLSX.utils.book_new();
       
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Full Menu");
-      XLSX.writeFile(workbook, `menu_full_${Date.now()}.xlsx`);
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Import Template");
+      XLSX.writeFile(workbook, "menu_import_template.xlsx");
       
-      toast.success("Full menu exported successfully");
+      toast.success("Example import template downloaded");
     } catch (error) {
-      toast.error("Failed to export menu");
+      toast.error("Failed to generate template");
     }
-  }, [dishes, subcategories, categories]);
+  }, []);
 
   const handleImportClick = () => {
     const input = document.createElement("input");
@@ -491,9 +503,9 @@ export const SpreadsheetView = ({
             <Upload className="h-4 w-4" />
             Import
           </Button>
-          <Button variant="outline" size="sm" onClick={handleExport} className="gap-2">
+          <Button variant="outline" size="sm" onClick={handleExampleImport} className="gap-2">
             <Download className="h-4 w-4" />
-            Export
+            Example Import
           </Button>
         </div>
       </div>
@@ -535,9 +547,9 @@ export const SpreadsheetView = ({
               <Upload className="h-4 w-4 mr-2" />
               Import Excel
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleExport}>
+            <DropdownMenuItem onClick={handleExampleImport}>
               <Download className="h-4 w-4 mr-2" />
-              Export Excel
+              Example Import
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
