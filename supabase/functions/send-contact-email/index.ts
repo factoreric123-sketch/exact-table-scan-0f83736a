@@ -16,6 +16,15 @@ interface ContactRequest {
   message?: string;
 }
 
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -41,19 +50,40 @@ Deno.serve(async (req: Request): Promise<Response> => {
       );
     }
 
+    // Length validation
+    if (subject.length > 200) {
+      return new Response(
+        JSON.stringify({ error: "Subject too long (max 200 characters)" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    if (message && message.length > 5000) {
+      return new Response(
+        JSON.stringify({ error: "Message too long (max 5000 characters)" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Escape all user inputs before embedding in HTML
+    const safeName = escapeHtml(name || "Not provided");
+    const safeEmail = escapeHtml(email);
+    const safePhone = escapeHtml(phone || "Not provided");
+    const safeSubject = escapeHtml(subject);
+    const safeMessage = escapeHtml(message || "No message provided");
+
     const emailResponse = await resend.emails.send({
       from: "Contact Form <onboarding@resend.dev>",
       to: ["factoreric123@gmail.com"],
-      subject: `[Contact Form] ${subject}`,
+      subject: `[Contact Form] ${safeSubject}`,
       html: `
         <h2>New Contact Form Submission</h2>
-        <p><strong>From:</strong> ${name || "Not provided"}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Phone:</strong> ${phone || "Not provided"}</p>
-        <p><strong>Subject:</strong> ${subject}</p>
+        <p><strong>From:</strong> ${safeName}</p>
+        <p><strong>Email:</strong> ${safeEmail}</p>
+        <p><strong>Phone:</strong> ${safePhone}</p>
+        <p><strong>Subject:</strong> ${safeSubject}</p>
         <hr />
         <h3>Message:</h3>
-        <p>${message || "No message provided"}</p>
+        <p>${safeMessage}</p>
       `,
       reply_to: email,
     });
@@ -68,7 +98,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("Error in send-contact-email function:", error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "Failed to send message. Please try again later." }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }

@@ -13,6 +13,33 @@ serve(async (req) => {
   }
 
   try {
+    // Validate the authenticated user from JWT
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+
+    const supabaseAuth = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+
+    // Use authenticated user's ID and email - never trust client-supplied values
+    const userId = user.id;
+    const email = user.email;
+
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
     });
@@ -21,12 +48,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-
-    const { userId, email } = await req.json();
-
-    if (!userId || !email) {
-      throw new Error('Missing userId or email');
-    }
 
     console.log('Creating checkout session for user:', userId);
 
@@ -47,7 +68,6 @@ serve(async (req) => {
       });
       customerId = customer.id;
 
-      // Update subscription with customer ID
       await supabaseClient
         .from('subscriptions')
         .update({ stripe_customer_id: customerId })
@@ -68,7 +88,7 @@ serve(async (req) => {
               name: 'Menu Premium',
               description: 'Unlimited QR codes, public menus, and shareable links',
             },
-            unit_amount: 1000, // $10.00
+            unit_amount: 1000,
             recurring: {
               interval: 'month',
             },
