@@ -371,6 +371,7 @@ interface EditorTopBarProps {
   onRefresh?: () => void;
   onUpdate?: () => Promise<void>;
   hasPendingChanges?: boolean;
+  onImportData?: (data: any[]) => void;
 }
 
 export const EditorTopBar = ({
@@ -389,6 +390,7 @@ export const EditorTopBar = ({
   onRefresh,
   onUpdate,
   hasPendingChanges = false,
+  onImportData,
 }: EditorTopBarProps) => {
   const navigate = useNavigate();
   const [showQRModal, setShowQRModal] = useState(false);
@@ -797,6 +799,7 @@ export const EditorTopBar = ({
           restaurant={restaurant}
           onFilterToggle={onFilterToggle}
           onSettingsUpdate={() => onRefresh?.()}
+          onImportData={onImportData}
         />
       )}
 
