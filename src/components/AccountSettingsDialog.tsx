@@ -132,21 +132,19 @@ export const AccountSettingsDialog = ({ open, onOpenChange }: AccountSettingsDia
                   </p>
                 )}
 
-                {!hasPremium && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleSyncSubscription}
-                    disabled={syncLoading}
-                    className="w-full text-xs text-muted-foreground"
-                  >
-                    {syncLoading ? (
-                      <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Syncing...</>
-                    ) : (
-                      <><RefreshCw className="mr-1 h-3 w-3" />Already paid? Sync subscription</>
-                    )}
-                  </Button>
-                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSyncSubscription}
+                  disabled={syncLoading}
+                  className="w-full text-xs text-muted-foreground"
+                >
+                  {syncLoading ? (
+                    <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Syncing...</>
+                  ) : (
+                    <><RefreshCw className="mr-1 h-3 w-3" />{hasPremium ? "Sync with Stripe" : "Already paid? Sync subscription"}</>
+                  )}
+                </Button>
               </>
             )}
           </div>
