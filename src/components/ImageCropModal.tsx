@@ -12,7 +12,8 @@ interface ImageCropModalProps {
   onOpenChange: (open: boolean) => void;
   imageFile: File;
   onCropComplete: (file: File) => void;
-  aspectRatio?: number; // Initial aspect ratio: 1 for square, 3/4 for vertical
+  aspectRatio?: number;
+  mode?: 'dish' | 'header';
 }
 
 export const ImageCropModal = ({
@@ -21,6 +22,7 @@ export const ImageCropModal = ({
   imageFile,
   onCropComplete,
   aspectRatio: initialAspectRatio = 1,
+  mode = 'dish',
 }: ImageCropModalProps) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -31,9 +33,9 @@ export const ImageCropModal = ({
     initialAspectRatio === 1 ? 'square' : 'vertical'
   );
 
-  const currentAspectRatio = selectedShape === 'square' ? 1 : 3 / 4;
+  // Header mode always uses 16:9 banner ratio
+  const currentAspectRatio = mode === 'header' ? 16 / 9 : (selectedShape === 'square' ? 1 : 3 / 4);
 
-  // Reset shape when modal opens with new initial aspect ratio
   useEffect(() => {
     if (open) {
       setSelectedShape(initialAspectRatio === 1 ? 'square' : 'vertical');
@@ -87,29 +89,36 @@ export const ImageCropModal = ({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Shape Toggle */}
-          <div className="flex items-center justify-center gap-2">
-            <Button
-              type="button"
-              variant={selectedShape === 'square' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedShape('square')}
-              className="flex items-center gap-2"
-            >
-              <Square className="h-4 w-4" />
-              Square
-            </Button>
-            <Button
-              type="button"
-              variant={selectedShape === 'vertical' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedShape('vertical')}
-              className="flex items-center gap-2"
-            >
-              <RectangleVertical className="h-4 w-4" />
-              Vertical
-            </Button>
-          </div>
+          {/* Shape Toggle - only for dish images */}
+          {mode === 'dish' && (
+            <div className="flex items-center justify-center gap-2">
+              <Button
+                type="button"
+                variant={selectedShape === 'square' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedShape('square')}
+                className="flex items-center gap-2"
+              >
+                <Square className="h-4 w-4" />
+                Square
+              </Button>
+              <Button
+                type="button"
+                variant={selectedShape === 'vertical' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedShape('vertical')}
+                className="flex items-center gap-2"
+              >
+                <RectangleVertical className="h-4 w-4" />
+                Vertical
+              </Button>
+            </div>
+          )}
+          {mode === 'header' && (
+            <p className="text-center text-sm text-muted-foreground">
+              Banner crop (16:9) — looks great on all devices
+            </p>
+          )}
 
           <div className="relative w-full h-96 bg-muted">
             {imageSrc && (
