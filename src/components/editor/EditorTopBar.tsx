@@ -467,7 +467,7 @@ export const EditorTopBar = ({
               <div className="min-w-0 flex-1">
                 <h1 className="text-sm sm:text-base font-bold truncate">{restaurant.name}</h1>
                 <p className="text-xs text-muted-foreground hidden sm:block">
-                   Visual Editor
+                   Menu Editor
                 </p>
               </div>
               {!restaurant.published && (
@@ -634,7 +634,7 @@ export const EditorTopBar = ({
                 <div>
                   <h1 className="text-lg font-bold">{restaurant.name}</h1>
                   <p className="text-xs text-muted-foreground">
-                    Visual Editor
+                    Menu Editor
                   </p>
                 </div>
                 {!restaurant.published && (
