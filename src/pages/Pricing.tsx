@@ -15,10 +15,7 @@ const Pricing = () => {
         "30+ color schemes",
         "Preview mode"
       ],
-      limitations: [
-        "Public publishing not included",
-        "QR code generation not included"
-      ],
+      limitations: [],
       ctaText: "Get Started Free",
       ctaLink: "/auth?signup=true"
     },
@@ -34,7 +31,7 @@ const Pricing = () => {
         "Real-time live menu updates",
         "Priority email support"
       ],
-      ctaText: "Get Started",
+      ctaText: "Start 14 Day Free Trial",
       ctaLink: "/auth?signup=true",
       popular: true
     }
