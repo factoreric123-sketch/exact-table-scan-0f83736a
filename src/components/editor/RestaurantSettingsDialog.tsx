@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { Loader2, Square, RectangleVertical, Upload, Download } from "lucide-react";
 import { menuFontOptions, getFontClassName } from "@/lib/fontUtils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RestaurantSettingsDialogProps {
   open: boolean;
@@ -72,6 +73,66 @@ export const RestaurantSettingsDialog = ({
     const newColors = { ...badgeColors, [badge]: rgb };
     setBadgeColors(newColors);
     updateSetting("badge_colors", newColors);
+  };
+
+  const handleExportMenu = async () => {
+    try {
+      const { data: categories } = await supabase
+        .from("categories")
+        .select("id, name, order_index")
+        .eq("restaurant_id", restaurant.id)
+        .order("order_index");
+
+      if (!categories?.length) {
+        toast.error("No menu data to export");
+        return;
+      }
+
+      const categoryIds = categories.map(c => c.id);
+      const { data: subcategories } = await supabase
+        .from("subcategories")
+        .select("id, name, category_id, order_index")
+        .in("category_id", categoryIds)
+        .order("order_index");
+
+      const subcategoryIds = subcategories?.map(s => s.id) || [];
+      const { data: dishes } = await supabase
+        .from("dishes")
+        .select("*")
+        .in("subcategory_id", subcategoryIds)
+        .order("order_index");
+
+      const catMap = new Map(categories.map(c => [c.id, c.name]));
+      const subMap = new Map(subcategories?.map(s => [s.id, { name: s.name, categoryId: s.category_id }]) || []);
+
+      const exportData = (dishes || []).map(dish => {
+        const sub = subMap.get(dish.subcategory_id);
+        return {
+          Category: sub ? catMap.get(sub.categoryId) || "" : "",
+          Subcategory: sub?.name || "",
+          Name: dish.name,
+          Description: dish.description || "",
+          Price: dish.price,
+          Calories: dish.calories || "",
+          Allergens: (dish.allergens || []).join(", "),
+          Vegetarian: dish.is_vegetarian ? "Yes" : "No",
+          Vegan: dish.is_vegan ? "Yes" : "No",
+          Spicy: dish.is_spicy ? "Yes" : "No",
+          New: dish.is_new ? "Yes" : "No",
+          Special: dish.is_special ? "Yes" : "No",
+          Popular: dish.is_popular ? "Yes" : "No",
+          "Chef's Pick": dish.is_chef_recommendation ? "Yes" : "No",
+        };
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Menu");
+      XLSX.writeFile(workbook, `${restaurant.name.replace(/[^a-zA-Z0-9]/g, "_")}_menu.xlsx`);
+      toast.success(`Exported ${exportData.length} dishes`);
+    } catch (error) {
+      toast.error("Failed to export menu");
+    }
   };
 
   const handleExampleImport = () => {
@@ -464,12 +525,16 @@ export const RestaurantSettingsDialog = ({
 
           {/* Import / Export */}
           <div>
-            <h3 className="text-sm font-semibold mb-4">Import Menu</h3>
+            <h3 className="text-sm font-semibold mb-4">Import / Export Menu</h3>
             <div className="flex flex-col gap-3">
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={handleImportClick} className="gap-2 flex-1">
                   <Upload className="h-4 w-4" />
-                  Import Excel
+                  Import
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleExportMenu} className="gap-2 flex-1">
+                  <Download className="h-4 w-4" />
+                  Export
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleExampleImport} className="gap-2 flex-1">
                   <Download className="h-4 w-4" />
@@ -477,7 +542,7 @@ export const RestaurantSettingsDialog = ({
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Download the example template to see the expected format, then import your menu data.
+                Export your current menu, download the example template, or import menu data.
               </p>
             </div>
           </div>
