@@ -4,11 +4,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRestaurants } from "@/hooks/useRestaurants";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
-import { Plus, LogOut, Crown } from "lucide-react";
+import { Plus, LogOut, Crown, Settings } from "lucide-react";
 import { CreateRestaurantModal } from "@/components/CreateRestaurantModal";
 import { RestaurantCard } from "@/components/RestaurantCard";
 import { PremiumBadge } from "@/components/PremiumBadge";
 import { PaywallModal } from "@/components/PaywallModal";
+import { AccountSettingsDialog } from "@/components/AccountSettingsDialog";
 import { toast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
@@ -22,6 +23,7 @@ const Dashboard = () => {
   const { hasPremium, subscription, refetch, isLoading: subscriptionLoading } = useSubscription();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showAccountSettings, setShowAccountSettings] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -77,10 +79,16 @@ const Dashboard = () => {
               )}
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setShowAccountSettings(true)}>
+              <Settings className="h-4 w-4 mr-2" />
+              Account
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -148,6 +156,11 @@ const Dashboard = () => {
         open={showPaywall}
         onOpenChange={setShowPaywall}
         feature="Premium Features"
+      />
+
+      <AccountSettingsDialog
+        open={showAccountSettings}
+        onOpenChange={setShowAccountSettings}
       />
     </div>
   );
