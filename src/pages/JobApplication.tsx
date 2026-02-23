@@ -63,7 +63,7 @@ const JobApplication = () => {
             <CheckCircle className="w-16 h-16 text-foreground mx-auto" />
             <h1 className="text-3xl md:text-4xl font-bold">Application Submitted!</h1>
             <p className="text-muted-foreground text-lg">
-              Thank you for applying for <strong className="text-foreground">{position}</strong>. We'll review your application and get back to you within 5-7 business days.
+              Thank you for applying for <strong className="text-foreground">{position}</strong>. We'll review your application and be in touch soon.
             </p>
             <Button asChild variant="outline">
               <Link to="/careers">← Back to Careers</Link>
