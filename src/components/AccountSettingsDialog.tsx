@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Crown, CreditCard, Loader2, Mail, Calendar } from "lucide-react";
+import { Crown, CreditCard, Loader2, Mail, Calendar, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,8 +16,24 @@ interface AccountSettingsDialogProps {
 
 export const AccountSettingsDialog = ({ open, onOpenChange }: AccountSettingsDialogProps) => {
   const { user } = useAuth();
-  const { subscription, hasPremium, isLoading: subLoading } = useSubscription();
+  const { subscription, hasPremium, isLoading: subLoading, refetch } = useSubscription();
   const [portalLoading, setPortalLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
+
+  const handleSyncSubscription = async () => {
+    setSyncLoading(true);
+    try {
+      const { error } = await supabase.functions.invoke('fix-subscription');
+      if (error) throw error;
+      await refetch();
+      toast({ title: "Subscription synced", description: "Your subscription status has been updated." });
+    } catch (error) {
+      logger.error('Sync error:', error);
+      toast({ title: "Sync failed", description: "Could not sync subscription. Please try again.", variant: "destructive" });
+    } finally {
+      setSyncLoading(false);
+    }
+  };
 
   const handleManageBilling = async () => {
     setPortalLoading(true);
@@ -114,6 +130,22 @@ export const AccountSettingsDialog = ({ open, onOpenChange }: AccountSettingsDia
                   <p className="text-xs text-yellow-500">
                     Your subscription will not renew. You'll lose premium features after the current period ends.
                   </p>
+                )}
+
+                {!hasPremium && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSyncSubscription}
+                    disabled={syncLoading}
+                    className="w-full text-xs text-muted-foreground"
+                  >
+                    {syncLoading ? (
+                      <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Syncing...</>
+                    ) : (
+                      <><RefreshCw className="mr-1 h-3 w-3" />Already paid? Sync subscription</>
+                    )}
+                  </Button>
                 )}
               </>
             )}

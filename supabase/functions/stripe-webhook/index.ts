@@ -39,31 +39,87 @@ serve(async (req) => {
     );
 
     switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        const userId = session.metadata?.userId || session.subscription_data?.metadata?.userId;
+        const customerId = session.customer as string;
+        const subscriptionId = session.subscription as string;
+
+        console.log('Checkout completed. Customer:', customerId, 'Subscription:', subscriptionId);
+
+        if (subscriptionId && customerId) {
+          // Fetch subscription details from Stripe
+          const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
+          
+          // Find user by customer ID if no userId in metadata
+          let targetUserId = userId;
+          if (!targetUserId) {
+            const { data: sub } = await supabaseClient
+              .from('subscriptions')
+              .select('user_id')
+              .eq('stripe_customer_id', customerId)
+              .single();
+            targetUserId = sub?.user_id;
+          }
+
+          if (targetUserId) {
+            await supabaseClient
+              .from('subscriptions')
+              .update({
+                stripe_customer_id: customerId,
+                stripe_subscription_id: subscriptionId,
+                status: stripeSubscription.status === 'trialing' ? 'active' : stripeSubscription.status,
+                plan_type: 'premium',
+                current_period_start: new Date(stripeSubscription.current_period_start * 1000).toISOString(),
+                current_period_end: new Date(stripeSubscription.current_period_end * 1000).toISOString(),
+                cancel_at_period_end: stripeSubscription.cancel_at_period_end,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('user_id', targetUserId);
+            console.log('Subscription activated for user:', targetUserId);
+          } else {
+            console.error('Could not find user for customer:', customerId);
+          }
+        }
+        break;
+      }
+
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
         const userId = subscription.metadata.userId;
 
-        if (!userId) {
-          console.error('No userId in subscription metadata');
+        // Also try finding user by customer ID
+        let targetUserId = userId;
+        if (!targetUserId) {
+          const { data: sub } = await supabaseClient
+            .from('subscriptions')
+            .select('user_id')
+            .eq('stripe_customer_id', subscription.customer as string)
+            .single();
+          targetUserId = sub?.user_id;
+        }
+
+        if (!targetUserId) {
+          console.error('No userId found for subscription:', subscription.id);
           break;
         }
 
-        console.log('Updating subscription for user:', userId);
+        console.log('Updating subscription for user:', targetUserId);
 
         await supabaseClient
           .from('subscriptions')
           .update({
             stripe_customer_id: subscription.customer as string,
             stripe_subscription_id: subscription.id,
-            status: subscription.status,
+            status: subscription.status === 'trialing' ? 'active' : subscription.status,
             plan_type: 'premium',
             current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
             cancel_at_period_end: subscription.cancel_at_period_end,
             updated_at: new Date().toISOString(),
           })
-          .eq('user_id', userId);
+          .eq('user_id', targetUserId);
 
         console.log('Subscription updated successfully');
         break;
