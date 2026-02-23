@@ -7,13 +7,12 @@ interface PricingCardProps {
   price: string;
   description: string;
   features: string[];
-  limitations?: string[];
   ctaText: string;
   ctaLink: string;
   popular?: boolean;
 }
 
-const PricingCard = ({ title, price, description, features, limitations, ctaText, ctaLink, popular }: PricingCardProps) => {
+const PricingCard = ({ title, price, description, features, ctaText, ctaLink, popular }: PricingCardProps) => {
   return (
     <Card className={`relative bg-foreground text-background ${popular ? "border-foreground/30 shadow-lg scale-105" : "border-foreground/20"}`}>
       {popular && (
@@ -37,19 +36,6 @@ const PricingCard = ({ title, price, description, features, limitations, ctaText
               <span className="text-sm text-background">{feature}</span>
             </li>
           ))}
-          {limitations && (
-            <>
-              <li className="flex items-start gap-2 pt-2 border-t border-background/20">
-                <span className="text-sm font-medium text-background/60">Not included</span>
-              </li>
-              {limitations.map((limitation, index) => (
-                <li key={`limit-${index}`} className="flex items-start gap-2">
-                  <span className="text-background/40">•</span>
-                  <span className="text-sm text-background/60">{limitation}</span>
-                </li>
-              ))}
-            </>
-          )}
         </ul>
       </CardContent>
       <CardFooter>
