@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRestaurants } from "@/hooks/useRestaurants";
 import { useSubscription } from "@/hooks/useSubscription";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Plus, LogOut, Crown, Settings } from "lucide-react";
 import { CreateRestaurantModal } from "@/components/CreateRestaurantModal";
@@ -30,20 +31,24 @@ const Dashboard = () => {
     navigate("/auth");
   };
 
-  // Handle successful payment redirect
+  // Handle successful payment redirect — sync subscription from Stripe
   useEffect(() => {
     const success = searchParams.get('success');
     const canceled = searchParams.get('canceled');
 
     if (success) {
-      toast({
-        title: "Welcome to Premium! 🎉",
-        description: "Your subscription is now active. Enjoy all premium features!",
+      // Sync subscription status from Stripe
+      supabase.functions.invoke('fix-subscription').then(({ error }) => {
+        if (error) {
+          console.error('Subscription sync error:', error);
+        }
+        refetch();
+        toast({
+          title: "Welcome to Premium! 🎉",
+          description: "Your subscription is now active. Enjoy all premium features!",
+        });
       });
-      // Remove query params
       setSearchParams({});
-      // Refetch subscription status
-      refetch();
     } else if (canceled) {
       toast({
         title: "Checkout Canceled",
