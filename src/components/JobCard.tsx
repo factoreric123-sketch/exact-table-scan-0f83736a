@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, MapPin, Briefcase } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 interface JobCardProps {
   title: string;
@@ -60,7 +61,9 @@ const JobCard = ({ title, department, location, type, description, responsibilit
                 ))}
               </ul>
             </div>
-            <Button className="w-full">Apply Now</Button>
+            <Button asChild className="w-full">
+              <Link to={`/careers/apply?position=${encodeURIComponent(title)}`}>Apply Now</Link>
+            </Button>
           </CardContent>
         </CollapsibleContent>
       </Card>

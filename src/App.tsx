@@ -20,6 +20,7 @@ import AboutUs from "./pages/AboutUs";
 import Pricing from "./pages/Pricing";
 import Contact from "./pages/Contact";
 import Careers from "./pages/Careers";
+import JobApplication from "./pages/JobApplication";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
@@ -65,6 +66,7 @@ const App = () => (
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/careers" element={<Careers />} />
+            <Route path="/careers/apply" element={<JobApplication />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />

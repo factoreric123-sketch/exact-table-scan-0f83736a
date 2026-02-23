@@ -15,7 +15,6 @@ const Pricing = () => {
         "30+ color schemes",
         "Preview mode"
       ],
-      limitations: [],
       ctaText: "Get Started Free",
       ctaLink: "/auth?signup=true"
     },
