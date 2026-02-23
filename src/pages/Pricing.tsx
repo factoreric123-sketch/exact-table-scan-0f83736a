@@ -5,21 +5,19 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 const Pricing = () => {
   const pricingPlans = [
     {
-      title: "Free",
+      title: "Basic",
       price: "$0",
       description: "Perfect for trying out our software",
       features: [
-        "Unlimited restaurants",
+        "Unlimited menu creation",
         "Unlimited dishes & categories",
-        "Full visual editor access",
-        "10+ beautiful themes",
-        "Mobile-optimized menus",
-        "Real-time menu updates",
+        "Full drag & drop visual editor",
+        "30+ color schemes",
         "Preview mode"
       ],
       limitations: [
-        "No QR code generation",
-        "No public menu publishing"
+        "Public publishing not included",
+        "QR code generation not included"
       ],
       ctaText: "Get Started Free",
       ctaLink: "/auth?signup=true"
@@ -29,14 +27,14 @@ const Pricing = () => {
       price: "$10",
       description: "For restaurants ready to go live",
       features: [
-        "Everything in Free, plus:",
-        "Unlimited QR code generation",
+        "All Basic features",
+        "QR code generation",
         "Publish menus publicly",
         "Shareable menu links",
-        "Download QR codes (PNG/SVG)",
+        "Real-time live menu updates",
         "Priority email support"
       ],
-      ctaText: "Start 7-Day Free Trial",
+      ctaText: "Get Started",
       ctaLink: "/auth?signup=true",
       popular: true
     }
