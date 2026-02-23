@@ -326,6 +326,7 @@ const RestaurantHeader = memo(({
           onOpenChange={setShowCropModal}
           imageFile={selectedImage}
           onCropComplete={handleImageCrop}
+          mode="header"
         />
       )}
     </>
