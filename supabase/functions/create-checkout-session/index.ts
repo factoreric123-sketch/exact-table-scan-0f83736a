@@ -82,17 +82,7 @@ serve(async (req) => {
       payment_method_types: ['card'],
       line_items: [
         {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'Menu Premium',
-              description: 'Unlimited QR codes, public menus, and shareable links',
-            },
-            unit_amount: 1000,
-            recurring: {
-              interval: 'month',
-            },
-          },
+          price: 'price_1T44pQAZWo5yW3Zl7vY9zPn2',
           quantity: 1,
         },
       ],
