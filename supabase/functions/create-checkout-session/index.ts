@@ -74,25 +74,8 @@ serve(async (req) => {
         .eq('user_id', userId);
     }
 
-    // Look up the active $10 recurring price from Stripe
-    const prices = await stripe.prices.list({
-      active: true,
-      type: 'recurring',
-      limit: 100,
-    });
-
-    const targetPrice = prices.data.find(
-      (p: any) => p.unit_amount === 1000 && p.currency === 'usd' && p.recurring
-    );
-
-    if (!targetPrice) {
-      return new Response(
-        JSON.stringify({ error: 'No active $10/month price found in Stripe' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
-
-    console.log('Using price:', targetPrice.id);
+    const targetPriceId = 'price_1T489BAZWo5yW3ZlP9DsUCJL';
+    console.log('Using price:', targetPriceId);
 
     // Create checkout session
     const origin = req.headers.get('origin') || 'http://localhost:8080';
@@ -102,7 +85,7 @@ serve(async (req) => {
       payment_method_types: ['card'],
       line_items: [
         {
-          price: targetPrice.id,
+          price: targetPriceId,
           quantity: 1,
         },
       ],
