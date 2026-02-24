@@ -29,7 +29,7 @@ const CTASection = () => {
             {/* CTA */}
             <div className="flex justify-center pt-4">
               <Button
-                onClick={() => navigate("/auth?signup=true")}
+                onClick={() => navigate("/pricing")}
                 size="lg"
                 className="bg-background hover:bg-background/90 text-foreground font-semibold text-lg h-14 px-8 group"
               >
