@@ -466,9 +466,6 @@ export const EditorTopBar = ({
               </Button>
               <div className="min-w-0 flex-1">
                 <h1 className="text-sm sm:text-base font-bold truncate">{restaurant.name}</h1>
-                <p className="text-xs text-muted-foreground hidden sm:block">
-                   Menu Editor
-                </p>
               </div>
               {!restaurant.published && (
                 <Badge variant="secondary" className="text-xs shrink-0">
@@ -633,9 +630,6 @@ export const EditorTopBar = ({
               <div className="flex items-center gap-2">
                 <div>
                   <h1 className="text-lg font-bold">{restaurant.name}</h1>
-                  <p className="text-xs text-muted-foreground">
-                    Menu Editor
-                  </p>
                 </div>
                 {!restaurant.published && (
                   <Badge variant="secondary" className="text-xs">
