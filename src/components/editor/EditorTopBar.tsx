@@ -464,12 +464,10 @@ export const EditorTopBar = ({
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-sm sm:text-base font-bold truncate">{restaurant.name}</h1>
-              </div>
+              <h1 className="text-sm sm:text-base font-bold truncate min-w-0 flex-1 leading-none">{restaurant.name}</h1>
               {!restaurant.published && (
-                <Badge variant="secondary" className="text-xs shrink-0">
-                  Draft
+                <Badge variant="secondary" className="text-xs shrink-0 leading-none">
+                  Unpublished
                 </Badge>
               )}
             </div>
@@ -628,11 +626,9 @@ export const EditorTopBar = ({
               </Button>
               <div className="border-l border-border h-6" />
               <div className="flex items-center gap-2">
-                <div>
-                  <h1 className="text-lg font-bold">{restaurant.name}</h1>
-                </div>
+                <h1 className="text-lg font-bold leading-none">{restaurant.name}</h1>
                 {!restaurant.published && (
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="text-xs leading-none">
                     Unpublished
                   </Badge>
                 )}
