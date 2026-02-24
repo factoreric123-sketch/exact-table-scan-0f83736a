@@ -29,7 +29,7 @@ const HeroSection = () => {
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
             <Button
-              onClick={() => navigate("/auth?signup=true")}
+              onClick={() => navigate("/pricing")}
               size="lg"
               className="bg-foreground hover:bg-foreground/90 text-background font-semibold text-lg h-14 px-8 group"
             >
