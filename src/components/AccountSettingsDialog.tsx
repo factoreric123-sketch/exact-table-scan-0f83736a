@@ -110,7 +110,7 @@ export const AccountSettingsDialog = ({ open, onOpenChange }: AccountSettingsDia
                       ? "bg-yellow-500/10 text-yellow-500"
                       : "bg-muted text-muted-foreground"
                   }`}>
-                    {subscription?.status === "trialing" ? "Trial" : subscription?.status ?? "active"}
+                    {subscription?.status === "trialing" ? "Trial" : subscription?.status === "active" ? "Active" : (subscription?.status ?? "Active")}
                   </span>
                 </div>
 
