@@ -1,12 +1,14 @@
 import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
-import { Download, Printer } from "lucide-react";
+import { Download, Printer, Upload, RotateCcw } from "lucide-react";
 import logoDark from "@/assets/logo-dark.png";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 const BusinessCard = () => {
   const demoUrl = "https://menuapp.restaurant/demo";
   const qrRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [customQrUrl, setCustomQrUrl] = useState<string | null>(null);
 
   const handlePrint = () => {
     window.print();
@@ -42,10 +44,22 @@ const BusinessCard = () => {
     img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
   };
 
+  const handleUploadQR = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setCustomQrUrl(url);
+    e.target.value = "";
+  };
+
   return (
     <div className="min-h-screen bg-muted/30 py-12 px-4">
       {/* Controls - hidden when printing */}
-      <div className="max-w-4xl mx-auto mb-8 flex justify-center gap-4 print:hidden">
+      <div className="max-w-4xl mx-auto mb-8 flex justify-center gap-4 flex-wrap print:hidden">
         <Button onClick={handlePrint} className="gap-2">
           <Printer className="h-4 w-4" />
           Print Card
@@ -54,6 +68,23 @@ const BusinessCard = () => {
           <Download className="h-4 w-4" />
           Download QR
         </Button>
+        <Button onClick={handleUploadQR} variant="outline" className="gap-2">
+          <Upload className="h-4 w-4" />
+          Upload QR
+        </Button>
+        {customQrUrl && (
+          <Button onClick={() => setCustomQrUrl(null)} variant="ghost" className="gap-2">
+            <RotateCcw className="h-4 w-4" />
+            Reset QR
+          </Button>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
       </div>
 
       {/* Business Card - Front */}
@@ -86,12 +117,16 @@ const BusinessCard = () => {
               </p>
               
               <div ref={qrRef} className="bg-white p-1.5 rounded-md shadow-sm border">
-                <QRCodeSVG
-                  value={demoUrl}
-                  size={56}
-                  level="H"
-                  includeMargin={false}
-                />
+                {customQrUrl ? (
+                  <img src={customQrUrl} alt="Custom QR Code" className="w-14 h-14 object-contain" />
+                ) : (
+                  <QRCodeSVG
+                    value={demoUrl}
+                    size={56}
+                    level="H"
+                    includeMargin={false}
+                  />
+                )}
               </div>
               
               <p className="text-foreground/50 text-[7px] mt-2">
