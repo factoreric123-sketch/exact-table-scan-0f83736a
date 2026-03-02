@@ -127,7 +127,7 @@ const BusinessCard = () => {
             
             <div className="mt-auto pt-3">
               <p className="text-background/40 text-[8px]">
-                exact-clone-guardian.lovable.app
+                menuapp.restaurant
               </p>
             </div>
           </div>
