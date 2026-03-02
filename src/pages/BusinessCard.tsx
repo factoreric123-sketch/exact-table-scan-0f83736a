@@ -5,7 +5,7 @@ import logoDark from "@/assets/logo-dark.png";
 import { useRef } from "react";
 
 const BusinessCard = () => {
-  const demoUrl = "https://exact-clone-guardian.lovable.app/demo";
+  const demoUrl = "https://menuapp.restaurant/demo";
   const qrRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = () => {
