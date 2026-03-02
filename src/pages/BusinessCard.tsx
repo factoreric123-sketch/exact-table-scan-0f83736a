@@ -1,7 +1,7 @@
-import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Download, Printer, Upload, RotateCcw } from "lucide-react";
 import logoDark from "@/assets/logo-dark.png";
+import demoQr from "@/assets/demo-qr.png";
 import { useRef, useState } from "react";
 
 const BusinessCard = () => {
@@ -120,12 +120,7 @@ const BusinessCard = () => {
                 {customQrUrl ? (
                   <img src={customQrUrl} alt="Custom QR Code" className="w-14 h-14 object-contain" />
                 ) : (
-                  <QRCodeSVG
-                    value={demoUrl}
-                    size={56}
-                    level="H"
-                    includeMargin={false}
-                  />
+                  <img src={demoQr} alt="Demo QR Code" className="w-14 h-14 object-contain" />
                 )}
               </div>
               
