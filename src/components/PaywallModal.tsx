@@ -105,7 +105,7 @@ export const PaywallModal = ({ open, onOpenChange, feature }: PaywallModalProps)
             ) : (
               <>
                 <Crown className="mr-2 h-4 w-4" />
-                Start 14-Day Free Trial
+                Start 1 Month Free Trial
               </>
             )}
           </Button>

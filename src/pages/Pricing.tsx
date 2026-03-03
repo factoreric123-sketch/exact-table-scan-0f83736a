@@ -30,7 +30,7 @@ const Pricing = () => {
         "Real-time live menu updates",
         "Priority email support"
       ],
-      ctaText: "Start 14 Day Free Trial",
+      ctaText: "Start 1 Month Free Trial",
       ctaLink: "/auth?signup=true",
       popular: true
     }
