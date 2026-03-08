@@ -226,6 +226,7 @@ export type Database = {
       dishes: {
         Row: {
           allergens: string[] | null
+          available: boolean
           calories: number | null
           created_at: string | null
           description: string | null
@@ -247,6 +248,7 @@ export type Database = {
         }
         Insert: {
           allergens?: string[] | null
+          available?: boolean
           calories?: number | null
           created_at?: string | null
           description?: string | null
@@ -268,6 +270,7 @@ export type Database = {
         }
         Update: {
           allergens?: string[] | null
+          available?: boolean
           calories?: number | null
           created_at?: string | null
           description?: string | null
@@ -551,6 +554,7 @@ export type Database = {
           status: string
           stripe_payment_intent_id: string | null
           table_id: string | null
+          tax_cents: number
           total_cents: number
           updated_at: string
         }
@@ -567,6 +571,7 @@ export type Database = {
           status?: string
           stripe_payment_intent_id?: string | null
           table_id?: string | null
+          tax_cents?: number
           total_cents?: number
           updated_at?: string
         }
@@ -583,6 +588,7 @@ export type Database = {
           status?: string
           stripe_payment_intent_id?: string | null
           table_id?: string | null
+          tax_cents?: number
           total_cents?: number
           updated_at?: string
         }
@@ -710,6 +716,7 @@ export type Database = {
           menu_font: string | null
           menu_font_size: string | null
           name: string
+          ordering_enabled: boolean
           owner_id: string
           published: boolean | null
           show_allergen_filter: boolean | null
@@ -718,6 +725,7 @@ export type Database = {
           show_prices: boolean | null
           slug: string
           tagline: string | null
+          tax_rate: number
           text_overlay: boolean | null
           theme: Json | null
           updated_at: string | null
@@ -740,6 +748,7 @@ export type Database = {
           menu_font?: string | null
           menu_font_size?: string | null
           name: string
+          ordering_enabled?: boolean
           owner_id: string
           published?: boolean | null
           show_allergen_filter?: boolean | null
@@ -748,6 +757,7 @@ export type Database = {
           show_prices?: boolean | null
           slug: string
           tagline?: string | null
+          tax_rate?: number
           text_overlay?: boolean | null
           theme?: Json | null
           updated_at?: string | null
@@ -770,6 +780,7 @@ export type Database = {
           menu_font?: string | null
           menu_font_size?: string | null
           name?: string
+          ordering_enabled?: boolean
           owner_id?: string
           published?: boolean | null
           show_allergen_filter?: boolean | null
@@ -778,6 +789,7 @@ export type Database = {
           show_prices?: boolean | null
           slug?: string
           tagline?: string | null
+          tax_rate?: number
           text_overlay?: boolean | null
           theme?: Json | null
           updated_at?: string | null
