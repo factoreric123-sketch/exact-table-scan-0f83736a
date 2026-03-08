@@ -72,17 +72,6 @@ const MobileMenu = ({ isOpen, onClose, scrollToSection }: MobileMenuProps) => {
             >
               Start Free Trial
             </Button>
-            <Button
-              onClick={() => {
-                navigate("/demo");
-                onClose();
-              }}
-              variant="outline"
-              size="lg"
-              className="w-full text-lg h-14"
-            >
-              View Demo Menu
-            </Button>
           </div>
         </div>
       </div>
