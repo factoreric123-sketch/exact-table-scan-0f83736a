@@ -66,8 +66,9 @@ const MobileMenu = ({ isOpen, onClose, scrollToSection }: MobileMenuProps) => {
                 navigate("/auth?signup=true");
                 onClose();
               }}
+              variant="outline"
               size="lg"
-              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold text-lg h-14"
+              className="w-full text-lg h-14"
             >
               Start Free Trial
             </Button>
